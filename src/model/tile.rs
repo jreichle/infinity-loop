@@ -1,41 +1,49 @@
 #![allow(dead_code)]
 
+use quickcheck::{Arbitrary, Gen};
 use std::fmt::Display;
 
 /// A tile is a 2D-square with possible connections to orthogonal neighbors denoted by lines pointing outwards from the center.
 /// It is encoded with the 4 least significant bits as 0b000_URDL with 0 representing no connection
 /// in that particular direction and 1 representing a present one.
 /// The 4 possible directions are in clockwise direction: Up, Right, Down, Left
-/// 
+///
 /// * Basic operations are checking present connections and rotating tiles
 /// * invariant: values are between 0 and 15
-/// 
+///
 /// implementation note: would ideally use u4
 #[derive(Debug, PartialEq, Eq, PartialOrd, Ord, Hash, Clone, Copy)]
 pub struct Tile(u8);
-
 
 #[inline(always)]
 fn test_bit(value: u8, index: u8) -> bool {
     value & (1 << index) != 0
 }
 
-impl Display for Tile {
+impl Arbitrary for Tile {
+    fn arbitrary(g: &mut Gen) -> Self {
+        Tile(u8::arbitrary(g))
+    }
+}
 
+impl Display for Tile {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(f, "{}", Tile::ASCII_TILES[self.0 as usize])
     }
-    
 }
 
 impl Tile {
-
     const BIT_SIZE: u8 = 4;
-    const ASCII_TILES: [&'static str; 16] = [" ", "╹", "╺", "┗", "╻", "┃", "┏", "┣", "╸", "┛", "━", "┻", "┓", "┫", "┳", "╋"];
-    
+    const ASCII_TILES: [&'static str; 16] = [
+        " ", "╹", "╺", "┗", "╻", "┃", "┏", "┣", "╸", "┛", "━", "┻", "┓", "┫", "┳", "╋",
+    ];
+
     /// creates new [Tile] from supplied value and panics if value > 15
     pub fn new(value: u8) -> Self {
-        assert!(value < 16, "Tile::new: expected value between 0 and 15, but was {value}");
+        assert!(
+            value <= 0xF,
+            "Tile::new: expected value between 0 and 15, but was {value}"
+        );
         Tile(value)
     }
 
@@ -61,12 +69,39 @@ impl Tile {
     }
 
     // rotates the 4 least significant bits
+    // number parameter must be used modulo 4
     pub fn rotate_clockwise(self, number: u8) -> Self {
+        let number = number % 4;
         Tile::truncate((self.0 << number) | (self.0 >> (Tile::BIT_SIZE - number)))
     }
 
     pub fn rotate_counterclockwise(self, number: u8) -> Self {
         Tile::truncate((self.0 >> number) | (self.0 << (Tile::BIT_SIZE - number)))
     }
+}
 
+#[cfg(test)]
+mod tests {
+
+    use crate::Tile;
+
+    #[quickcheck]
+    fn tile_construction_and_deconstruction(value: u8) -> bool {
+        match value {
+            0x0..=0xF => Tile::new(value).0 == value,
+            _ => std::panic::catch_unwind(|| Tile::new(value)).is_err(),
+        }
+    }
+
+    #[quickcheck]
+    fn rotate_clockwise_4times_is_identity(tile: Tile) -> bool {
+        let tile = Tile::truncate(tile.0);
+        tile.rotate_clockwise(4) == tile
+    }
+
+    #[quickcheck]
+    fn rotate_counterclockwise_4times_is_identity(tile: Tile) -> bool {
+        let tile = Tile::truncate(tile.0);
+        tile.rotate_counterclockwise(4) == tile
+    }
 }
