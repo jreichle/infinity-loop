@@ -1,6 +1,7 @@
 use std::{
     fmt::Display,
     ops::{Index, IndexMut},
+    vec::IntoIter,
 };
 
 use quickcheck::{Arbitrary, Gen};
@@ -45,11 +46,11 @@ impl<A> Board<A> {
         }
     }
 
-    pub fn rows(&self) -> usize {
+    pub const fn rows(&self) -> usize {
         self.rows
     }
 
-    pub fn columns(&self) -> usize {
+    pub const fn columns(&self) -> usize {
         self.columns
     }
 }
@@ -89,6 +90,16 @@ impl<A> IndexMut<Coordinate<usize>> for Board<A> {
             self.columns
         );
         &mut self.elements[coordinate.x + self.columns * coordinate.y]
+    }
+}
+
+impl<A> IntoIterator for Board<A> {
+    type Item = A;
+
+    type IntoIter = IntoIter<A>;
+
+    fn into_iter(self) -> Self::IntoIter {
+        self.elements.into_iter()
     }
 }
 
