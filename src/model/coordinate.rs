@@ -1,5 +1,8 @@
-use std::{ops::{Add, AddAssign, Neg, Sub, SubAssign}, fmt::Display};
 use quickcheck::{Arbitrary, Gen};
+use std::{
+    fmt::Display,
+    ops::{Add, AddAssign, Neg, Sub, SubAssign},
+};
 
 /// Holds position for x and y axis and offers basic arithmetic operators
 #[derive(Debug, PartialEq, Eq, PartialOrd, Ord, Hash, Clone, Copy)]
@@ -12,6 +15,11 @@ pub struct Coordinate<A> {
 impl Coordinate<i32> {
     /// neutral element for [Coordinate] with regards to addition
     pub const ORIGIN: Coordinate<i32> = Self { x: 0, y: 0 };
+}
+
+impl Coordinate<u32> {
+    /// neutral element for [Coordinate] with regards to addition
+    pub const ORIGIN: Coordinate<u32> = Self { x: 0, y: 0 };
 }
 
 impl<A: Display> Display for Coordinate<A> {

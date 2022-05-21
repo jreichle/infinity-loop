@@ -1,4 +1,3 @@
-
 use quickcheck::{Arbitrary, Gen};
 use std::fmt::Display;
 
@@ -15,7 +14,7 @@ use std::fmt::Display;
 pub struct Tile(u8);
 
 #[inline(always)]
-fn test_bit(value: u8, index: u8) -> bool {
+const fn test_bit(value: u8, index: u8) -> bool {
     value & (1 << index) != 0
 }
 
@@ -47,34 +46,34 @@ impl Tile {
     }
 
     /// creates new [Tile] from supplied value and disregards higher bits
-    pub fn truncate(value: u8) -> Self {
+    pub const fn truncate(value: u8) -> Self {
         Tile(value & 0xF)
     }
 
-    pub fn has_connection_up(self) -> bool {
+    pub const fn has_connection_up(self) -> bool {
         test_bit(self.0, 3)
     }
 
-    pub fn has_connection_right(self) -> bool {
+    pub const fn has_connection_right(self) -> bool {
         test_bit(self.0, 2)
     }
 
-    pub fn has_connection_down(self) -> bool {
+    pub const fn has_connection_down(self) -> bool {
         test_bit(self.0, 1)
     }
 
-    pub fn has_connection_left(self) -> bool {
+    pub const fn has_connection_left(self) -> bool {
         test_bit(self.0, 0)
     }
 
     // rotates the 4 least significant bits
     // number parameter must be used modulo 4
-    pub fn rotate_clockwise(self, number: u8) -> Self {
+    pub const fn rotate_clockwise(self, number: u8) -> Self {
         let number = number % 4;
         Tile::truncate((self.0 << number) | (self.0 >> (Tile::BIT_SIZE - number)))
     }
 
-    pub fn rotate_counterclockwise(self, number: u8) -> Self {
+    pub const fn rotate_counterclockwise(self, number: u8) -> Self {
         Tile::truncate((self.0 >> number) | (self.0 << (Tile::BIT_SIZE - number)))
     }
 }
