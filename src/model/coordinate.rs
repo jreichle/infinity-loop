@@ -1,4 +1,4 @@
-use std::ops::{Add, AddAssign, Neg, Sub, SubAssign};
+use std::{ops::{Add, AddAssign, Neg, Sub, SubAssign}, fmt::Display};
 use quickcheck::{Arbitrary, Gen};
 
 /// Holds position for x and y axis and offers basic arithmetic operators
@@ -12,6 +12,12 @@ pub struct Coordinate<A> {
 impl Coordinate<i32> {
     /// neutral element for [Coordinate] with regards to addition
     pub const ORIGIN: Coordinate<i32> = Self { x: 0, y: 0 };
+}
+
+impl<A: Display> Display for Coordinate<A> {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "(x: {:04}, y: {:04})", self.x, self.y)
+    }
 }
 
 impl<A: Add + Add<Output = A>> Add for Coordinate<A> {
