@@ -7,19 +7,19 @@ use std::{
 /// Holds position for x and y axis and offers basic arithmetic operators
 #[derive(Debug, PartialEq, Eq, PartialOrd, Ord, Hash, Clone, Copy)]
 pub struct Coordinate<A> {
-    x: A,
-    y: A,
+    pub x: A,
+    pub y: A,
 }
 
 // how to implement for generic numeric value?
-impl Coordinate<i32> {
+impl Coordinate<isize> {
     /// neutral element for [Coordinate] with regards to addition
-    pub const ORIGIN: Coordinate<i32> = Self { x: 0, y: 0 };
+    pub const ORIGIN: Coordinate<isize> = Self { x: 0, y: 0 };
 }
 
-impl Coordinate<u32> {
+impl Coordinate<usize> {
     /// neutral element for [Coordinate] with regards to addition
-    pub const ORIGIN: Coordinate<u32> = Self { x: 0, y: 0 };
+    pub const ORIGIN: Coordinate<usize> = Self { x: 0, y: 0 };
 }
 
 impl<A: Display> Display for Coordinate<A> {

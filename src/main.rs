@@ -9,10 +9,20 @@ extern crate quickcheck_macros;
 
 mod model;
 
+use model::board::*;
 use model::tile::*;
+use rand::Rng;
 
 fn main() {
     println!("Hello, world!");
 
-    let _tile = Tile::new(1);
+    let mut rng = rand::thread_rng();
+    
+    let rows = 10;
+    let columns = 10;
+
+    let random_vals = (0..rows * columns).map(|_| Tile::new(rng.gen_range(0..16))).collect();
+
+    let board = Board::new(rows, columns, random_vals);
+    println!("{board}");
 }
