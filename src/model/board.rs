@@ -24,7 +24,7 @@ impl<A> Board<A> {
             "Board::new: rows = {rows} * columns = {columns} must match length of elements = {}",
             elements.len()
         );
-        Board {
+        Self {
             rows,
             columns,
             elements,
@@ -60,13 +60,13 @@ impl<A> Index<Coordinate<usize>> for Board<A> {
     fn index(&self, coordinate: Coordinate<usize>) -> &Self::Output {
         assert!(
             coordinate.x <= self.rows,
-            "Board::index: index.x = {} should be smaller or equal to rows = {}",
+            "Board::index: coordinate.x = {} should be smaller or equal to rows = {}",
             coordinate.x,
             self.rows
         );
         assert!(
             coordinate.y <= self.columns,
-            "Board::index: index.y = {} should be smaller or equal to columns = {}",
+            "Board::index: coordinate.y = {} should be smaller or equal to columns = {}",
             coordinate.y,
             self.columns
         );
@@ -78,13 +78,13 @@ impl<A> IndexMut<Coordinate<usize>> for Board<A> {
     fn index_mut(&mut self, coordinate: Coordinate<usize>) -> &mut Self::Output {
         assert!(
             coordinate.x <= self.rows,
-            "Board::index: index.x = {} should be smaller or equal to rows = {}",
+            "Board::index_mut: coordinate.x = {} should be smaller or equal to rows = {}",
             coordinate.x,
             self.rows
         );
         assert!(
             coordinate.y <= self.columns,
-            "Board::index: index.y = {} should be smaller or equal to columns = {}",
+            "Board::index_mut: coordinate.y = {} should be smaller or equal to columns = {}",
             coordinate.y,
             self.columns
         );
