@@ -1,4 +1,3 @@
-#![allow(dead_code)]
 
 use quickcheck::{Arbitrary, Gen};
 use std::fmt::Display;
