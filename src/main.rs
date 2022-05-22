@@ -25,6 +25,9 @@ fn main() {
         .map(|_| Tile::new(rng.gen_range(0..16)))
         .collect();
 
-    let board = Board::new(rows, columns, random_vals);
+    let mut board = Board::new(rows, columns, random_vals);
     println!("{board}");
+    println!("{}", "-".repeat(rows));
+    board = board.map(|t| t.rotate_clockwise(1));
+    println!("{}", board)
 }

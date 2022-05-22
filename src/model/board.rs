@@ -71,6 +71,15 @@ impl<A: Clone> Board<A> {
             elements: vec![element; rows * columns],
         }
     }
+
+    // vec cannot be safely mapped over in-place, therefore map for board creates a new instance 
+    pub fn map<B, F: Fn(A) -> B>(&self, transform: F) -> Board<B> {
+        Board {
+            elements: self.elements.clone().into_iter().map(transform).collect(),
+            rows: self.rows,
+            columns: self.columns,
+        }
+    }
 }
 
 impl<A> Index<Coordinate<usize>> for Board<A> {
