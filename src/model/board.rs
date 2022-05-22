@@ -8,7 +8,7 @@ use quickcheck::{Arbitrary, Gen};
 
 use super::coordinate::Coordinate;
 
-/// naive implementation, API is bound to change
+/// gameboard as 2D-grid implemented with a flattened [Vec]
 ///
 /// invariant through game design: board forms a recangle completely filled with [Tile]s
 #[derive(Debug, PartialEq, Eq, PartialOrd, Ord, Clone)]
@@ -52,6 +52,24 @@ impl<A> Board<A> {
 
     pub const fn columns(&self) -> usize {
         self.columns
+    }
+
+    pub const fn size(&self) -> usize {
+        self.rows * self.columns
+    }
+
+    pub fn elements(&self) -> &[A] {
+        &self.elements[..]
+    }
+}
+
+impl<A: Clone> Board<A> {
+    pub fn filled_with(rows: usize, columns: usize, element: A) -> Self {
+        Self {
+            rows,
+            columns,
+            elements: vec![element; rows * columns],
+        }
     }
 }
 
@@ -124,11 +142,26 @@ impl<A: Arbitrary> Arbitrary for Board<A> {
     fn arbitrary(g: &mut Gen) -> Self {
         let rows = usize::arbitrary(g);
         let columns = usize::arbitrary(g);
-        let elements = vec![A::arbitrary(g); rows * columns];
+        let elements = (0..rows * columns).map(|_| A::arbitrary(g)).collect();
         Self {
             rows,
             columns,
             elements,
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+
+    use crate::Board;
+
+    // restrict size of rows and columns to avoid excessive vector allocation
+    #[quickcheck]
+    fn ensure_dimensions(rows: u8, columns: u8) -> bool {
+        let rows = rows as usize;
+        let columns = columns as usize;
+        let board = Board::filled_with(rows, columns, 0);
+        board.rows() == rows && board.columns() == columns
     }
 }
