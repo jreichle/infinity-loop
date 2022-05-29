@@ -11,6 +11,7 @@ use super::coordinate::Coordinate;
 /// gameboard as 2D-grid implemented with a flattened [Vec]
 ///
 /// invariant through game design: board forms a recangle completely filled with [Tile]s
+/// invariant: ∀b: Board. b.rows * b.columns == b.elements.len()
 #[derive(Debug, PartialEq, Eq, PartialOrd, Ord, Clone)]
 pub struct Board<A> {
     rows: usize,
@@ -54,6 +55,10 @@ impl<A> Board<A> {
         self.columns
     }
 
+    pub const fn dimension(&self) -> Coordinate<usize> {
+        Coordinate { x: self.rows, y: self.columns }
+    }
+
     pub const fn size(&self) -> usize {
         self.rows * self.columns
     }
@@ -61,6 +66,8 @@ impl<A> Board<A> {
     pub fn elements(&self) -> &[A] {
         &self.elements[..]
     }
+
+
 }
 
 impl<A: Clone> Board<A> {
@@ -70,6 +77,23 @@ impl<A: Clone> Board<A> {
             columns,
             elements: vec![element; rows * columns],
         }
+    }
+
+    // vec cannot be safely mapped over in-place, therefore map for board creates a new instance
+    pub fn map<B, F: Fn(A) -> B>(&self, transform: F) -> Board<B> {
+        Board {
+            elements: self.elements.clone().into_iter().map(transform).collect(),
+            rows: self.rows,
+            columns: self.columns,
+        }
+    }
+
+    fn map_mut<F: Fn(A) -> A>(mut self, transform: F) -> Self {
+        for i in 0..self.size() {
+            self.elements[i] = transform(self.elements[i].clone());
+        }
+        self
+        
     }
 }
 
