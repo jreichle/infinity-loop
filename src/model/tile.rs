@@ -127,11 +127,11 @@ mod tests {
         repetitions: u8,
     ) -> bool {
         let successive = (0..repetitions).fold(tile, |acc, _| acc.rotated_clockwise(1));
-        successive == tile.rotated_clockwise(repetitions)
+        successive == tile.rotated_counterclockwise(repetitions)
     }
 
     #[quickcheck]
     fn rotate_counterclockwise_preserves_number_of_connections(tile: Tile, rotations: u8) -> bool {
-        tile.0.count_ones() == tile.rotated_clockwise(rotations).0.count_ones()
+        tile.0.count_ones() == tile.rotated_counterclockwise(rotations).0.count_ones()
     }
 }
