@@ -7,24 +7,24 @@ use std::{
 /// Holds position for x and y axis and offers basic arithmetic operators
 #[derive(Debug, PartialEq, Eq, PartialOrd, Ord, Hash, Clone, Copy)]
 pub struct Coordinate<A> {
-    pub x: A,
-    pub y: A,
+    pub row: A,
+    pub column: A,
 }
 
 // how to implement for generic numeric value?
 impl Coordinate<isize> {
     /// neutral element for [Coordinate] with regards to addition
-    pub const ORIGIN: Coordinate<isize> = Self { x: 0, y: 0 };
+    pub const ORIGIN: Coordinate<isize> = Self { row: 0, column: 0 };
 }
 
 impl Coordinate<usize> {
     /// neutral element for [Coordinate] with regards to addition
-    pub const ORIGIN: Coordinate<usize> = Self { x: 0, y: 0 };
+    pub const ORIGIN: Coordinate<usize> = Self { row: 0, column: 0 };
 }
 
 impl<A: Display> Display for Coordinate<A> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "(x: {:04}, y: {:04})", self.x, self.y)
+        write!(f, "(x: {:04}, y: {:04})", self.row, self.column)
     }
 }
 
@@ -33,8 +33,8 @@ impl<A: Add + Add<Output = A>> Add for Coordinate<A> {
 
     fn add(self, other: Self) -> Self::Output {
         Self {
-            x: self.x + other.x,
-            y: self.y + other.y,
+            row: self.row + other.row,
+            column: self.column + other.column,
         }
     }
 }
@@ -42,8 +42,8 @@ impl<A: Add + Add<Output = A>> Add for Coordinate<A> {
 impl<A: AddAssign + Add<Output = A> + Copy> AddAssign for Coordinate<A> {
     fn add_assign(&mut self, other: Self) {
         *self = Self {
-            x: self.x + other.x,
-            y: self.y + other.y,
+            row: self.row + other.row,
+            column: self.column + other.column,
         };
     }
 }
@@ -53,8 +53,8 @@ impl<A: Sub + Sub<Output = A>> Sub for Coordinate<A> {
 
     fn sub(self, other: Self) -> Self::Output {
         Self {
-            x: self.x - other.x,
-            y: self.y - other.y,
+            row: self.row - other.row,
+            column: self.column - other.column,
         }
     }
 }
@@ -62,8 +62,8 @@ impl<A: Sub + Sub<Output = A>> Sub for Coordinate<A> {
 impl<A: SubAssign + Sub<Output = A> + Copy> SubAssign for Coordinate<A> {
     fn sub_assign(&mut self, other: Self) {
         *self = Self {
-            x: self.x - other.x,
-            y: self.y - other.y,
+            row: self.row - other.row,
+            column: self.column - other.column,
         };
     }
 }
@@ -73,8 +73,8 @@ impl<A: Neg + Neg<Output = A>> Neg for Coordinate<A> {
 
     fn neg(self) -> Self::Output {
         Self {
-            x: -self.x,
-            y: -self.y,
+            row: -self.row,
+            column: -self.column,
         }
     }
 }
@@ -82,8 +82,8 @@ impl<A: Neg + Neg<Output = A>> Neg for Coordinate<A> {
 impl<A: Arbitrary> Arbitrary for Coordinate<A> {
     fn arbitrary(g: &mut Gen) -> Self {
         Self {
-            x: A::arbitrary(g),
-            y: A::arbitrary(g),
+            row: A::arbitrary(g),
+            column: A::arbitrary(g),
         }
     }
 }

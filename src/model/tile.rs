@@ -10,7 +10,7 @@ use std::fmt::Display;
 /// * invariant: values are between 0 and 15
 ///
 /// implementation note: would ideally use u4
-#[derive(Debug, PartialEq, Eq, PartialOrd, Ord, Hash, Clone, Copy)]
+#[derive(Debug, PartialEq, Eq, PartialOrd, Ord, Hash, Clone, Copy, Default)]
 pub struct Tile(u8);
 
 #[inline(always)]
@@ -20,19 +20,25 @@ const fn test_bit(value: u8, index: u8) -> bool {
 
 impl Arbitrary for Tile {
     fn arbitrary(g: &mut Gen) -> Self {
-        Tile(u8::arbitrary(g))
+        Tile::truncate(u8::arbitrary(g))
     }
 }
 
 impl Display for Tile {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{}", Tile::ASCII_TILES[self.0 as usize])
+        write!(f, "{}", Tile::UNICODE_TILES[self.0 as usize])
     }
 }
 
 impl Tile {
+    /// number of bits used to save a single [Tile] configuration
     const BIT_SIZE: u8 = 4;
-    const ASCII_TILES: [&'static str; 16] = [
+
+    /// bit mask for all used bits
+    const USED_BITS: u8 = (1 << Tile::BIT_SIZE) - 1;
+
+    /// visualization for each configuration as UNICODE symbol
+    const UNICODE_TILES: [&'static str; 16] = [
         " ", "╹", "╺", "┗", "╻", "┃", "┏", "┣", "╸", "┛", "━", "┻", "┓", "┫", "┳", "╋",
     ];
 
@@ -47,41 +53,42 @@ impl Tile {
 
     /// creates new [Tile] from supplied value and disregards higher bits
     pub const fn truncate(value: u8) -> Self {
-        Tile(value & 0xF)
+        Tile(value & Tile::USED_BITS)
     }
 
-    pub const fn has_connection_up(self) -> bool {
+    pub const fn has_connection_up(&self) -> bool {
         test_bit(self.0, 3)
     }
 
-    pub const fn has_connection_right(self) -> bool {
+    pub const fn has_connection_right(&self) -> bool {
         test_bit(self.0, 2)
     }
 
-    pub const fn has_connection_down(self) -> bool {
+    pub const fn has_connection_down(&self) -> bool {
         test_bit(self.0, 1)
     }
 
-    pub const fn has_connection_left(self) -> bool {
+    pub const fn has_connection_left(&self) -> bool {
         test_bit(self.0, 0)
     }
 
     // rotates the 4 least significant bits
-    // number parameter must be used modulo 4
-    pub const fn rotate_clockwise(self, number: u8) -> Self {
-        let number = number % 4;
-        Tile::truncate((self.0 << number) | (self.0 >> (Tile::BIT_SIZE - number)))
+    // 0100 -> 1000
+    pub fn rotated_clockwise(&self, repetitions: u8) -> Self {
+        let repetitions = repetitions % 4;
+        let rotated = (self.0 << repetitions) | (self.0 >> (Tile::BIT_SIZE - repetitions));
+        Tile::truncate(rotated)
     }
 
-    pub const fn rotate_counterclockwise(self, number: u8) -> Self {
-        Tile::truncate((self.0 >> number) | (self.0 << (Tile::BIT_SIZE - number)))
+    pub fn rotated_counterclockwise(&self, repetitions: u8) -> Self {
+        self.rotated_clockwise(4 - repetitions % 4)
     }
 }
 
 #[cfg(test)]
 mod tests {
 
-    use crate::Tile;
+    use super::Tile;
 
     #[quickcheck]
     fn tile_construction_and_deconstruction(value: u8) -> bool {
@@ -92,14 +99,39 @@ mod tests {
     }
 
     #[quickcheck]
-    fn rotate_clockwise_4times_is_identity(tile: Tile) -> bool {
-        let tile = Tile::truncate(tile.0);
-        tile.rotate_clockwise(4) == tile
+    fn rotate_clockwise_4_times_is_identity(tile: Tile) -> bool {
+        tile == tile.rotated_clockwise(4)
     }
 
     #[quickcheck]
-    fn rotate_counterclockwise_4times_is_identity(tile: Tile) -> bool {
-        let tile = Tile::truncate(tile.0);
-        tile.rotate_counterclockwise(4) == tile
+    fn repeated_clockwise_rotation_is_clockwise_rotation_with_repetitions(
+        tile: Tile,
+        repetitions: u8,
+    ) -> bool {
+        let successive = (0..repetitions).fold(tile, |acc, _| acc.rotated_clockwise(1));
+        successive == tile.rotated_clockwise(repetitions)
+    }
+
+    #[quickcheck]
+    fn rotate_clockwise_preserves_number_of_connections(tile: Tile, rotations: u8) -> bool {
+        tile.0.count_ones() == tile.rotated_clockwise(rotations).0.count_ones()
+    }
+
+    #[quickcheck]
+    fn rotate_counterclockwise_4_times_is_identity(tile: Tile) -> bool {
+        tile == tile.rotated_counterclockwise(4)
+    }
+
+    fn repeated_counterclockwise_rotation_is_counterclockwise_rotation_with_repetitions(
+        tile: Tile,
+        repetitions: u8,
+    ) -> bool {
+        let successive = (0..repetitions).fold(tile, |acc, _| acc.rotated_clockwise(1));
+        successive == tile.rotated_clockwise(repetitions)
+    }
+
+    #[quickcheck]
+    fn rotate_counterclockwise_preserves_number_of_connections(tile: Tile, rotations: u8) -> bool {
+        tile.0.count_ones() == tile.rotated_clockwise(rotations).0.count_ones()
     }
 }
