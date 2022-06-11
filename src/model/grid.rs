@@ -75,6 +75,13 @@ impl<A> Grid<A> {
         &self.elements[..]
     }
 
+    pub fn elements2(&self) -> Vec<A> 
+    where
+        A: Clone    
+    {
+        self.elements.clone()
+    }
+
     // pub fn get_mut(&mut self, index: Coordinate<usize>) -> Option<&mut A>
     // where
     //     A: Copy,
@@ -174,7 +181,7 @@ impl GameBoard for Grid<Tile> {
     }
 
     fn is_solved(&self) -> bool {
-        // currently implemented as pure function on gameboard with no caching
+        // currently implemented as pure function on gameboard without caching
         // in case of performance issues use caching of already solved grid regions
         //
         // algorithm
@@ -182,7 +189,7 @@ impl GameBoard for Grid<Tile> {
         // split up grid in all complete horizontal and vertical sections by coordinates
         // transform coordinates into respective tiles and enclose each section with empty sentinel tiles
         // to ensure absence of connections pointing outside the grid
-        // ensure all neighboring tiles in sections have matching connections, either both or neither connection pointing to each
+        // ensure all neighboring tiles in sections have matching connections, either both or neither connection pointing to each other
         //
         // Tile is newtype around integer, owned vs borrowed irrelevant
 

@@ -1,7 +1,9 @@
 use super::accesserror::AccessError;
 
 /// complete interface to interact with game
-// missing: query access for observer pattern
+// sending information to the view:
+//  1. return changed grid parts as list of actions
+//  2. send whole grid as `HasMap Coordinate Tile`
 pub trait GameBoard
 where
     Self: Sized,
