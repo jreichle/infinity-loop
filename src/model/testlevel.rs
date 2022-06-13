@@ -1,4 +1,4 @@
-use super::{grid::Grid, tile::Tile};
+use super::{grid::Grid, squaretile::SquareTile};
 
 /// char to tile mapping
 ///
@@ -10,36 +10,36 @@ use super::{grid::Grid, tile::Tile};
 /// | 2           | 'L'       | '┗', '┏', '┛', '┓' |
 /// | 3           | 'T'       | '┣', '┻', '┫', '┳' |
 /// | 4           | '+'       | '╋'                |
-pub fn char_to_tile(tile_character: char) -> Result<Tile, String> {
+pub fn char_to_tile(tile_character: char) -> Result<SquareTile, String> {
     match tile_character {
-        ' ' => Ok(Tile::new(0b0000)),
-        '-' => Ok(Tile::new(0b1000)),
-        'I' => Ok(Tile::new(0b1010)),
-        'L' => Ok(Tile::new(0b1100)),
-        'T' => Ok(Tile::new(0b1110)),
-        '+' => Ok(Tile::new(0b1111)),
+        ' ' => Ok(SquareTile::new(0b0000)),
+        '-' => Ok(SquareTile::new(0b1000)),
+        'I' => Ok(SquareTile::new(0b1010)),
+        'L' => Ok(SquareTile::new(0b1100)),
+        'T' => Ok(SquareTile::new(0b1110)),
+        '+' => Ok(SquareTile::new(0b1111)),
         c => Err(format!("parsing error: unknown character {c}")),
     }
 }
 
-pub fn unicode_to_tile(tile_character: char) -> Result<Tile, String> {
+pub fn unicode_to_tile(tile_character: char) -> Result<SquareTile, String> {
     match tile_character {
-        ' ' => Ok(Tile::new(0b0000)),
-        '╹' => Ok(Tile::new(0b1000)),
-        '╺' => Ok(Tile::new(0b0100)),
-        '┗' => Ok(Tile::new(0b1100)),
-        '╻' => Ok(Tile::new(0b0010)),
-        '┃' => Ok(Tile::new(0b1010)),
-        '┏' => Ok(Tile::new(0b0110)),
-        '┣' => Ok(Tile::new(0b1110)),
-        '╸' => Ok(Tile::new(0b0001)),
-        '┛' => Ok(Tile::new(0b1001)),
-        '━' => Ok(Tile::new(0b0101)),
-        '┻' => Ok(Tile::new(0b1101)),
-        '┓' => Ok(Tile::new(0b0011)),
-        '┫' => Ok(Tile::new(0b1011)),
-        '┳' => Ok(Tile::new(0b0111)),
-        '╋' => Ok(Tile::new(0b1111)),
+        ' ' => Ok(SquareTile::new(0b0000)),
+        '╹' => Ok(SquareTile::new(0b1000)),
+        '╺' => Ok(SquareTile::new(0b0100)),
+        '┗' => Ok(SquareTile::new(0b1100)),
+        '╻' => Ok(SquareTile::new(0b0010)),
+        '┃' => Ok(SquareTile::new(0b1010)),
+        '┏' => Ok(SquareTile::new(0b0110)),
+        '┣' => Ok(SquareTile::new(0b1110)),
+        '╸' => Ok(SquareTile::new(0b0001)),
+        '┛' => Ok(SquareTile::new(0b1001)),
+        '━' => Ok(SquareTile::new(0b0101)),
+        '┻' => Ok(SquareTile::new(0b1101)),
+        '┓' => Ok(SquareTile::new(0b0011)),
+        '┫' => Ok(SquareTile::new(0b1011)),
+        '┳' => Ok(SquareTile::new(0b0111)),
+        '╋' => Ok(SquareTile::new(0b1111)),
         c => Err(format!("parsing error: unknown character {c}")),
     }
 }
@@ -48,9 +48,9 @@ pub fn unicode_to_tile(tile_character: char) -> Result<Tile, String> {
 ///
 /// expects newline delimited string
 /// relies on internal vector layout in grid
-pub fn parse_level<F>(leveldata: &str, converter: F) -> Result<Grid<Tile>, String>
+pub fn parse_level<F>(leveldata: &str, converter: F) -> Result<Grid<SquareTile>, String>
 where
-    F: Fn(char) -> Result<Tile, String>,
+    F: Fn(char) -> Result<SquareTile, String>,
 {
     let lines = leveldata.lines().collect::<Vec<_>>();
 
@@ -71,7 +71,7 @@ where
 }
 
 /// relies on internal vector layout in grid
-pub fn serialize_level<F: Fn(Tile) -> char>(grid: Grid<Tile>, converter: F) -> String {
+pub fn serialize_level<F: Fn(SquareTile) -> char>(grid: Grid<SquareTile>, converter: F) -> String {
     grid.elements2()
         .into_iter()
         .map(converter)

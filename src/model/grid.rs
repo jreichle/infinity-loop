@@ -9,7 +9,7 @@ use quickcheck::{Arbitrary, Gen};
 use super::accesserror::AccessError;
 use super::coordinate::Coordinate;
 use super::gameboard::GameBoard;
-use super::tile::Tile;
+use super::squaretile::SquareTile;
 
 /// gameboard as 2D-grid implemented with a flattened [Vec]
 ///
@@ -169,9 +169,9 @@ impl<A: Clone> Grid<A> {
     }
 }
 
-impl GameBoard for Grid<Tile> {
+impl GameBoard for Grid<SquareTile> {
     type Index = Coordinate<usize>;
-    type Tile = Tile;
+    type Tile = SquareTile;
 
     fn rotate_clockwise(&self, index: Self::Index) -> Result<Self, AccessError> {
         self.adjust_at(index, |x| x.rotated_clockwise(1))
@@ -199,9 +199,9 @@ impl GameBoard for Grid<Tile> {
             column: columns,
         } = self.dimensions();
 
-        let enclose_sentinels = |mut v: Vec<Tile>| {
-            v.insert(0, Tile::default());
-            v.push(Tile::default());
+        let enclose_sentinels = |mut v: Vec<SquareTile>| {
+            v.insert(0, SquareTile::default());
+            v.push(SquareTile::default());
             v
         };
         let row_slice = |r| {
@@ -326,7 +326,7 @@ mod grid_tests {
 #[cfg(test)]
 mod gameboard_tests {
 
-    use super::{GameBoard, Grid, Tile};
+    use super::{GameBoard, Grid, SquareTile};
 
     #[quickcheck]
     fn empty_gameboard_is_solved() -> bool {
@@ -335,7 +335,7 @@ mod gameboard_tests {
 
     // single tile gameboard is solved iff tile has no connections
     #[quickcheck]
-    fn single_tile_gameboard_is_solved(tile: Tile) -> bool {
+    fn single_tile_gameboard_is_solved(tile: SquareTile) -> bool {
         let is_solved = Grid::new(1, 1, vec![tile]).is_solved();
         if tile.has_connection_up()
             || tile.has_connection_right()

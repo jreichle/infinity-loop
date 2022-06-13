@@ -11,10 +11,10 @@ mod model;
 
 use model::grid::*;
 use model::testlevel::*;
-use model::tile::*;
+use model::squaretile::*;
 
 fn main() {
-    let levels: Vec<Grid<Tile>> = TEST_LEVELS
+    let levels: Vec<Grid<SquareTile>> = TEST_LEVELS
         .map(|l| parse_level(l, char_to_tile).unwrap())
         .to_vec();
     levels
