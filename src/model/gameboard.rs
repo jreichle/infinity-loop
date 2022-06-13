@@ -1,3 +1,5 @@
+use std::collections::HashMap;
+
 use super::accesserror::AccessError;
 
 /// complete interface to interact with game
@@ -10,6 +12,7 @@ where
 {
     /// defines indexing system for the given [Model]
     type Index;
+    type Tile;
 
     /// performs single clockwise rotation
     ///
@@ -25,4 +28,7 @@ where
 
     /// queries if gameboard is solved
     fn is_solved(&self) -> bool;
+
+    /// query the current status
+    fn serialize_board(&self) -> HashMap<Self::Index, &Self::Tile>;
 }

@@ -75,9 +75,9 @@ impl<A> Grid<A> {
         &self.elements[..]
     }
 
-    pub fn elements2(&self) -> Vec<A> 
+    pub fn elements2(&self) -> Vec<A>
     where
-        A: Clone    
+        A: Clone,
     {
         self.elements.clone()
     }
@@ -171,6 +171,7 @@ impl<A: Clone> Grid<A> {
 
 impl GameBoard for Grid<Tile> {
     type Index = Coordinate<usize>;
+    type Tile = Tile;
 
     fn rotate_clockwise(&self, index: Self::Index) -> Result<Self, AccessError> {
         self.adjust_at(index, |x| x.rotated_clockwise(1))
@@ -230,6 +231,22 @@ impl GameBoard for Grid<Tile> {
                 .all(|(tu, td)| tu.has_connection_down() == td.has_connection_up())
         });
         rows_solved && columns_solved
+    }
+
+    fn serialize_board(&self) -> std::collections::HashMap<Self::Index, &Self::Tile> {
+        self.elements()
+            .into_iter()
+            .zip(0..)
+            .map(|(x, i)| {
+                (
+                    Coordinate {
+                        row: i / self.rows,
+                        column: i % self.rows,
+                    },
+                    x,
+                )
+            })
+            .collect()
     }
 }
 

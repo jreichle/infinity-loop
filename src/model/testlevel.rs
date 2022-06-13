@@ -70,18 +70,16 @@ where
         .map(|v| Grid::new(rows, columns, v))
 }
 
-
-
 /// relies on internal vector layout in grid
 pub fn serialize_level<F: Fn(Tile) -> char>(grid: Grid<Tile>, converter: F) -> String {
     grid.elements2()
-    .into_iter()
-    .map(converter)
-    .collect::<Vec<char>>()
-    .chunks(grid.columns())
-    .map(|chunk| chunk.into_iter().collect())
-    .collect::<Vec<String>>()
-    .join("\n")
+        .into_iter()
+        .map(converter)
+        .collect::<Vec<char>>()
+        .chunks(grid.columns())
+        .map(|chunk| chunk.into_iter().collect())
+        .collect::<Vec<String>>()
+        .join("\n")
 }
 
 pub const LEVEL_MALFORMED: &str = " ";
