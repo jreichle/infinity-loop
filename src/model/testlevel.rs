@@ -116,21 +116,24 @@ pub const TEST_LEVELS: [&str; 20] = [
     "L- \nTL-\nIII\nLTT\nLTL\n-LL\n -L",
 ];
 
-
 #[cfg(test)]
 mod tests {
 
-    use crate::model::{tile::{Tile, Square}, testlevel::unicode_to_tile};
+    use crate::model::{
+        testlevel::unicode_to_tile,
+        tile::{Square, Tile},
+    };
 
     #[quickcheck]
     fn display_then_unicode_to_tile_is_identity(tile: Tile<Square>) -> bool {
-        let tile_char = tile.to_string().chars().next().expect("expected single element string");
+        let tile_char = tile
+            .to_string()
+            .chars()
+            .next()
+            .expect("expected single element string");
         tile == unicode_to_tile(tile_char).unwrap()
     }
-
 }
-
-
 
 /*
 pub const LEVEL_1: &str = "

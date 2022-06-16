@@ -39,6 +39,8 @@ impl Arbitrary for Square {
     }
 }
 
+// clashes with EnumSetType autoderive
+
 // impl Not for Square {
 //     type Output = Self;
 //
@@ -52,6 +54,10 @@ impl Arbitrary for Square {
 //     }
 // }
 
+/// A tile is a 2D-shape with possible connections to orthogonal neighbor tiles.
+/// The possible directions for connections correspond to the number of enum values in the EnumSetType
+///
+/// Basic operations are checking present connections and rotating tiles
 #[derive(Debug, Clone, Copy, Hash, PartialEq, Eq, PartialOrd, Ord)]
 pub struct Tile<A: EnumSetType>(pub EnumSet<A>);
 
@@ -62,16 +68,25 @@ impl<A: EnumSetType> Default for Tile<A> {
 }
 
 impl<A: EnumSetType> Tile<A> {
+
+    /// rotates the tile clockwise by one step
+    /// 
+    /// each step is 360 degrees / number of enum values
     pub fn rotated_clockwise(&self, repetitions: u32) -> Self {
         let bit_rep = self.0.as_u32();
-        let repetitions = repetitions % 4;
+        let enum_values = EnumSet::<A>::bit_width();
+        let repetitions = repetitions % enum_values;
         let rotated_bit_rep =
-            (bit_rep << repetitions) | (bit_rep >> (EnumSet::<A>::bit_width() - repetitions));
+            (bit_rep << repetitions) | (bit_rep >> (enum_values - repetitions));
         Self(EnumSet::from_u32_truncated(rotated_bit_rep))
     }
 
+    /// rotates the tile counterclockwise by one step
+    /// 
+    /// each step is 360 degrees / number of enum values
     pub fn rotated_counterclockwise(&self, repetitions: u32) -> Self {
-        self.rotated_clockwise(4 - repetitions % 4)
+        let enum_values = EnumSet::<A>::bit_width();
+        self.rotated_clockwise( enum_values - repetitions % enum_values)
     }
 }
 
@@ -83,11 +98,26 @@ impl<A: 'static + EnumSetType> Arbitrary for Tile<A> {
 
 impl Display for Tile<Square> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{}", Self::UNICODE_TILES[self.0.as_usize()])
+        let set = self.0;
+        let mut index = 0;
+        if set.contains(Up) {
+            index += 1
+        }
+        if set.contains(Right) {
+            index += 2
+        }
+        if set.contains(Down) {
+            index += 4
+        }
+        if set.contains(Left) {
+            index += 8
+        }
+        write!(f, "{}", Self::UNICODE_TILES[index])
     }
 }
 
 impl Tile<Square> {
+    /// visualization for each configuration as UNICODE symbol
     const UNICODE_TILES: [&'static str; 16] = [
         " ", "╹", "╺", "┗", "╻", "┃", "┏", "┣", "╸", "┛", "━", "┻", "┓", "┫", "┳", "╋",
     ];
