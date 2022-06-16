@@ -6,17 +6,19 @@ use std::{
 
 use quickcheck::{Arbitrary, Gen};
 
-use super::accesserror::AccessError;
 use super::coordinate::Coordinate;
 use super::gameboard::GameBoard;
-use super::squaretile::SquareTile;
+use super::{
+    accesserror::AccessError,
+    tile::{Square, Tile},
+};
 
 /// gameboard as 2D-grid implemented with a flattened [Vec]
 ///
 /// defines the geometry of the puzzle
 ///
-/// invariant through game design: gameboard forms a recangle completely filled with [Tile]s
-/// invariant: ∀g: Grid. g.rows * g.columns == g.elements.len()
+/// * invariant through game design: gameboard forms a recangle completely filled with [Tile]s
+/// * invariant: ∀g: Grid. g.rows * g.columns == g.elements.len()
 #[derive(Debug, PartialEq, Eq, PartialOrd, Ord, Clone, Hash, Default)]
 pub struct Grid<A> {
     rows: usize,
@@ -169,6 +171,93 @@ impl<A: Clone> Grid<A> {
     }
 }
 
+impl GameBoard for Grid<Tile<Square>> {
+    type Index = Coordinate<usize>;
+
+    type Tile = Tile<Square>;
+
+    fn rotate_clockwise(&self, index: Self::Index) -> Result<Self, AccessError> {
+        self.adjust_at(index, |x| x.rotated_clockwise(1))
+    }
+
+    fn rotate_counterclockwise(&self, index: Self::Index) -> Result<Self, AccessError> {
+        self.adjust_at(index, |x| x.rotated_counterclockwise(1))
+    }
+
+    fn is_solved(&self) -> bool {
+        // currently implemented as pure function on gameboard without caching
+        // in case of performance issues use caching of already solved grid regions
+        //
+        // algorithm
+        //
+        // split up grid in all complete horizontal and vertical sections by coordinates
+        // transform coordinates into respective tiles and enclose each section with empty sentinel tiles
+        // to ensure absence of connections pointing outside the grid
+        // ensure all neighboring tiles in sections have matching connections, either both or neither connection pointing to each other
+        //
+        // Tile is newtype around integer, owned vs borrowed irrelevant
+
+        // better algorithm
+        // copy into new grid with borde of sentinel values
+        // for each (coord, v) except last column check connection to right neighbor
+        // for each (coord, v) except last row check connection to down neighbor
+
+        let Coordinate {
+            row: rows,
+            column: columns,
+        } = self.dimensions();
+
+        let enclose_sentinels = |mut v: Vec<Self::Tile>| {
+            v.insert(0, Self::Tile::default());
+            v.push(Self::Tile::default());
+            v
+        };
+        let row_slice = |r| {
+            (0..columns)
+                .map(|c| Coordinate { row: r, column: c })
+                .collect::<Vec<_>>()
+        };
+        let column_slice = |c| {
+            (0..rows)
+                .map(|r| Coordinate { row: r, column: c })
+                .collect::<Vec<_>>()
+        };
+
+        let to_tile =
+            |v: Vec<Coordinate<_>>| enclose_sentinels(v.into_iter().map(|c| self[c]).collect());
+
+        let rows_solved = (0..rows).map(row_slice).map(to_tile).all(|v| {
+            v[0..]
+                .into_iter()
+                .zip(v[1..].into_iter())
+                .all(|(tl, tr)| tl.0.contains(Square::Right) == tr.0.contains(Square::Left))
+        });
+        let columns_solved = (0..columns).map(column_slice).map(to_tile).all(|v| {
+            v[0..]
+                .into_iter()
+                .zip(v[1..].into_iter())
+                .all(|(tu, td)| tu.0.contains(Square::Down) == td.0.contains(Square::Up))
+        });
+        rows_solved && columns_solved
+    }
+
+    fn serialize_board(&self) -> std::collections::HashMap<Self::Index, &Self::Tile> {
+        self.elements()
+            .into_iter()
+            .zip(0..)
+            .map(|(x, i)| {
+                (
+                    Coordinate {
+                        row: i / self.rows,
+                        column: i % self.rows,
+                    },
+                    x,
+                )
+            })
+            .collect()
+    }
+}
+/*
 impl GameBoard for Grid<SquareTile> {
     type Index = Coordinate<usize>;
     type Tile = SquareTile;
@@ -249,6 +338,7 @@ impl GameBoard for Grid<SquareTile> {
             .collect()
     }
 }
+*/
 
 // Index trait is not designed to return Option
 impl<A> Index<Coordinate<usize>> for Grid<A> {
@@ -311,7 +401,7 @@ impl<A: Arbitrary> Arbitrary for Grid<A> {
 #[cfg(test)]
 mod grid_tests {
 
-    use crate::Grid;
+    use super::Grid;
 
     // restrict size of rows and columns to avoid excessive vector allocation
     #[quickcheck]
@@ -326,7 +416,7 @@ mod grid_tests {
 #[cfg(test)]
 mod gameboard_tests {
 
-    use super::{GameBoard, Grid, SquareTile};
+    use super::{GameBoard, Grid, Square, Tile};
 
     #[quickcheck]
     fn empty_gameboard_is_solved() -> bool {
@@ -335,16 +425,12 @@ mod gameboard_tests {
 
     // single tile gameboard is solved iff tile has no connections
     #[quickcheck]
-    fn single_tile_gameboard_is_solved(tile: SquareTile) -> bool {
+    fn single_tile_gameboard_is_solved(tile: Tile<Square>) -> bool {
         let is_solved = Grid::new(1, 1, vec![tile]).is_solved();
-        if tile.has_connection_up()
-            || tile.has_connection_right()
-            || tile.has_connection_down()
-            || tile.has_connection_left()
-        {
-            !is_solved
-        } else {
+        if tile.0.is_empty() {
             is_solved
+        } else {
+            !is_solved
         }
     }
 }

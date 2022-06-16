@@ -1,4 +1,12 @@
-use super::{grid::Grid, squaretile::SquareTile};
+use enumset::EnumSet;
+
+use super::{
+    grid::Grid,
+    tile::{
+        Square::{self, Down, Left, Right, Up},
+        Tile,
+    },
+};
 
 /// char to tile mapping
 ///
@@ -10,36 +18,36 @@ use super::{grid::Grid, squaretile::SquareTile};
 /// | 2           | 'L'       | '┗', '┏', '┛', '┓' |
 /// | 3           | 'T'       | '┣', '┻', '┫', '┳' |
 /// | 4           | '+'       | '╋'                |
-pub fn char_to_tile(tile_character: char) -> Result<SquareTile, String> {
+pub fn char_to_tile(tile_character: char) -> Result<Tile<Square>, String> {
     match tile_character {
-        ' ' => Ok(SquareTile::new(0b0000)),
-        '-' => Ok(SquareTile::new(0b1000)),
-        'I' => Ok(SquareTile::new(0b1010)),
-        'L' => Ok(SquareTile::new(0b1100)),
-        'T' => Ok(SquareTile::new(0b1110)),
-        '+' => Ok(SquareTile::new(0b1111)),
+        ' ' => Ok(Tile(EnumSet::empty())),
+        '-' => Ok(Tile(EnumSet::only(Up))),
+        'I' => Ok(Tile(Up | Down)),
+        'L' => Ok(Tile(Up | Right)),
+        'T' => Ok(Tile(Up | Right | Down)),
+        '+' => Ok(Tile(EnumSet::all())),
         c => Err(format!("parsing error: unknown character {c}")),
     }
 }
 
-pub fn unicode_to_tile(tile_character: char) -> Result<SquareTile, String> {
+pub fn unicode_to_tile(tile_character: char) -> Result<Tile<Square>, String> {
     match tile_character {
-        ' ' => Ok(SquareTile::new(0b0000)),
-        '╹' => Ok(SquareTile::new(0b1000)),
-        '╺' => Ok(SquareTile::new(0b0100)),
-        '┗' => Ok(SquareTile::new(0b1100)),
-        '╻' => Ok(SquareTile::new(0b0010)),
-        '┃' => Ok(SquareTile::new(0b1010)),
-        '┏' => Ok(SquareTile::new(0b0110)),
-        '┣' => Ok(SquareTile::new(0b1110)),
-        '╸' => Ok(SquareTile::new(0b0001)),
-        '┛' => Ok(SquareTile::new(0b1001)),
-        '━' => Ok(SquareTile::new(0b0101)),
-        '┻' => Ok(SquareTile::new(0b1101)),
-        '┓' => Ok(SquareTile::new(0b0011)),
-        '┫' => Ok(SquareTile::new(0b1011)),
-        '┳' => Ok(SquareTile::new(0b0111)),
-        '╋' => Ok(SquareTile::new(0b1111)),
+        ' ' => Ok(Tile(EnumSet::empty())),
+        '╹' => Ok(Tile(EnumSet::only(Up))),
+        '╺' => Ok(Tile(EnumSet::only(Right))),
+        '┗' => Ok(Tile(Up | Right)),
+        '╻' => Ok(Tile(EnumSet::only(Down))),
+        '┃' => Ok(Tile(Up | Down)),
+        '┏' => Ok(Tile(Right | Down)),
+        '┣' => Ok(Tile(Up | Right | Down)),
+        '╸' => Ok(Tile(EnumSet::only(Left))),
+        '┛' => Ok(Tile(Up | Left)),
+        '━' => Ok(Tile(Right | Left)),
+        '┻' => Ok(Tile(Up | Right | Left)),
+        '┓' => Ok(Tile(Down | Left)),
+        '┫' => Ok(Tile(Up | Down | Left)),
+        '┳' => Ok(Tile(Right | Down | Left)),
+        '╋' => Ok(Tile(EnumSet::all())),
         c => Err(format!("parsing error: unknown character {c}")),
     }
 }
@@ -48,9 +56,9 @@ pub fn unicode_to_tile(tile_character: char) -> Result<SquareTile, String> {
 ///
 /// expects newline delimited string
 /// relies on internal vector layout in grid
-pub fn parse_level<F>(leveldata: &str, converter: F) -> Result<Grid<SquareTile>, String>
+pub fn parse_level<A, F>(leveldata: &str, converter: F) -> Result<Grid<A>, String>
 where
-    F: Fn(char) -> Result<SquareTile, String>,
+    F: Fn(char) -> Result<A, String>,
 {
     let lines = leveldata.lines().collect::<Vec<_>>();
 
@@ -71,7 +79,7 @@ where
 }
 
 /// relies on internal vector layout in grid
-pub fn serialize_level<F: Fn(SquareTile) -> char>(grid: Grid<SquareTile>, converter: F) -> String {
+pub fn serialize_level<A: Clone, F: Fn(A) -> char>(grid: Grid<A>, converter: F) -> String {
     grid.elements2()
         .into_iter()
         .map(converter)
@@ -107,6 +115,22 @@ pub const TEST_LEVELS: [&str; 20] = [
     "---\nITL\nII \nIT-\nIL-\nLI-",
     "L- \nTL-\nIII\nLTT\nLTL\n-LL\n -L",
 ];
+
+
+#[cfg(test)]
+mod tests {
+
+    use crate::model::{tile::{Tile, Square}, testlevel::unicode_to_tile};
+
+    #[quickcheck]
+    fn display_then_unicode_to_tile_is_identity(tile: Tile<Square>) -> bool {
+        let tile_char = tile.to_string().chars().next().expect("expected single element string");
+        tile == unicode_to_tile(tile_char).unwrap()
+    }
+
+}
+
+
 
 /*
 pub const LEVEL_1: &str = "

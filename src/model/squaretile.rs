@@ -68,8 +68,20 @@ impl SquareTile {
         test_bit(self.0, 1)
     }
 
+    /// query for the left connection
     pub const fn has_connection_left(&self) -> bool {
         test_bit(self.0, 0)
+    }
+
+    /// returns the number of connections
+    ///
+    /// return value is between 0 and 4 inclusive
+    pub const fn number_of_connections(&self) -> u32 {
+        self.0.count_ones()
+    }
+
+    pub const fn has_no_connection(&self) -> bool {
+        self.0 == 0
     }
 
     // rotates the 4 least significant bits
@@ -122,16 +134,20 @@ mod tests {
         tile == tile.rotated_counterclockwise(4)
     }
 
+    #[quickcheck]
     fn repeated_counterclockwise_rotation_is_counterclockwise_rotation_with_repetitions(
         tile: SquareTile,
         repetitions: u8,
     ) -> bool {
-        let successive = (0..repetitions).fold(tile, |acc, _| acc.rotated_clockwise(1));
+        let successive = (0..repetitions).fold(tile, |acc, _| acc.rotated_counterclockwise(1));
         successive == tile.rotated_counterclockwise(repetitions)
     }
 
     #[quickcheck]
-    fn rotate_counterclockwise_preserves_number_of_connections(tile: SquareTile, rotations: u8) -> bool {
+    fn rotate_counterclockwise_preserves_number_of_connections(
+        tile: SquareTile,
+        rotations: u8,
+    ) -> bool {
         tile.0.count_ones() == tile.rotated_counterclockwise(rotations).0.count_ones()
     }
 }

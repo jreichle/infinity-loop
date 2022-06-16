@@ -6,10 +6,7 @@ use super::accesserror::AccessError;
 // sending information to the view:
 //  1. return changed grid parts as list of actions
 //  2. send whole grid as `HasMap Coordinate Tile`
-pub trait GameBoard
-where
-    Self: Sized,
-{
+pub trait GameBoard: Sized {
     /// defines indexing system for the given [Model]
     type Index;
     type Tile;
