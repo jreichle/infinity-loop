@@ -248,8 +248,8 @@ impl GameBoard for Grid<Tile<Square>> {
             .map(|(x, i)| {
                 (
                     Coordinate {
-                        row: i / self.rows,
-                        column: i % self.rows,
+                        row: i % self.columns,
+                        column: i / self.columns,
                     },
                     x,
                 )
@@ -264,7 +264,7 @@ impl<A> Index<Coordinate<usize>> for Grid<A> {
 
     fn index(&self, index: Coordinate<usize>) -> &Self::Output {
         self.ensure_index_in_bounds(index).expect("Grid::index: ");
-        &self.elements[index.row + self.columns * index.column]
+        &self.elements[index.row + self.rows * index.column]
     }
 }
 
@@ -272,7 +272,7 @@ impl<A> IndexMut<Coordinate<usize>> for Grid<A> {
     fn index_mut(&mut self, index: Coordinate<usize>) -> &mut Self::Output {
         self.ensure_index_in_bounds(index)
             .expect("Grid::index_mut: ");
-        &mut self.elements[index.row + self.columns * index.column]
+        &mut self.elements[index.row + self.rows * index.column]
     }
 }
 
