@@ -21,8 +21,8 @@ use super::{
 /// * invariant: ∀g: Grid. g.rows * g.columns == g.elements.len()
 #[derive(Debug, PartialEq, Eq, PartialOrd, Ord, Clone, Hash, Default)]
 pub struct Grid<A> {
-    rows: usize,
-    columns: usize,
+    pub rows: usize,
+    pub columns: usize,
     elements: Vec<A>,
 }
 

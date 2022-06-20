@@ -121,6 +121,24 @@ impl Tile<Square> {
     const UNICODE_TILES: [&'static str; 16] = [
         " ", "╹", "╺", "┗", "╻", "┃", "┏", "┣", "╸", "┛", "━", "┻", "┓", "┫", "┳", "╋",
     ];
+
+    pub fn get_value(&self) -> &str {
+        let set = self.0;
+        let mut index = 0;
+        if set.contains(Up) {
+            index += 1
+        }
+        if set.contains(Right) {
+            index += 2
+        }
+        if set.contains(Down) {
+            index += 4
+        }
+        if set.contains(Left) {
+            index += 8
+        }
+        Self::UNICODE_TILES[index]
+    }
 }
 
 #[cfg(test)]

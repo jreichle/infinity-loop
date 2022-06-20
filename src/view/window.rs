@@ -3,8 +3,13 @@ use pixels::{Pixels, SurfaceTexture};
 use winit::event::{Event, WindowEvent};
 use winit::event_loop::{ControlFlow, EventLoop};
 use winit::window::WindowBuilder;
+use winit::dpi::PhysicalSize;
 
 use crate::model::tile::*;
+use crate::model::grid::*;
+use crate::model::testlevel::*;
+use crate::model::gameboard::*;
+use crate::model::coordinate::Coordinate;
 
 // use https://docs.rs/buttons/latest/buttons/ for button -- has winit support
 
@@ -19,11 +24,15 @@ pub fn initiate_window() {
     let surface_texture = SurfaceTexture::new(window_size.width, window_size.height, &window);
 
     let mut pixels;
-    if let Ok(buffer) = Pixels::new(320, 240, surface_texture) {
+    if let Ok(buffer) = Pixels::new(window_size.width, window_size.height, surface_texture) {
         pixels = buffer;
     } else {
         panic!("Problem! TODO!!!"); // TODO: error handling
     }
+
+    let levels = TEST_LEVELS
+        .map(|l| parse_level(l, char_to_tile).unwrap())
+        .to_vec();
 
     event_loop.run(move |event, _, control_flow| {
         *control_flow = ControlFlow::Wait; // suspend thread until new event arrives
@@ -33,7 +42,7 @@ pub fn initiate_window() {
                 ..
             } => *control_flow = ControlFlow::Exit,
             Event::RedrawRequested(_) => {
-                draw(pixels.get_frame());
+                draw(pixels.get_frame(), window_size, &levels[0]);
                 if pixels.render().is_err() {
                     *control_flow = ControlFlow::Exit;
                     return;
@@ -50,18 +59,82 @@ pub fn initiate_window() {
 // - how big are tiles currently
 // - how big is canvas -> padding
 
-fn draw(frame: &mut [u8]) {
+fn draw(frame: &mut [u8], window_size: PhysicalSize<u32>, board: &Grid<Tile<Square>>) {
+    let tile_set = board.serialize_board();
+
+    for (key, value) in &tile_set {
+        println!("{} / {}", key, value);
+    }
+
+    let mut tile_width : usize = (window_size.width as usize) / (board.columns as usize);
+    if tile_width % 2 == 0 { tile_width -= 1; }
+
+    let mut tile_height : usize = (window_size.height as usize) / (board.rows as usize);
+    if tile_height % 2 == 0 { tile_height -= 1; }
+
+    let tile_center_x = tile_width / 2 + 1;
+    let tile_center_y = tile_height / 2 + 1;
+
     for (i, pixel) in frame.chunks_exact_mut(4).enumerate() {
-        let x = (i % 320 as usize) as i16;
-        let y = (i / 320 as usize) as i16;
+        let x = i % window_size.width as usize;
+        let y = i / window_size.width as usize;
 
-        let inside = x >= 10 && x < 110 && y > 20 && y < 120;
+        let tile_coord_x = x / tile_width;
+        let tile_coord_y = y / tile_height;
 
-        let rgba = if inside {
-            [0x5e, 0x99, 0x39, 0xff]
-        } else {
-            [0x48, 0xb2, 0xe8, 0xff]
-        };
+        let tile;
+        if let Some(result) = tile_set.get(&Coordinate {
+            column: tile_coord_y,
+            row: tile_coord_x
+        })
+        {
+            tile = result.get_value();
+        }
+        else
+        {
+            continue
+        }
+
+        let norm_x = std::cmp::max(0, (x as i16) - ((tile_coord_x * tile_width) as i16)) as usize;
+        let norm_y = std::cmp::max(0, (y as i16) - ((tile_coord_y * tile_height) as i16)) as usize;
+        let color1 = [0xff, 0xff, 0xff, 0xff];
+        let color2 = [0x00, 0x00, 0x00, 0xff];
+
+        let rgba =
+            if norm_x != tile_center_x && norm_y != tile_center_y
+            {
+                color1
+            }
+            else if norm_x == tile_center_x && norm_y == tile_center_y && tile == " "
+            {
+                color2
+            }
+            else if norm_x == tile_center_x && norm_y < tile_center_y && "╹┗┃┣┛┻┫╋".contains(tile)
+            {
+                color2
+            }
+            else if norm_x == tile_center_x && norm_y > tile_center_y && "╻┃┏┣┓┫┳╋".contains(tile)
+            {
+                color2
+            }
+            else if norm_x < tile_center_x && norm_y == tile_center_y && "╸┛━┻┓┫┳╋".contains(tile)
+            {
+                color2
+            }
+            else if norm_x > tile_center_x && norm_y == tile_center_y && "╺┗┏┣━┻┳╋".contains(tile)
+            {
+                color2
+            }
+            else
+            {
+                color1
+            };
+
+        // println!("x:{} \t y:{} \t tile:{} \t tile_coord_x:{} \t tile_coord_y:{} \t norm_x:{} \t norm_y:{} \t tile_width:{} \t tile_height:{} \t tile_center_x:{} \t tile_center_y:{}",
+        //     x, y, tile, tile_coord_x, tile_coord_y, norm_x, norm_y, tile_width, tile_height, tile_center_x, tile_center_y);
+
+        // println!("tile:{} \t tile_coord_x:{} \t tile_coord_y:{}",
+        //     tile, tile_coord_x, tile_coord_y);
 
         pixel.copy_from_slice(&rgba);
     }
