@@ -12,6 +12,15 @@ use std::collections::HashMap;
 use std::collections::HashSet;
 use std::iter::FromIterator;
 
+fn get_opposite_direction(dir: Square) -> Square {
+    match dir {
+        Up => Down,
+        Right => Left,
+        Down => Up,
+        Left => Right
+    }
+}
+
 // Get Tile object with given bool for all four directions (Up, Right, Down, Left)
 fn get_tile_from_bool(up: bool, right: bool, down: bool, left: bool) -> Tile<Square> {
     let mut tile_enum: EnumSet<Square> = EnumSet::new();
@@ -46,88 +55,71 @@ fn get_all_possible_tiles() -> Vec<Tile<Square>> {
     tiles
 }
 
-
-// Get rules set for each direction (connection available)
-fn parse_direction_rules(
-    available_tiles: &Vec<Tile<Square>>,
-) -> HashMap<Square, Vec<Tile<Square>>> {
-    let mut rule_map = HashMap::new();
-
-    let up_tiles: Vec<Tile<Square>> = available_tiles.iter().filter(|tile| tile.0.contains(Down)).cloned().collect();
-    let right_tiles: Vec<Tile<Square>> = available_tiles.iter().filter(|tile| tile.0.contains(Left)).cloned().collect();
-    let down_tiles: Vec<Tile<Square>> = available_tiles.iter().filter(|tile| tile.0.contains(Up)).cloned().collect();
-    let left_tiles: Vec<Tile<Square>> = available_tiles.iter().filter(|tile| tile.0.contains(Right)).cloned().collect();
-
-    rule_map.insert(Up, up_tiles);
-    rule_map.insert(Right, right_tiles);
-    rule_map.insert(Down, down_tiles);
-    rule_map.insert(Left, left_tiles);
-
-    rule_map
-}
-
-// Get rules set for without each direction (connection not available)
-fn parse_not_direction_rules(
-    available_tiles: &Vec<Tile<Square>>,
-) -> HashMap<Square, Vec<Tile<Square>>> {
-    let mut rule_map = HashMap::new();
-
-    let up_tiles: Vec<Tile<Square>> = available_tiles.iter().filter(|tile| !tile.0.contains(Down)).cloned().collect();
-    let right_tiles: Vec<Tile<Square>> = available_tiles.iter().filter(|tile| !tile.0.contains(Left)).cloned().collect();
-    let down_tiles: Vec<Tile<Square>> = available_tiles.iter().filter(|tile| !tile.0.contains(Up)).cloned().collect();
-    let left_tiles: Vec<Tile<Square>> = available_tiles.iter().filter(|tile| !tile.0.contains(Right)).cloned().collect();
-
-    rule_map.insert(Up, up_tiles);
-    rule_map.insert(Right, right_tiles);
-    rule_map.insert(Down, down_tiles);
-    rule_map.insert(Left, left_tiles);
-
-    rule_map
-}
-
 fn parse_rules(
     available_tiles: &Vec<Tile<Square>>,
 ) -> HashMap<Tile<Square>, HashMap<Square, Vec<Tile<Square>>>> {
-    
-    let dir_rule_map = parse_direction_rules(available_tiles);
-    let not_dir_rule_map = parse_not_direction_rules(available_tiles);
+
+    /// Get rules set for each direction 
+    /// # Arguments
+    /// `is_connected` - if the rule set should be for connecting matches 
+    fn parse_direction_rules(
+        available_tiles: &Vec<Tile<Square>>,
+        is_connected: bool,
+    ) -> HashMap<Square, Vec<Tile<Square>>> {
+        let mut rule_map = HashMap::new();
+
+        // check if tile matches 
+        let tile_matches: fn(&Tile<Square>, Square) -> bool = match is_connected {
+            true => |tile, dir| tile.0.contains(get_opposite_direction(dir)),
+            false => |tile, dir| !tile.0.contains(get_opposite_direction(dir)),
+        };
+
+        let up_tiles: Vec<Tile<Square>> = available_tiles
+            .iter()
+            .filter(|tile| tile_matches(tile, Up))
+            .cloned()
+            .collect();
+        let right_tiles: Vec<Tile<Square>> = available_tiles
+            .iter()
+            .filter(|tile| tile_matches(tile, Right))
+            .cloned()
+            .collect();
+        let down_tiles: Vec<Tile<Square>> = available_tiles
+            .iter()
+            .filter(|tile| tile_matches(tile, Down))
+            .cloned()
+            .collect();
+        let left_tiles: Vec<Tile<Square>> = available_tiles
+            .iter()
+            .filter(|tile| tile_matches(tile, Left))
+            .cloned()
+            .collect();
+
+        rule_map.insert(Up, up_tiles);
+        rule_map.insert(Right, right_tiles);
+        rule_map.insert(Down, down_tiles);
+        rule_map.insert(Left, left_tiles);
+
+        rule_map
+    }
+
+    let dir_rule_map = parse_direction_rules(available_tiles, true);
+    let not_dir_rule_map = parse_direction_rules(available_tiles, false);
 
     let mut rule_map = HashMap::new(); //parse_rules(available_tiles);
 
     for tile in available_tiles.iter() {
         let mut tile_rule: HashMap<Square, Vec<Tile<Square>>> = HashMap::new();
-        let (left_tiles, down_tiles, right_tiles, up_tiles): (Vec<Tile<Square>>, Vec<Tile<Square>>, Vec<Tile<Square>>, Vec<Tile<Square>>);
 
-        if tile.0.contains(Left) {  
-            left_tiles = dir_rule_map.get(&Left).unwrap().clone();
-        } else {
-            left_tiles = not_dir_rule_map.get(&Left).unwrap().clone();
+        for dir in [Left, Down, Right, Up] {
+            let dir_set;
+            if tile.0.contains(dir) {
+                dir_set = dir_rule_map.get(&dir).unwrap().clone();
+            } else {
+                dir_set = not_dir_rule_map.get(&dir).unwrap().clone();
+            }
+            tile_rule.insert(dir, dir_set);
         }
-        tile_rule.insert(Left, left_tiles);
-        
-        if tile.0.contains(Down) {
-            down_tiles = dir_rule_map.get(&Down).unwrap().clone();
-        } else {
-            down_tiles = not_dir_rule_map.get(&Down).unwrap().clone();
-        }
-        tile_rule.insert(Down, down_tiles);
-
-        if tile.0.contains(Right) {
-            right_tiles = dir_rule_map.get(&Right).unwrap().clone();
-        } else {
-            right_tiles = not_dir_rule_map.get(&Right).unwrap().clone();
-        }
-        tile_rule.insert(Right, right_tiles);
-
-
-        if tile.0.contains(Up) {
-            up_tiles = dir_rule_map.get(&Up).unwrap().clone();
-        } else {
-            up_tiles = not_dir_rule_map.get(&Up).unwrap().clone();
-        }
-
-        tile_rule.insert(Up, up_tiles);
-
         rule_map.insert(tile.clone(), tile_rule);
     }
     rule_map
