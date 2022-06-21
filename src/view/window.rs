@@ -23,6 +23,9 @@ pub fn initiate_window() {
     let window_size = window.inner_size();
     let surface_texture = SurfaceTexture::new(window_size.width, window_size.height, &window);
 
+    let mut index = 0;
+    let mut counter = 0;
+
     let mut pixels;
     if let Ok(buffer) = Pixels::new(window_size.width, window_size.height, surface_texture) {
         pixels = buffer;
@@ -35,22 +38,29 @@ pub fn initiate_window() {
         .to_vec();
 
     event_loop.run(move |event, _, control_flow| {
-        *control_flow = ControlFlow::Wait; // suspend thread until new event arrives
-        match event {
-            Event::WindowEvent {
-                event: WindowEvent::CloseRequested,
-                ..
-            } => *control_flow = ControlFlow::Exit,
-            Event::RedrawRequested(_) => {
-                draw(pixels.get_frame(), window_size, &levels[0]);
+        counter += 1;
+        if counter % 5 == 0
+        {
+            counter = 0;
+            index = (index + 1) % 20;
+        }
+
+        // *control_flow = ControlFlow::Wait; // suspend thread until new event arrives
+        // match event {
+        //     Event::WindowEvent {
+        //         event: WindowEvent::CloseRequested,
+        //         ..
+        //     } => *control_flow = ControlFlow::Exit,
+        //     Event::RedrawRequested(_) => {
+                draw(pixels.get_frame(), window_size, &levels[index]);
                 if pixels.render().is_err() {
                     *control_flow = ControlFlow::Exit;
                     return;
                 }
                 window.request_redraw();
-            }
-            _ => (),
-        }
+            // }
+            // _ => (),
+        //}
     });
 }
 
@@ -80,6 +90,7 @@ fn draw(frame: &mut [u8], window_size: PhysicalSize<u32>, board: &Grid<Tile<Squa
 
         let color1 = [0xff, 0xff, 0xff, 0xff];
         let color2 = [0x00, 0x00, 0x00, 0xff];
+        let color3 = [0xff, 0xff, 0xff, 0x03];
 
         let tile;
         if let Some(result) = tile_set.get(&Coordinate {
@@ -97,34 +108,44 @@ fn draw(frame: &mut [u8], window_size: PhysicalSize<u32>, board: &Grid<Tile<Squa
 
         let norm_x = std::cmp::max(0, (x as i16) - ((tile_coord_x * tile_width) as i16)) as usize;
         let norm_y = std::cmp::max(0, (y as i16) - ((tile_coord_y * tile_height) as i16)) as usize;
+        let center_square_size = 3;
+        let helper_grid_distance = 6;
 
         let rgba =
-            if norm_x != tile_center_x && norm_y != tile_center_y
+            if norm_x >= tile_center_x - center_square_size && norm_x <= tile_center_x + center_square_size &&
+               norm_y >= tile_center_y - center_square_size && norm_y <= tile_center_y + center_square_size && tile != " "
             {
-                color1
-            }
-            else if norm_x == tile_center_x && norm_y == tile_center_y && tile == " "
-            {
+                // Centered box
                 color2
             }
             else if norm_x == tile_center_x && norm_y < tile_center_y && "╹┗┃┣┛┻┫╋".contains(tile)
             {
+                // Upper arm
                 color2
             }
             else if norm_x == tile_center_x && norm_y > tile_center_y && "╻┃┏┣┓┫┳╋".contains(tile)
             {
+                // Lower arm
                 color2
             }
             else if norm_x < tile_center_x && norm_y == tile_center_y && "╸┛━┻┓┫┳╋".contains(tile)
             {
+                // Left arm
                 color2
             }
             else if norm_x > tile_center_x && norm_y == tile_center_y && "╺┗┏┣━┻┳╋".contains(tile)
             {
+                // Right arm
                 color2
+            }
+            else if (norm_x == 0 && tile_coord_x != 0 && norm_y % helper_grid_distance == 0) || (norm_y == 0 && tile_coord_y != 0 && norm_x % helper_grid_distance == 0)
+            {
+                // Grid lines
+                color3
             }
             else
             {
+                // default
                 color1
             };
 
