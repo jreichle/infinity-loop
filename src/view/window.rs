@@ -62,10 +62,6 @@ pub fn initiate_window() {
 fn draw(frame: &mut [u8], window_size: PhysicalSize<u32>, board: &Grid<Tile<Square>>) {
     let tile_set = board.serialize_board();
 
-    for (key, value) in &tile_set {
-        println!("{} / {}", key, value);
-    }
-
     let mut tile_width : usize = (window_size.width as usize) / (board.columns as usize);
     if tile_width % 2 == 0 { tile_width -= 1; }
 
@@ -82,6 +78,9 @@ fn draw(frame: &mut [u8], window_size: PhysicalSize<u32>, board: &Grid<Tile<Squa
         let tile_coord_x = x / tile_width;
         let tile_coord_y = y / tile_height;
 
+        let color1 = [0xff, 0xff, 0xff, 0xff];
+        let color2 = [0x00, 0x00, 0x00, 0xff];
+
         let tile;
         if let Some(result) = tile_set.get(&Coordinate {
             column: tile_coord_y,
@@ -92,13 +91,12 @@ fn draw(frame: &mut [u8], window_size: PhysicalSize<u32>, board: &Grid<Tile<Squa
         }
         else
         {
+            pixel.copy_from_slice(&color1);
             continue
         }
 
         let norm_x = std::cmp::max(0, (x as i16) - ((tile_coord_x * tile_width) as i16)) as usize;
         let norm_y = std::cmp::max(0, (y as i16) - ((tile_coord_y * tile_height) as i16)) as usize;
-        let color1 = [0xff, 0xff, 0xff, 0xff];
-        let color2 = [0x00, 0x00, 0x00, 0xff];
 
         let rgba =
             if norm_x != tile_center_x && norm_y != tile_center_y
@@ -129,12 +127,6 @@ fn draw(frame: &mut [u8], window_size: PhysicalSize<u32>, board: &Grid<Tile<Squa
             {
                 color1
             };
-
-        // println!("x:{} \t y:{} \t tile:{} \t tile_coord_x:{} \t tile_coord_y:{} \t norm_x:{} \t norm_y:{} \t tile_width:{} \t tile_height:{} \t tile_center_x:{} \t tile_center_y:{}",
-        //     x, y, tile, tile_coord_x, tile_coord_y, norm_x, norm_y, tile_width, tile_height, tile_center_x, tile_center_y);
-
-        // println!("tile:{} \t tile_coord_x:{} \t tile_coord_y:{}",
-        //     tile, tile_coord_x, tile_coord_y);
 
         pixel.copy_from_slice(&rgba);
     }

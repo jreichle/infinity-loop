@@ -10,9 +10,9 @@ extern crate quickcheck_macros;
 mod model;
 mod view;
 
-use model::grid::*;
+//use model::grid::*;
 //use model::squaretile::*;
-use model::testlevel::*;
+//use model::testlevel::*;
 
 
 use view::window::*;
