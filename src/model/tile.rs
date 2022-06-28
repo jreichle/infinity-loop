@@ -8,13 +8,13 @@ use Square::{Down, Left, Right, Up};
 #[derive(Hash, Debug, EnumSetType)]
 #[enumset(repr = "u32")]
 pub enum Square {
-    /// Coordinate(0, 1)
-    Up,
-    /// Coordinate(1, 0)
-    Right,
-    /// Coordinate(0, -1)
-    Down,
     /// Coordinate(-1, 0)
+    Up,
+    /// Coordinate(0, 1)
+    Right,
+    /// Coordinate(1, 0)
+    Down,
+    /// Coordinate(0, -1)
     Left,
 }
 
@@ -122,7 +122,7 @@ impl Display for Tile<Square> {
 impl Tile<Square> {
     /// visualization for each configuration as UNICODE symbol
     const UNICODE_TILES: [&'static str; 16] = [
-        " ", "╹", "╺", "┗", "╻", "┃", "┏", "┣", "╸", "┛", "━", "┻", "┓", "┫", "┳", "╋",
+        "O", "╹", "╺", "┗", "╻", "┃", "┏", "┣", "╸", "┛", "━", "┻", "┓", "┫", "┳", "╋",
     ];
 }
 

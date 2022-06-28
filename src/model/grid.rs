@@ -46,8 +46,8 @@ impl<A> Grid<A> {
     pub fn init<F: Fn(Coordinate<isize>) -> A>(rows: usize, columns: usize, init: F) -> Self {
         let mut elements = Vec::with_capacity(rows * columns);
 
-        for column in 0..columns {
-            for row in 0..rows {
+        for row in 0..rows {
+            for column in 0..columns {
                 elements.push(init(Coordinate {
                     row: row as isize,
                     column: column as isize,
@@ -193,7 +193,11 @@ impl<A: Clone> Grid<A> {
 
 impl<A: Clone> Grid<Option<A>> {
     pub fn sequence(&self) -> Option<Grid<A>> {
-        Some(Grid { rows: self.rows, columns: self.columns, elements: self.elements.clone().into_iter().collect::<Option<_>>()? })
+        Some(Grid {
+            rows: self.rows,
+            columns: self.columns,
+            elements: self.elements.clone().into_iter().collect::<Option<_>>()?,
+        })
     }
 }
 

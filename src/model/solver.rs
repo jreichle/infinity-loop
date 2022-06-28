@@ -1,5 +1,6 @@
 use crate::model::tile::Square::{Down, Left, Right, Up};
-use std::{collections::HashSet, hash::Hash};
+use core::fmt::Debug;
+use std::{collections::HashSet, hash::Hash, fmt::Display};
 
 use enumset::{EnumSet, EnumSetType};
 
@@ -25,10 +26,12 @@ use super::{
 /// => brute force approach unfeasible, early pruning necessary
 ///
 ///
+/// square tiles under rotational symmetry form 6 equivalence classes
+///
 /// backtracking approach
 ///
 /// constraints on tile configuration
-///     * by symmetry tiles with no and all connections posess a singular configuration
+///     * by symmetry tiles with no and all connections possess a singular configuration
 ///         => trivially solved
 ///     * neighbors of fixed tiles must follow the connection symmetry
 ///
@@ -45,14 +48,14 @@ use super::{
 struct SentinelGrid<A>(Grid<A>);
 
 impl<A> SentinelGrid<A> {
-
-    pub fn extract_grid(self) -> Grid<A>
+    pub fn extract_grid(&self) -> Grid<A>
     where
-        A: Clone
+        A: Clone,
     {
-        Grid::init(self.0.rows() - 2, self.0.columns() - 2, |c| self.0[c + Coordinate::of(1)].clone())
-    } 
-
+        Grid::init(self.0.rows() - 2, self.0.columns() - 2, |c| {
+            self.0[c + Coordinate::of(1)].clone()
+        })
+    }
 
     fn map<B, F: Fn(A) -> B>(&self, transform: F) -> SentinelGrid<B>
     where
@@ -63,6 +66,13 @@ impl<A> SentinelGrid<A> {
 
     fn adjust_inner<B, F: Fn(Grid<A>) -> Grid<B>>(self, transform: F) -> SentinelGrid<B> {
         SentinelGrid(transform(self.0))
+    }
+}
+
+impl Display for SentinelGrid<Superposition<Square>> {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let grid = self.0.map(|s| Tile::join_all(s.clone().into_iter()));
+        Display::fmt(&grid, f)
     }
 }
 
@@ -89,10 +99,10 @@ fn coordinate_to_square(coordinate: Coordinate<isize>) -> Option<Square> {
 
 fn square_to_coordinate(square: Square) -> Coordinate<isize> {
     match square {
-        Up => Coordinate { row: 0, column: 1 },
-        Right => Coordinate { row: 1, column: 0 },
-        Down => Coordinate { row: 0, column: -1 },
-        Left => Coordinate { row: -1, column: 0 },
+        Up => Coordinate { row: -1, column: 0 },
+        Right => Coordinate { row: 0, column: 1 },
+        Down => Coordinate { row: 1, column: 0 },
+        Left => Coordinate { row: 0, column: -1 },
     }
 }
 
@@ -139,33 +149,31 @@ fn to_configuration_space<A: EnumSetType + Hash>(
 }
 
 fn determine<A>(superposition: HashSet<A>) -> Option<A> {
-    superposition.into_iter().next()
+    if superposition.len() == 1 {
+        superposition.into_iter().next()
+    } else {
+        None
+    }
 }
 
 fn unique<A: Clone>(grid: SentinelGrid<HashSet<A>>) -> Option<Grid<A>> {
     grid.extract_grid().map(determine).sequence()
 }
 
-
 fn is_solvable<A: EnumSetType>(grid: &SentinelGrid<HashSet<Tile<A>>>) -> bool {
     grid.0.elements().iter().all(|s| !s.is_empty())
 }
-
-// fn minimize(superposition: Helper<Square>, index: Coordinate<usize>, direction: Square) -> Option<Helper<Square>> {
-//     let y = neighbor(index, direction).and_then(|c| superposition.0.get(c))?;
-//     superposition.adjust_inner(|g| g.adjust_at(index, |s| s.difference(y)).ok())
-// }
 
 /// restricts superposition to only include tiles with specified connection and direction
 fn restrict_tile<A: EnumSetType + Hash>(
     connection: Connection<A>,
     superposition: Superposition<A>,
 ) -> Superposition<A> {
-    let predicate: Box<dyn Fn(&Tile<A>) -> bool> = match connection {
-        Connection(ref d, Status::Absent) => Box::new(|t| t.0.contains(*d)),
-        Connection(ref d, Status::Present) => Box::new(|t| t.0.contains(*d)),
-    };
-    superposition.into_iter().filter(predicate).collect()
+    let iter = superposition.into_iter();
+    match connection {
+        Connection(ref d, Status::Absent) => iter.filter(|t| !t.0.contains(*d)).collect(),
+        Connection(ref d, Status::Present) => iter.filter(|t| t.0.contains(*d)).collect(),
+    }
 }
 
 #[derive(Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Debug, Hash)]
@@ -178,10 +186,9 @@ enum Status {
 struct Connection<A>(A, Status);
 
 impl Connection<Square> {
-
     fn opposite(&self) -> Self {
         match self {
-            Connection(d, s) => Connection(d.opposite(), *s)
+            Connection(d, s) => Connection(d.opposite(), *s),
         }
     }
 }
@@ -192,7 +199,6 @@ impl Connection<Square> {
 ///
 /// returned directions are guaranteed unique
 fn overlaps<A: EnumSetType>(superposition: Superposition<A>) -> Vec<Connection<A>> {
-
     // empty superposition leads to propagation of Absent and Present hints simultaneously
     let mut connections = Vec::new();
     connections.extend(
@@ -211,15 +217,18 @@ fn overlaps<A: EnumSetType>(superposition: Superposition<A>) -> Vec<Connection<A
 }
 
 /// iterative fixed point of a function
-/// 
+///
 /// applies function to initial value until `condition(x, step(x))` holds true
 fn iter_fix<A, F, T>(initial: A, step: F, condition: T) -> A
 where
+    A: Display,
     F: Fn(&A) -> A,
     T: Fn(&A, &A) -> bool,
 {
     let mut initial = initial;
     loop {
+        println!("{}", &initial);
+        println!("-------");
         let next = step(&initial);
         if condition(&initial, &next) {
             return initial;
@@ -230,8 +239,11 @@ where
 
 pub fn solve(grid: &Grid<Tile<Square>>) -> Grid<Tile<Square>> {
     let helper = to_configuration_space(&with_sentinels(grid));
-    let solved = iter_fix(helper, |g| g.0.coordinates().into_iter().fold(g.clone(), step), SentinelGrid::eq);
-    // let solved = helper.0.coordinates().into_iter().fold(helper, step);
+    let solved = iter_fix(
+        helper,
+        |g| g.0.coordinates().into_iter().fold(g.clone(), step),
+        SentinelGrid::eq,
+    );
     unique(solved).expect("Error while solving: not trivial")
 }
 
@@ -249,7 +261,6 @@ fn step(grid: Helper<Square>, index: Coordinate<isize>) -> Helper<Square> {
                 .unwrap_or(acc)
         })
 }
-
 
 #[cfg(test)]
 mod test {

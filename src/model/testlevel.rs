@@ -10,14 +10,14 @@ use super::{
 
 /// char to tile mapping
 ///
-/// | Connections | Character | Unicode            |
-/// |:------------|:----------|:-------------------|
-/// | 0           | ' '       | ' '                |
-/// | 1           | '-'       | '╹', '╺', '╻', '╸' |
-/// | 2           | 'I'       | '┃', '━'           |
-/// | 2           | 'L'       | '┗', '┏', '┛', '┓' |
-/// | 3           | 'T'       | '┣', '┻', '┫', '┳' |
-/// | 4           | '+'       | '╋'                |
+/// | Connections | Character | Unicode                 |
+/// |:------------|:----------|:------------------------|
+/// | 0           | ' '       | `[ ]`                   |
+/// | 1           | '-'       | `[╹]`/`[╺]`/`[╻]`/`[╸]` |
+/// | 2           | 'I'       | `[┃]`/`[━]`             |
+/// | 2           | 'L'       | `[┗]`/`[┏]`/`[┛]`/`[┓]` |
+/// | 3           | 'T'       | `[┣]`/`[┻]`/`[┫]`/`[┳]` |
+/// | 4           | '+'       | `[╋]`                   |
 pub fn char_to_tile(tile_character: char) -> Result<Tile<Square>, String> {
     match tile_character {
         ' ' => Ok(Tile(EnumSet::empty())),
@@ -116,7 +116,7 @@ pub const TEST_LEVELS: [&str; 20] = [
     "L- \nTL-\nIII\nLTT\nLTL\n-LL\n -L",
 ];
 
-pub const TRIVIAL_LEVEL: &str = "-I-";
+pub const TRIVIAL_LEVEL: &str = "--";
 
 #[cfg(test)]
 mod tests {
