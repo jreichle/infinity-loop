@@ -33,14 +33,14 @@ pub fn char_to_tile(tile_character: char) -> Result<Tile<Square>, String> {
 pub fn unicode_to_tile(tile_character: char) -> Result<Tile<Square>, String> {
     match tile_character {
         ' ' => Ok(Tile(EnumSet::empty())),
-        '╹' => Ok(Tile(EnumSet::only(Up))),
-        '╺' => Ok(Tile(EnumSet::only(Right))),
+        '╹' => Ok(Tile(!Up)),
+        '╺' => Ok(Tile(!Right)),
         '┗' => Ok(Tile(Up | Right)),
-        '╻' => Ok(Tile(EnumSet::only(Down))),
+        '╻' => Ok(Tile(!Down)),
         '┃' => Ok(Tile(Up | Down)),
         '┏' => Ok(Tile(Right | Down)),
         '┣' => Ok(Tile(Up | Right | Down)),
-        '╸' => Ok(Tile(EnumSet::only(Left))),
+        '╸' => Ok(Tile(!Left)),
         '┛' => Ok(Tile(Up | Left)),
         '━' => Ok(Tile(Right | Left)),
         '┻' => Ok(Tile(Up | Right | Left)),
@@ -115,6 +115,8 @@ pub const TEST_LEVELS: [&str; 20] = [
     "---\nITL\nII \nIT-\nIL-\nLI-",
     "L- \nTL-\nIII\nLTT\nLTL\n-LL\n -L",
 ];
+
+pub const TRIVIAL_LEVEL: &str = "-I-";
 
 #[cfg(test)]
 mod tests {

@@ -1,4 +1,4 @@
-use std::fmt::Display;
+use std::{collections::HashSet, fmt::Display};
 
 use enumset::{EnumSet, EnumSetType};
 use quickcheck::{Arbitrary, Gen};
@@ -16,6 +16,17 @@ pub enum Square {
     Down,
     /// Coordinate(-1, 0)
     Left,
+}
+
+impl Square {
+    pub fn opposite(self) -> Self {
+        match self {
+            Up => Down,
+            Right => Left,
+            Down => Up,
+            Left => Right,
+        }
+    }
 }
 
 impl Display for Square {
@@ -39,23 +50,17 @@ impl Arbitrary for Square {
     }
 }
 
-// clashes with EnumSetType autoderive
-
-// impl Not for Square {
-//     type Output = Self;
-//
-//     fn not(self) -> Self::Output {
-//         match self {
-//             Up => Down,
-//             Right => Left,
-//             Down => Up,
-//             Left => Right,
-//         }
-//     }
-// }
+/// equals powerset of full set
+pub fn all_sets<A: EnumSetType>() -> HashSet<EnumSet<A>> {
+    (0..(2 ^ EnumSet::<A>::variant_count()) - 1)
+        .map(EnumSet::<A>::from_u32_truncated)
+        .collect()
+}
 
 /// A tile is a 2D-shape with possible connections to orthogonal neighbor tiles.
 /// The possible directions for connections correspond to the number of enum values in the EnumSetType
+///
+/// it is guaranteed to implement the [Copy] trait
 ///
 /// Basic operations are checking present connections and rotating tiles
 #[derive(Debug, Clone, Copy, Hash, PartialEq, Eq, PartialOrd, Ord)]
@@ -68,25 +73,23 @@ impl<A: EnumSetType> Default for Tile<A> {
 }
 
 impl<A: EnumSetType> Tile<A> {
-
     /// rotates the tile clockwise by one step
-    /// 
+    ///
     /// each step is 360 degrees / number of enum values
     pub fn rotated_clockwise(&self, repetitions: u32) -> Self {
         let bit_rep = self.0.as_u32();
         let enum_values = EnumSet::<A>::bit_width();
         let repetitions = repetitions % enum_values;
-        let rotated_bit_rep =
-            (bit_rep << repetitions) | (bit_rep >> (enum_values - repetitions));
+        let rotated_bit_rep = (bit_rep << repetitions) | (bit_rep >> (enum_values - repetitions));
         Self(EnumSet::from_u32_truncated(rotated_bit_rep))
     }
 
     /// rotates the tile counterclockwise by one step
-    /// 
+    ///
     /// each step is 360 degrees / number of enum values
     pub fn rotated_counterclockwise(&self, repetitions: u32) -> Self {
         let enum_values = EnumSet::<A>::bit_width();
-        self.rotated_clockwise( enum_values - repetitions % enum_values)
+        self.rotated_clockwise(enum_values - repetitions % enum_values)
     }
 }
 

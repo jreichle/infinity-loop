@@ -1,4 +1,5 @@
 use std::{
+    collections::HashSet,
     fmt::Display,
     ops::{Index, IndexMut},
     vec::IntoIter,
@@ -42,12 +43,15 @@ impl<A> Grid<A> {
         }
     }
 
-    pub fn init<F: Fn(usize, usize) -> A>(rows: usize, columns: usize, init: F) -> Self {
+    pub fn init<F: Fn(Coordinate<isize>) -> A>(rows: usize, columns: usize, init: F) -> Self {
         let mut elements = Vec::with_capacity(rows * columns);
 
         for column in 0..columns {
             for row in 0..rows {
-                elements.push(init(row, column));
+                elements.push(init(Coordinate {
+                    row: row as isize,
+                    column: column as isize,
+                }));
             }
         }
 
@@ -84,6 +88,12 @@ impl<A> Grid<A> {
         self.elements.clone()
     }
 
+    pub fn coordinates(&self) -> HashSet<Coordinate<isize>> {
+        (0..self.rows as isize)
+            .flat_map(|r| (0..self.columns as isize).map(move |c| Coordinate { row: r, column: c }))
+            .collect()
+    }
+
     // pub fn get_mut(&mut self, index: Coordinate<usize>) -> Option<&mut A>
     // where
     //     A: Copy,
@@ -95,6 +105,12 @@ impl<A> Grid<A> {
     //         _ => None,
     //     }
     // }
+
+    pub fn get(&self, index: Coordinate<isize>) -> Option<&A> {
+        self.ensure_index_in_bounds(index)
+            .map(|_| &self.elements[index.row as usize + self.rows * index.column as usize])
+            .ok()
+    }
 
     // /// applies transformation to element at supplied index, if possible
     // pub fn adjust_at<F: FnOnce(A) -> A>(&self, index: Coordinate<usize>, transformation: F) -> Self
@@ -108,25 +124,29 @@ impl<A> Grid<A> {
     //     copy
     // }
 
-    pub fn adjust_at<F: FnOnce(A) -> A>(
+    pub fn adjust_at<F: Fn(A) -> A>(
         &self,
-        index: Coordinate<usize>,
+        index: Coordinate<isize>,
         transformation: F,
     ) -> Result<Self, AccessError>
     where
-        A: Copy + Clone,
+        A: Clone,
     {
         if self.ensure_index_in_bounds(index).is_ok() {
             let mut copy = self.clone();
-            copy[index] = transformation(self[index]);
+            copy[index] = transformation(self[index].clone());
             Ok(copy)
         } else {
             Err(AccessError::IndexOutOfBounds)
         }
     }
 
-    fn ensure_index_in_bounds(&self, index: Coordinate<usize>) -> Result<(), String> {
-        if index.row <= self.rows() && index.column <= self.columns() {
+    fn ensure_index_in_bounds(&self, index: Coordinate<isize>) -> Result<(), String> {
+        if index.row >= 0
+            && index.column >= 0
+            && index.row < self.rows() as isize
+            && index.column < self.columns() as isize
+        {
             Ok(())
         } else {
             Err(format!(
@@ -171,8 +191,14 @@ impl<A: Clone> Grid<A> {
     }
 }
 
+impl<A: Clone> Grid<Option<A>> {
+    pub fn sequence(&self) -> Option<Grid<A>> {
+        Some(Grid { rows: self.rows, columns: self.columns, elements: self.elements.clone().into_iter().collect::<Option<_>>()? })
+    }
+}
+
 impl GameBoard for Grid<Tile<Square>> {
-    type Index = Coordinate<usize>;
+    type Index = Coordinate<isize>;
 
     type Tile = Tile<Square>;
 
@@ -205,7 +231,7 @@ impl GameBoard for Grid<Tile<Square>> {
         let Coordinate {
             row: rows,
             column: columns,
-        } = self.dimensions();
+        } = self.dimensions().map(|x| x as isize);
 
         let enclose_sentinels = |mut v: Vec<Self::Tile>| {
             v.insert(0, Self::Tile::default());
@@ -248,8 +274,8 @@ impl GameBoard for Grid<Tile<Square>> {
             .map(|(x, i)| {
                 (
                     Coordinate {
-                        row: i / self.rows,
-                        column: i % self.rows,
+                        row: i / self.rows as isize,
+                        column: i % self.rows as isize,
                     },
                     x,
                 )
@@ -259,20 +285,19 @@ impl GameBoard for Grid<Tile<Square>> {
 }
 
 // Index trait is not designed to return Option
-impl<A> Index<Coordinate<usize>> for Grid<A> {
+impl<A> Index<Coordinate<isize>> for Grid<A> {
     type Output = A;
 
-    fn index(&self, index: Coordinate<usize>) -> &Self::Output {
-        self.ensure_index_in_bounds(index).expect("Grid::index: ");
-        &self.elements[index.row + self.columns * index.column]
+    fn index(&self, index: Coordinate<isize>) -> &Self::Output {
+        self.get(index).expect("Grid::index: ")
     }
 }
 
-impl<A> IndexMut<Coordinate<usize>> for Grid<A> {
-    fn index_mut(&mut self, index: Coordinate<usize>) -> &mut Self::Output {
+impl<A> IndexMut<Coordinate<isize>> for Grid<A> {
+    fn index_mut(&mut self, index: Coordinate<isize>) -> &mut Self::Output {
         self.ensure_index_in_bounds(index)
             .expect("Grid::index_mut: ");
-        &mut self.elements[index.row + self.columns * index.column]
+        &mut self.elements[index.row as usize + self.rows * index.column as usize]
     }
 }
 
