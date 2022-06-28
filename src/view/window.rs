@@ -1,6 +1,6 @@
 use pixels::{Pixels, SurfaceTexture};
 
-use winit::event::{Event, WindowEvent};
+use winit::event::{ElementState, Event, MouseButton, WindowEvent};
 use winit::event_loop::{ControlFlow, EventLoop};
 use winit::window::WindowBuilder;
 use winit::dpi::PhysicalSize;
@@ -24,7 +24,6 @@ pub fn initiate_window() {
     let surface_texture = SurfaceTexture::new(window_size.width, window_size.height, &window);
 
     let mut index = 0;
-    let mut counter = 0;
 
     let mut pixels;
     if let Ok(buffer) = Pixels::new(window_size.width, window_size.height, surface_texture) {
@@ -38,29 +37,43 @@ pub fn initiate_window() {
         .to_vec();
 
     event_loop.run(move |event, _, control_flow| {
-        counter += 1;
-        if counter % 5 == 0
-        {
-            counter = 0;
-            index = (index + 1) % 20;
-        }
-
-        // *control_flow = ControlFlow::Wait; // suspend thread until new event arrives
-        // match event {
-        //     Event::WindowEvent {
-        //         event: WindowEvent::CloseRequested,
-        //         ..
-        //     } => *control_flow = ControlFlow::Exit,
-        //     Event::RedrawRequested(_) => {
+        *control_flow = ControlFlow::Wait; // suspend thread until new event arrives
+        match event {
+            Event::WindowEvent {
+                event: WindowEvent::CloseRequested,
+                ..
+            } => *control_flow = ControlFlow::Exit,
+            Event::RedrawRequested(_) => {
+                // On window load
                 draw(pixels.get_frame(), window_size, &levels[index]);
                 if pixels.render().is_err() {
                     *control_flow = ControlFlow::Exit;
                     return;
                 }
                 window.request_redraw();
-            // }
-            // _ => (),
-        //}
+            }
+            Event::WindowEvent {
+                window_id: _,
+                event:
+                    WindowEvent::MouseInput {
+                        device_id: _,
+                        state: ElementState::Pressed,
+                        button: MouseButton::Left,
+                        modifiers: _,
+                    },
+            } => {
+                // On mouse click
+                index = (index + 1) % 20;
+                draw(pixels.get_frame(), window_size, &levels[index]);
+                if pixels.render().is_err() {
+                    *control_flow = ControlFlow::Exit;
+                    return;
+                }
+                window.request_redraw();
+            }
+            _ => (),
+        }
+
     });
 }
 
