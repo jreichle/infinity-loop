@@ -20,7 +20,7 @@ use super::{
 ///
 /// * invariant through game design: gameboard forms a recangle completely filled with [Tile]s
 /// * invariant: ∀g: Grid. g.rows * g.columns == g.elements.len()
-#[derive(Debug, PartialEq, Eq, PartialOrd, Ord, Clone, Hash, Default)]
+#[derive(Debug, PartialEq, Eq, PartialOrd, Ord, Clone, Hash)]
 pub struct Grid<A> {
     rows: usize,
     columns: usize,
@@ -293,6 +293,12 @@ impl<A> IndexMut<Coordinate<isize>> for Grid<A> {
     }
 }
 
+impl<A> Default for Grid<A> {
+    fn default() -> Self {
+        Self::new(Default::default(), Default::default(), Default::default())
+    }
+}
+
 impl<A> IntoIterator for Grid<A> {
     type Item = A;
 
@@ -308,7 +314,10 @@ impl<A: Display> Display for Grid<A> {
         write!(
             f,
             "{}",
-            self.elements
+            if self.elements.is_empty() {
+                "".into()
+            } else {
+                self.elements
                 .iter()
                 .map(|x| format!("{x}"))
                 .collect::<Vec<String>>()
@@ -316,6 +325,7 @@ impl<A: Display> Display for Grid<A> {
                 .map(|s| s.join(""))
                 .collect::<Vec<String>>()
                 .join("\n")
+            }
         )
     }
 }

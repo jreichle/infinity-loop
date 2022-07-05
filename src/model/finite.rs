@@ -1,7 +1,5 @@
 use std::cmp::Ordering;
 
-use enumset::{EnumSet, EnumSetType};
-
 use super::cardinality::{Cardinality, Void};
 
 /// witness for the bijection between enumeration and natural numbers
@@ -114,15 +112,5 @@ impl<A: Finite> Finite for Option<A> {
             None => 0,
             Some(x) => x.enum_to_index() + 1,
         }
-    }
-}
-
-impl<A: Finite + EnumSetType> Finite for EnumSet<A> {
-    fn index_to_enum(value: u64) -> Self {
-        EnumSet::from_u64_truncated(value)
-    }
-
-    fn enum_to_index(&self) -> u64 {
-        self.as_u64()
     }
 }

@@ -4,7 +4,7 @@ use enumset::{EnumSet, EnumSetType};
 use quickcheck::{Arbitrary, Gen};
 use Square::{Down, Left, Right, Up};
 
-use super::finite::Finite;
+use super::{cardinality::Cardinality, finite::Finite};
 
 /// represents a direction vector for a tile connection
 #[derive(Hash, Debug, EnumSetType)]
@@ -50,6 +50,10 @@ impl Arbitrary for Square {
     fn arbitrary(g: &mut Gen) -> Self {
         *g.choose(&[Up, Right, Down, Left]).unwrap()
     }
+}
+
+impl Cardinality for Square {
+    const CARDINALITY: u64 = 4;
 }
 
 impl Finite for Square {
@@ -105,6 +109,34 @@ impl<A: EnumSetType> Tile<A> {
     pub fn rotated_counterclockwise(&self, repetitions: u32) -> Self {
         let enum_values = EnumSet::<A>::bit_width();
         self.rotated_clockwise(enum_values - repetitions % enum_values)
+    }
+}
+
+impl<A: Cardinality + EnumSetType> Cardinality for EnumSet<A> {
+    const CARDINALITY: u64 = 1 << A::CARDINALITY;
+}
+
+impl<A: Finite + EnumSetType> Finite for EnumSet<A> {
+    fn index_to_enum(value: u64) -> Self {
+        EnumSet::from_u64_truncated(value)
+    }
+
+    fn enum_to_index(&self) -> u64 {
+        self.as_u64()
+    }
+}
+
+impl<A: Cardinality + EnumSetType> Cardinality for Tile<A> {
+    const CARDINALITY: u64 = EnumSet::<A>::CARDINALITY;
+}
+
+impl<A: Finite + EnumSetType> Finite for Tile<A> {
+    fn index_to_enum(value: u64) -> Self {
+        Self(EnumSet::index_to_enum(value))
+    }
+
+    fn enum_to_index(&self) -> u64 {
+        self.0.enum_to_index()
     }
 }
 

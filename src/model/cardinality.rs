@@ -2,10 +2,6 @@ use std::cmp::Ordering;
 use std::collections::{HashMap, HashSet};
 use std::hash::Hash;
 
-use enumset::{EnumSet, EnumSetType};
-
-use super::tile::{Square, Tile};
-
 pub trait Cardinality: Sized {
     /// number of inhabitants in the type
     const CARDINALITY: u64;
@@ -92,17 +88,5 @@ impl<K: Cardinality, V: Cardinality> Cardinality for HashMap<K, V> {
 }
 
 impl<A: Cardinality> Cardinality for HashSet<A> {
-    const CARDINALITY: u64 = 1 << A::CARDINALITY;
-}
-
-impl Cardinality for Square {
-    const CARDINALITY: u64 = 4;
-}
-
-impl<A: Cardinality + EnumSetType> Cardinality for Tile<A> {
-    const CARDINALITY: u64 = 1 << A::CARDINALITY;
-}
-
-impl<A: Cardinality + EnumSetType> Cardinality for EnumSet<A> {
     const CARDINALITY: u64 = 1 << A::CARDINALITY;
 }

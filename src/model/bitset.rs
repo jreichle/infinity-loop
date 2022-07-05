@@ -11,7 +11,7 @@ use super::{cardinality::Cardinality, finite::Finite, lattice::BoundedLattice};
 /// number of bits equals number of storable elements
 type BitSetSize = u64;
 
-// compile-time proof that the BitSet can store 64 elements
+// compile-time proof that BitSet can store 64 elements
 const _: () = {
     type Has64Inhabitants = BitSet<(bool, Option<bool>)>;
     assert!(Has64Inhabitants::CARDINALITY == 64);
@@ -19,11 +19,11 @@ const _: () = {
 };
 
 /// Set for storing elements of statically enumerable types with known cardinality, as witnessed by the traits [Cardinality] and [Finite]
-/// 
+///
 /// the implementation uses a fixed amount of memory and does not grow dynamically
-/// 
+///
 /// trying to use types that exceed the storing capacity leads to a compile-time error
-/// 
+///
 /// invariant ensuring canonical representation: bits exceeding A::Cardinality are always 0
 #[derive(Debug, PartialEq, Eq, PartialOrd, Ord, Default, Hash)]
 pub struct BitSet<A>(BitSetSize, PhantomData<A>);
@@ -115,7 +115,7 @@ impl<A> BitSet<A> {
 
 impl<A: Cardinality> BitSet<A> {
     /// mask of all used bits
-    /// 
+    ///
     /// laws:
     /// * `∀s: BitSet. s.0 & USED_BITS == s.0`
     /// * equivalent: `∀s: BitSet. s.intersection(BitSet::FULL) == s`
@@ -128,7 +128,7 @@ impl<A: Cardinality> BitSet<A> {
 
     /// set containing all possible elements
     pub const FULL: Self = Self(Self::USED_BITS, PhantomData);
-    
+
     /// returns a set containing all elements not in this set
     ///
     /// mutable variant of [not]
@@ -148,7 +148,7 @@ impl<A: Finite> BitSet<A> {
         test_bit(self.0, element.enum_to_index())
     }
 
-    /// inserts new element into the set
+    /// inserts given element into the set
     ///
     /// immutable variant of [insert]
     pub fn inserted(self, element: A) -> Self {
@@ -169,25 +169,29 @@ impl<A: Finite> BitSet<A> {
         Self(toggle_bit(self.0, element.enum_to_index()), PhantomData)
     }
 
-    /// inserts new element into the set
+    /// inserts given element into the set and indicates if the set has changed
     ///
     /// mutable variant of [inserted]
-    pub fn insert(mut self, element: A) {
-        self.0 = set_bit(self.0, element.enum_to_index())
+    pub fn insert(mut self, element: A) -> bool {
+        let old = self.0;
+        self.0 = set_bit(self.0, element.enum_to_index());
+        self.0 != old
     }
 
-    /// removes given element from the set
+    /// removes given element from the set and indicates if the set has changed
     ///
     /// mutable variant of [removed]
-    pub fn remove(mut self, element: A) {
-        self.0 = clear_bit(self.0, element.enum_to_index())
+    pub fn remove(mut self, element: A) -> bool {
+        let old = self.0;
+        self.0 = clear_bit(self.0, element.enum_to_index());
+        self.0 != old
     }
 
     /// toggles given element in the set
     ///
     /// mutable variant of [toggled]
     pub fn toggle(mut self, element: A) {
-        self.0 = toggle_bit(self.0, element.enum_to_index())
+        self.0 = toggle_bit(self.0, element.enum_to_index());
     }
 
     /// unwraps the only element of the set
@@ -256,7 +260,9 @@ impl<A: Finite> FromIterator<A> for BitSet<A> {
 
 impl<A: Finite> Extend<A> for BitSet<A> {
     fn extend<T: IntoIterator<Item = A>>(&mut self, iter: T) {
-        iter.into_iter().for_each(|e| self.insert(e))
+        iter.into_iter().for_each(|e| {
+            self.insert(e);
+        })
     }
 }
 
@@ -370,7 +376,9 @@ mod test {
 
     #[quickcheck]
     fn bitset_invariant(set: BitSet<BitSet<bool>>) -> bool {
-        set.0 & BitSet::<BitSet<bool>>::USED_BITS == set.0 && set.intersection(BitSet::FULL) == set && set.union(BitSet::EMPTY) == set
+        set.0 & BitSet::<BitSet<bool>>::USED_BITS == set.0
+            && set.intersection(BitSet::FULL) == set
+            && set.union(BitSet::EMPTY) == set
     }
 
     #[quickcheck]

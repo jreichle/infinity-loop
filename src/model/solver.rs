@@ -6,7 +6,9 @@ use enumset::{EnumSet, EnumSetType};
 use quickcheck::Arbitrary;
 
 use super::{
+    bitset::BitSet,
     coordinate::Coordinate,
+    finite::Finite,
     grid::Grid,
     lattice::BoundedLattice,
     tile::{Square, Tile},
@@ -123,37 +125,31 @@ fn neighbor(index: Coordinate<isize>, direction: Square) -> Coordinate<isize> {
 }
 
 /// systematic view on grid to facilitate construction and solving
-type Helper<A> = SentinelGrid<HashSet<Tile<A>>>;
+type Helper<A> = SentinelGrid<BitSet<Tile<A>>>;
 
-type Superposition<A> = HashSet<Tile<A>>;
+type Superposition<A> = BitSet<Tile<A>>;
 
-fn all_tile_configurations<A: EnumSetType + Hash>(tile: Tile<A>) -> HashSet<Tile<A>> {
+fn all_tile_configurations<A: EnumSetType + Finite>(tile: Tile<A>) -> BitSet<Tile<A>> {
     // insert successively rotated tiles until encountering repeated initial tile
-    let mut tile = tile;
-    let mut configurations = HashSet::new();
-    while configurations.insert(tile) {
-        tile = tile.rotated_clockwise(1);
-    }
-    configurations
+    iter_fix(
+        (BitSet::<Tile<A>>::EMPTY, tile),
+        |(s, t)| (s.inserted(*t), t.rotated_clockwise(1)),
+        |x, y| x.0 == y.0,
+    )
+    .0
 }
 
 /// grid of superimposed tiles in different configurations
-fn to_configuration_space<A: EnumSetType + Hash>(
+fn to_configuration_space<A: EnumSetType + Finite>(
     grid: &SentinelGrid<Tile<A>>,
-) -> SentinelGrid<HashSet<Tile<A>>> {
+) -> SentinelGrid<BitSet<Tile<A>>> {
     grid.map(all_tile_configurations)
 }
 
-fn determine<A>(superposition: HashSet<A>) -> Option<A> {
-    if superposition.len() == 1 {
-        superposition.into_iter().next()
-    } else {
-        None
-    }
-}
-
-fn unique<A: Clone>(grid: SentinelGrid<HashSet<A>>) -> Option<Grid<A>> {
-    grid.extract_grid().map(determine).sequence()
+fn unique<A: Finite + Copy>(grid: SentinelGrid<BitSet<A>>) -> Option<Grid<A>> {
+    grid.extract_grid()
+        .map(BitSet::unwrap_if_singleton)
+        .sequence()
 }
 
 fn is_solvable<A>(grid: &SentinelGrid<HashSet<A>>) -> bool {
@@ -161,7 +157,7 @@ fn is_solvable<A>(grid: &SentinelGrid<HashSet<A>>) -> bool {
 }
 
 /// restricts superposition to only include tiles with specified connection and direction
-fn restrict_tile<A: EnumSetType + Hash>(
+fn restrict_tile<A: EnumSetType + Finite>(
     connection: Connection<A>,
     superposition: Superposition<A>,
 ) -> Superposition<A> {
@@ -206,7 +202,7 @@ impl Connection<Square> {
 /// eg. if there is a common [Up] connection between all superpositions, then the result includes [Connection::Present(Up)]
 ///
 /// returned directions are guaranteed unique
-fn overlaps<A: EnumSetType>(superposition: Superposition<A>) -> Vec<Connection<A>> {
+fn overlaps<A: EnumSetType + Finite>(superposition: Superposition<A>) -> Vec<Connection<A>> {
     // empty superposition leads to propagation of Absent and Present hints simultaneously
     let mut connections = Vec::new();
     connections.extend(
@@ -303,10 +299,10 @@ mod test {
 
     #[quickcheck]
     fn restrict_tile_sanity_check() -> bool {
-        let superposition = HashSet::from(all_tile_configurations(Tile(Up | Right)));
+        let superposition = BitSet::from_iter(all_tile_configurations(Tile(Up | Right)));
         let connection = Connection(Right, Status::Present);
         restrict_tile(connection, superposition)
-            == HashSet::from([Tile(Up | Right), Tile(Right | Down)])
+            == BitSet::from_iter([Tile(Up | Right), Tile(Right | Down)])
     }
 
     #[quickcheck]
@@ -337,5 +333,11 @@ mod test {
         // restrict coordinates to a range resembling actual values used in grid and avoid integer over- / underflows
         let index = index.map(|x| x as isize);
         EnumSet::all().into_iter().fold(index, neighbor) == index
+    }
+
+    #[quickcheck]
+    fn tile_configurations(tile: Tile<Square>) -> bool {
+        println!("{}", all_tile_configurations(tile));
+        true
     }
 }
