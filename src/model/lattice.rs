@@ -58,19 +58,15 @@ impl<A: EnumSetType> BoundedLattice for Tile<A> {
 }
 
 impl BoundedLattice for () {
-    fn bottom() -> () {
-        ()
-    }
+    fn bottom() {}
 
-    fn top() -> () {
-        ()
-    }
+    fn top() {}
 
-    fn meet(self, _: ()) -> () {
+    fn meet(self, _: ()) {
         self
     }
 
-    fn join(self, _: ()) -> () {
+    fn join(self, _: ()) {
         self
     }
 }

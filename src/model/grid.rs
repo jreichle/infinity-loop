@@ -24,6 +24,7 @@ use super::{
 pub struct Grid<A> {
     rows: usize,
     columns: usize,
+    /// layout: `[Coordinate(0, 0), Coordinate(0, 1), Coordinate(0, 2), ..., Coordinate(1, 0), Coordinate(1, 1), Coordinate(1, 2), ...]`
     elements: Vec<A>,
 }
 
@@ -94,35 +95,25 @@ impl<A> Grid<A> {
             .collect()
     }
 
-    // pub fn get_mut(&mut self, index: Coordinate<usize>) -> Option<&mut A>
-    // where
-    //     A: Copy,
-    // {
-    //     match index {
-    //         Coordinate { row, column } if row <= self.rows() && column <= self.columns() => {
-    //             Some(&mut self.elements[row * self.columns + column])
-    //         }
-    //         _ => None,
-    //     }
-    // }
+    /// see [Grid::elements] for memory layout
+    fn get_vec_index(&self, index: Coordinate<isize>) -> usize {
+        index.column as usize + self.columns * index.row as usize
+    }
 
     pub fn get(&self, index: Coordinate<isize>) -> Option<&A> {
         self.ensure_index_in_bounds(index)
-            .map(|_| &self.elements[index.row as usize + self.rows * index.column as usize])
+            .map(|_| &self.elements[self.get_vec_index(index)])
             .ok()
     }
 
-    // /// applies transformation to element at supplied index, if possible
-    // pub fn adjust_at<F: FnOnce(A) -> A>(&self, index: Coordinate<usize>, transformation: F) -> Self
-    // where
-    //     A: Copy + Clone,
-    // {
-    //     let mut copy = self.clone();
-    //     if self.ensure_index_in_bounds(index).is_ok() {
-    //         copy[index] = transformation(self[index]);
-    //     }
-    //     copy
-    // }
+    /// applies transformation to element at supplied index, if possible
+    pub fn try_adjust_at<F: Fn(A) -> A>(&self, index: Coordinate<isize>, transformation: F) -> Self
+    where
+        A: Clone,
+    {
+        self.adjust_at(index, transformation)
+            .unwrap_or_else(|_| self.clone())
+    }
 
     pub fn adjust_at<F: Fn(A) -> A>(
         &self,
@@ -166,12 +157,8 @@ impl<A: Clone> Grid<A> {
     /// constructs Grids from array of arrays
     ///
     /// for hardcoding Grids in source code
-    pub fn from_array<const R: usize, const C: usize>(elements: [[A; R]; C]) -> Self {
-        Grid::new(
-            elements.len(),
-            elements.get(0).map(|x| x.len()).unwrap_or(0),
-            elements.map(Vec::from).to_vec().concat(),
-        )
+    pub fn from_array<const R: usize, const C: usize>(elements: [[A; C]; R]) -> Self {
+        Grid::new(R, C, elements.map(Vec::from).to_vec().concat())
     }
 
     // vec cannot be safely mapped over in-place, therefore map for Grid creates a new instance
@@ -258,14 +245,14 @@ impl GameBoard for Grid<Tile<Square>> {
 
         let rows_solved = (0..rows).map(row_slice).map(to_tile).all(|v| {
             v[0..]
-                .into_iter()
-                .zip(v[1..].into_iter())
+                .iter()
+                .zip(v[1..].iter())
                 .all(|(tl, tr)| tl.0.contains(Square::Right) == tr.0.contains(Square::Left))
         });
         let columns_solved = (0..columns).map(column_slice).map(to_tile).all(|v| {
             v[0..]
-                .into_iter()
-                .zip(v[1..].into_iter())
+                .iter()
+                .zip(v[1..].iter())
                 .all(|(tu, td)| tu.0.contains(Square::Down) == td.0.contains(Square::Up))
         });
         rows_solved && columns_solved
@@ -273,7 +260,7 @@ impl GameBoard for Grid<Tile<Square>> {
 
     fn serialize_board(&self) -> std::collections::HashMap<Self::Index, &Self::Tile> {
         self.elements()
-            .into_iter()
+            .iter()
             .zip(0..)
             .map(|(x, i)| {
                 (
@@ -301,7 +288,8 @@ impl<A> IndexMut<Coordinate<isize>> for Grid<A> {
     fn index_mut(&mut self, index: Coordinate<isize>) -> &mut Self::Output {
         self.ensure_index_in_bounds(index)
             .expect("Grid::index_mut: ");
-        &mut self.elements[index.row as usize + self.rows * index.column as usize]
+        let vec_index = self.get_vec_index(index);
+        &mut self.elements[vec_index]
     }
 }
 

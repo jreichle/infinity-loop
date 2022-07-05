@@ -22,16 +22,12 @@ fn main() {
         env::set_var("RUST_BACKTRACE", "1");
     }
 
-    let _levels = TEST_LEVELS
+    let levels = TEST_LEVELS
         .map(|l| parse_level(l, char_to_tile).unwrap())
         .to_vec();
-    // levels
-    //     .iter()
-    //     .zip(1..)
-    //     .for_each(|(l, i)| println!("level {i}\n{l}\n"));
 
-    let level = parse_level(TRIVIAL_LEVEL, char_to_tile).unwrap();
-
-    println!("{}", level);
-    println!("{}", solve(&level));
+    levels
+        .iter()
+        .zip(1..)
+        .for_each(|(l, i)| println!("level {i}\n{l}\n\nlevel {i} solved\n{:?}\n", solve(l)));
 }

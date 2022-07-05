@@ -62,7 +62,7 @@ impl<A> Coordinate<Option<A>> {
 
 impl<A: Display> Display for Coordinate<A> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "(x: {:04}, y: {:04})", self.row, self.column)
+        write!(f, "(row: {:04}, column: {:04})", self.row, self.column)
     }
 }
 

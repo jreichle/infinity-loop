@@ -1,8 +1,10 @@
-use std::{collections::HashSet, fmt::Display};
+use std::fmt::Display;
 
 use enumset::{EnumSet, EnumSetType};
 use quickcheck::{Arbitrary, Gen};
 use Square::{Down, Left, Right, Up};
+
+use super::finite::Finite;
 
 /// represents a direction vector for a tile connection
 #[derive(Hash, Debug, EnumSetType)]
@@ -50,11 +52,24 @@ impl Arbitrary for Square {
     }
 }
 
-/// equals powerset of full set
-pub fn all_sets<A: EnumSetType>() -> HashSet<EnumSet<A>> {
-    (0..(2 ^ EnumSet::<A>::variant_count()) - 1)
-        .map(EnumSet::<A>::from_u32_truncated)
-        .collect()
+impl Finite for Square {
+    fn index_to_enum(value: u64) -> Self {
+        match value % 4 {
+            0 => Self::Up,
+            1 => Self::Right,
+            2 => Self::Down,
+            _ => Self::Left,
+        }
+    }
+
+    fn enum_to_index(&self) -> u64 {
+        match self {
+            Self::Up => 0,
+            Self::Right => 1,
+            Self::Down => 2,
+            Self::Left => 3,
+        }
+    }
 }
 
 /// A tile is a 2D-shape with possible connections to orthogonal neighbor tiles.
@@ -101,20 +116,7 @@ impl<A: 'static + EnumSetType> Arbitrary for Tile<A> {
 
 impl Display for Tile<Square> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        let set = self.0;
-        let mut index = 0;
-        if set.contains(Up) {
-            index += 1
-        }
-        if set.contains(Right) {
-            index += 2
-        }
-        if set.contains(Down) {
-            index += 4
-        }
-        if set.contains(Left) {
-            index += 8
-        }
+        let index = self.0.iter().map(|s| 1 << s.enum_to_index()).sum::<usize>();
         write!(f, "{}", Self::UNICODE_TILES[index])
     }
 }
@@ -122,7 +124,7 @@ impl Display for Tile<Square> {
 impl Tile<Square> {
     /// visualization for each configuration as UNICODE symbol
     const UNICODE_TILES: [&'static str; 16] = [
-        "O", "╹", "╺", "┗", "╻", "┃", "┏", "┣", "╸", "┛", "━", "┻", "┓", "┫", "┳", "╋",
+        " ", "╹", "╺", "┗", "╻", "┃", "┏", "┣", "╸", "┛", "━", "┻", "┓", "┫", "┳", "╋",
     ];
 }
 

@@ -1,8 +1,9 @@
 use crate::model::tile::Square::{Down, Left, Right, Up};
 use core::fmt::Debug;
-use std::{collections::HashSet, hash::Hash, fmt::Display};
+use std::{collections::HashSet, fmt::Display, hash::Hash};
 
 use enumset::{EnumSet, EnumSetType};
+use quickcheck::Arbitrary;
 
 use super::{
     coordinate::Coordinate,
@@ -71,17 +72,21 @@ impl<A> SentinelGrid<A> {
 
 impl Display for SentinelGrid<Superposition<Square>> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        let grid = self.0.map(|s| Tile::join_all(s.clone().into_iter()));
+        let grid = self.0.map(|s| Tile::join_all(s.into_iter()));
         Display::fmt(&grid, f)
+    }
+}
+
+impl Arbitrary for SentinelGrid<Tile<Square>> {
+    fn arbitrary(g: &mut quickcheck::Gen) -> Self {
+        with_sentinels(&Grid::arbitrary(g))
     }
 }
 
 /// function is specific to Square
 fn with_sentinels(grid: &Grid<Tile<Square>>) -> SentinelGrid<Tile<Square>> {
     SentinelGrid(Grid::init(grid.rows() + 2, grid.columns() + 2, |c| {
-        grid.get(c - Coordinate::of(1))
-            .map(|x| *x)
-            .unwrap_or_default()
+        grid.get(c - Coordinate::of(1)).copied().unwrap_or_default()
     }))
 }
 
@@ -89,10 +94,10 @@ fn coordinate_to_square(coordinate: Coordinate<isize>) -> Option<Square> {
     let row = coordinate.row;
     let column = coordinate.column;
     match (row, column) {
-        (0, 1) => Some(Up),
-        (1, 0) => Some(Right),
-        (0, -1) => Some(Down),
-        (-1, 0) => Some(Left),
+        (-1, 0) => Some(Up),
+        (0, 1) => Some(Right),
+        (1, 0) => Some(Down),
+        (0, -1) => Some(Left),
         _ => None,
     }
 }
@@ -103,15 +108,6 @@ fn square_to_coordinate(square: Square) -> Coordinate<isize> {
         Right => Coordinate { row: 0, column: 1 },
         Down => Coordinate { row: 1, column: 0 },
         Left => Coordinate { row: 0, column: -1 },
-    }
-}
-
-/// see [usize::checked_add_signed]
-fn checked_add_signed(lhs: usize, rhs: isize) -> Option<usize> {
-    if rhs >= 0 {
-        usize::checked_add(lhs, rhs as usize)
-    } else {
-        usize::checked_sub(lhs, rhs.unsigned_abs())
     }
 }
 
@@ -160,7 +156,7 @@ fn unique<A: Clone>(grid: SentinelGrid<HashSet<A>>) -> Option<Grid<A>> {
     grid.extract_grid().map(determine).sequence()
 }
 
-fn is_solvable<A: EnumSetType>(grid: &SentinelGrid<HashSet<Tile<A>>>) -> bool {
+fn is_solvable<A>(grid: &SentinelGrid<HashSet<A>>) -> bool {
     grid.0.elements().iter().all(|s| !s.is_empty())
 }
 
@@ -182,8 +178,20 @@ enum Status {
     Present,
 }
 
+impl Arbitrary for Status {
+    fn arbitrary(g: &mut quickcheck::Gen) -> Self {
+        *g.choose(&[Status::Absent, Status::Present]).unwrap()
+    }
+}
+
 #[derive(Clone, PartialEq, Eq, PartialOrd, Ord, Debug, Hash)]
 struct Connection<A>(A, Status);
+
+impl<A: Arbitrary> Arbitrary for Connection<A> {
+    fn arbitrary(g: &mut quickcheck::Gen) -> Self {
+        Connection(A::arbitrary(g), Status::arbitrary(g))
+    }
+}
 
 impl Connection<Square> {
     fn opposite(&self) -> Self {
@@ -210,6 +218,7 @@ fn overlaps<A: EnumSetType>(superposition: Superposition<A>) -> Vec<Connection<A
     connections.extend(
         Tile::join_all(superposition.into_iter())
             .0
+            .complement()
             .into_iter()
             .map(|d| Connection(d, Status::Absent)),
     );
@@ -218,17 +227,14 @@ fn overlaps<A: EnumSetType>(superposition: Superposition<A>) -> Vec<Connection<A
 
 /// iterative fixed point of a function
 ///
-/// applies function to initial value until `condition(x, step(x))` holds true
+/// applies function repeatedly starting from initial value until `condition(x, step(x))` holds true
 fn iter_fix<A, F, T>(initial: A, step: F, condition: T) -> A
 where
-    A: Display,
     F: Fn(&A) -> A,
     T: Fn(&A, &A) -> bool,
 {
     let mut initial = initial;
     loop {
-        println!("{}", &initial);
-        println!("-------");
         let next = step(&initial);
         if condition(&initial, &next) {
             return initial;
@@ -237,14 +243,23 @@ where
     }
 }
 
-pub fn solve(grid: &Grid<Tile<Square>>) -> Grid<Tile<Square>> {
+pub fn solve(grid: &Grid<Tile<Square>>) -> Vec<Grid<Tile<Square>>> {
     let helper = to_configuration_space(&with_sentinels(grid));
-    let solved = iter_fix(
-        helper,
+    let solved = minimize(helper);
+    let r = unique(solved);
+    r.into_iter().collect()
+    // while let None = r {
+    //     let coord = solved.0.coordinates().into_iter().max_by_key(|c| solved.0[c]).expect("Expected branch in puzzle, but it there were no superpositions");
+    //     solved.0[coord].into_iter().map(|x| HashSet::from(x)).map(|s| solved.0.try_adjust_at(coord, |_| s)).map(minimize).collect()
+    // }
+}
+
+fn minimize(grid: Helper<Square>) -> Helper<Square> {
+    iter_fix(
+        grid,
         |g| g.0.coordinates().into_iter().fold(g.clone(), step),
         SentinelGrid::eq,
-    );
-    unique(solved).expect("Error while solving: not trivial")
+    )
 }
 
 fn step(grid: Helper<Square>, index: Coordinate<isize>) -> Helper<Square> {
@@ -255,11 +270,21 @@ fn step(grid: Helper<Square>, index: Coordinate<isize>) -> Helper<Square> {
         .unwrap_or_default()
         .into_iter()
         .fold(grid, |acc, c| {
-            acc.0
-                .adjust_at(neighbor(index, c.0), |s| restrict_tile(c.opposite(), s))
-                .map(SentinelGrid)
-                .unwrap_or(acc)
+            SentinelGrid(
+                acc.0
+                    .try_adjust_at(neighbor(index, c.0), |s| restrict_tile(c.opposite(), s)),
+            )
         })
+}
+
+struct SolutionIterator<A>(Vec<A>);
+
+impl Iterator for SolutionIterator<Grid<Tile<Square>>> {
+    type Item = Grid<Tile<Square>>;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        todo!()
+    }
 }
 
 #[cfg(test)]
@@ -277,7 +302,40 @@ mod test {
     }
 
     #[quickcheck]
-    fn f() -> bool {
+    fn restrict_tile_sanity_check() -> bool {
+        let superposition = HashSet::from(all_tile_configurations(Tile(Up | Right)));
+        let connection = Connection(Right, Status::Present);
+        restrict_tile(connection, superposition)
+            == HashSet::from([Tile(Up | Right), Tile(Right | Down)])
+    }
+
+    #[quickcheck]
+    fn overlaps_sanity_check(superposition: Superposition<Square>) -> bool {
+        println!(
+            "{:?} -> {:?}",
+            superposition
+                .clone()
+                .into_iter()
+                .map(|s| s.to_string())
+                .collect::<Vec<_>>(),
+            overlaps(superposition)
+        );
         true
+    }
+
+    #[quickcheck]
+    fn neighborhood_is_symmetric(index: Coordinate<i8>, direction: Square) -> bool {
+        // restrict coordinates to a range resembling actual values used in grid and avoid integer over- / underflows
+        let index = index.map(|x| x as isize);
+        let neighbor_index = neighbor(index, direction);
+        index == neighbor(neighbor_index, direction.opposite())
+    }
+
+    /// successively visiting neighbors in each
+    #[quickcheck]
+    fn neighborhood_is_euclidian(index: Coordinate<i8>) -> bool {
+        // restrict coordinates to a range resembling actual values used in grid and avoid integer over- / underflows
+        let index = index.map(|x| x as isize);
+        EnumSet::all().into_iter().fold(index, neighbor) == index
     }
 }
