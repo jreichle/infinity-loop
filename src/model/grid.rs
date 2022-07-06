@@ -318,13 +318,13 @@ impl<A: Display> Display for Grid<A> {
                 "".into()
             } else {
                 self.elements
-                .iter()
-                .map(|x| format!("{x}"))
-                .collect::<Vec<String>>()
-                .chunks_exact(self.columns)
-                .map(|s| s.join(""))
-                .collect::<Vec<String>>()
-                .join("\n")
+                    .iter()
+                    .map(|x| format!("{x}"))
+                    .collect::<Vec<String>>()
+                    .chunks_exact(self.columns)
+                    .map(|s| s.join(""))
+                    .collect::<Vec<String>>()
+                    .join("\n")
             }
         )
     }

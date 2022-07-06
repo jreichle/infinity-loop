@@ -26,8 +26,10 @@ fn main() {
         .map(|l| parse_level(l, char_to_tile).unwrap())
         .to_vec();
 
-    levels
-        .iter()
-        .zip(1..)
-        .for_each(|(l, i)| println!("level {i}\n{l}\n\nlevel {i} solved\n{}\n", solve(l).into_iter().next().unwrap_or_default()));
+    levels.iter().zip(1..).for_each(|(l, i)| {
+        println!(
+            "level {i}\n{l}\n\nlevel {i} solved\n{}\n",
+            solve(l).into_iter().next().unwrap_or_default()
+        )
+    });
 }

@@ -129,6 +129,9 @@ type Helper<A> = SentinelGrid<BitSet<Tile<A>>>;
 
 type Superposition<A> = BitSet<Tile<A>>;
 
+/// witness for the ablility of [BitSet] to store at least Tile<Square>::CARDINALITY = 16 elements
+const _: Superposition<Square> = BitSet::FULL;
+
 fn all_tile_configurations<A: EnumSetType + Finite>(tile: Tile<A>) -> BitSet<Tile<A>> {
     // insert successively rotated tiles until encountering repeated initial tile
     iter_fix(

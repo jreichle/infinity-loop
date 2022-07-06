@@ -1,4 +1,9 @@
-use std::{fmt::Display, hash::Hash, marker::PhantomData, ops::Not};
+use std::{
+    fmt::Display,
+    hash::Hash,
+    marker::PhantomData,
+    ops::{BitAnd, BitOr, BitXor, Not, Shl},
+};
 
 use quickcheck::Arbitrary;
 
@@ -8,15 +13,12 @@ use super::{cardinality::Cardinality, finite::Finite, lattice::BoundedLattice};
 // type Width = u64;
 // struct BitSet<A: Cardinality>([Width; (A::CARDINALITY + Width::BITS - 1) / Width::BITS], PhantomData<A>);
 
+/// underlying integer size for storing elements in the [BitSet]
+/// 
 /// number of bits equals number of storable elements
+/// 
+/// may be set to any unsigned type
 type BitSetSize = u64;
-
-// compile-time proof that BitSet can store 64 elements
-const _: () = {
-    type Has64Inhabitants = BitSet<(bool, Option<bool>)>;
-    assert!(Has64Inhabitants::CARDINALITY == 64);
-    assert!(BitSet::<Has64Inhabitants>::USED_BITS == u64::MAX)
-};
 
 /// Set for storing elements of statically enumerable types with known cardinality, as witnessed by the traits [Cardinality] and [Finite]
 ///
@@ -43,6 +45,7 @@ impl<A: Display + Finite> Display for BitSet<A> {
         let mut string = self
             .into_iter()
             .fold(String::new(), |acc, x| acc + x.to_string().as_str() + ", ");
+        // delete last ", "-seperator
         string.pop();
         string.pop();
         write!(f, "{{{}}}", string)
@@ -55,11 +58,11 @@ impl<A: Cardinality> Cardinality for BitSet<A> {
 
 impl<A: Finite> Finite for BitSet<A> {
     fn index_to_enum(value: u64) -> Self {
-        Self(value & Self::USED_BITS, PhantomData) // truncating
+        Self(value as BitSetSize & Self::USED_BITS, PhantomData) // truncating
     }
 
     fn enum_to_index(&self) -> u64 {
-        self.0
+        self.0 as u64
     }
 }
 
@@ -119,9 +122,9 @@ impl<A: Cardinality> BitSet<A> {
     /// laws:
     /// * `∀s: BitSet. s.0 & USED_BITS == s.0`
     /// * equivalent: `∀s: BitSet. s.intersection(BitSet::FULL) == s`
-    const USED_BITS: BitSetSize = if A::CARDINALITY <= BitSetSize::BITS as BitSetSize {
+    const USED_BITS: BitSetSize = if A::CARDINALITY <= BitSetSize::BITS as u64 {
         // == `1 << A:CARDINALITY - 1` without overflow
-        BitSetSize::MAX >> (BitSetSize::BITS as BitSetSize - A::CARDINALITY)
+        BitSetSize::MAX >> (BitSetSize::BITS as BitSetSize - A::CARDINALITY as BitSetSize)
     } else {
         panic!("BitSet only supports up to 64 elements")
     };
@@ -145,28 +148,28 @@ impl<A: Finite> BitSet<A> {
 
     /// checks if set contains a given element
     pub fn contains(self, element: A) -> bool {
-        test_bit(self.0, element.enum_to_index())
+        test_bit(self.0, element.enum_to_index() as BitSetSize)
     }
 
     /// inserts given element into the set
     ///
     /// immutable variant of [insert]
     pub fn inserted(self, element: A) -> Self {
-        Self(set_bit(self.0, element.enum_to_index()), PhantomData)
+        Self(set_bit(self.0, element.enum_to_index() as BitSetSize), PhantomData)
     }
 
     /// removes given element from the set
     ///
     /// immutable variant of [remove]
     pub fn removed(self, element: A) -> Self {
-        Self(clear_bit(self.0, element.enum_to_index()), PhantomData)
+        Self(clear_bit(self.0, element.enum_to_index() as BitSetSize), PhantomData)
     }
 
     /// toggles given element in the set
     ///
     /// immutable variant of [toggle]
     pub fn toggled(self, element: A) -> Self {
-        Self(toggle_bit(self.0, element.enum_to_index()), PhantomData)
+        Self(toggle_bit(self.0, element.enum_to_index() as BitSetSize), PhantomData)
     }
 
     /// inserts given element into the set and indicates if the set has changed
@@ -174,7 +177,7 @@ impl<A: Finite> BitSet<A> {
     /// mutable variant of [inserted]
     pub fn insert(mut self, element: A) -> bool {
         let old = self.0;
-        self.0 = set_bit(self.0, element.enum_to_index());
+        self.0 = set_bit(self.0, element.enum_to_index() as BitSetSize);
         self.0 != old
     }
 
@@ -183,7 +186,7 @@ impl<A: Finite> BitSet<A> {
     /// mutable variant of [removed]
     pub fn remove(mut self, element: A) -> bool {
         let old = self.0;
-        self.0 = clear_bit(self.0, element.enum_to_index());
+        self.0 = clear_bit(self.0, element.enum_to_index() as BitSetSize);
         self.0 != old
     }
 
@@ -191,7 +194,7 @@ impl<A: Finite> BitSet<A> {
     ///
     /// mutable variant of [toggled]
     pub fn toggle(mut self, element: A) {
-        self.0 = toggle_bit(self.0, element.enum_to_index());
+        self.0 = toggle_bit(self.0, element.enum_to_index() as BitSetSize);
     }
 
     /// unwraps the only element of the set
@@ -200,7 +203,7 @@ impl<A: Finite> BitSet<A> {
     /// * returns `None` if set contains several elements or is empty
     pub fn unwrap_if_singleton(self) -> Option<A> {
         if self.len() == 1 {
-            Some(A::index_to_enum(self.0.trailing_zeros() as BitSetSize))
+            Some(A::index_to_enum(self.0.trailing_zeros() as u64))
         } else {
             None
         }
@@ -240,15 +243,18 @@ impl<A: Finite> Iterator for Iter<A> {
     type Item = A;
 
     fn next(&mut self) -> Option<Self::Item> {
+
         if self.bits == 0 {
-            return None;
+            None
+        } else {
+            let trailing = self.bits.trailing_zeros() as BitSetSize;
+
+            self.bits >>= trailing;
+            self.bits &= !1; // consume element at current index 
+            self.index += trailing;
+    
+            Some(A::index_to_enum(self.index as u64))
         }
-
-        let trailing = self.bits.trailing_zeros() as BitSetSize + 1;
-        self.bits >>= trailing;
-        self.index += trailing;
-
-        Some(A::index_to_enum(self.index - 1))
     }
 }
 
@@ -302,29 +308,73 @@ impl<A: Cardinality> BoundedLattice for BitSet<A> {
 }
 
 #[inline(always)]
-fn bit_at(index: u64) -> u64 {
-    1 << index
+fn bit_at<A: Shl + From<u8>>(index: A) -> <A as Shl>::Output {
+    A::from(1) << index
 }
 
 #[inline(always)]
-fn test_bit(value: u64, index: u64) -> bool {
-    value & bit_at(index) != 0
+fn test_bit<A>(value: A, index: A) -> bool
+where
+    A: Shl + Shl<Output = A> + BitAnd + BitAnd<Output = A> + PartialEq + From<u8>,
+{
+    value & bit_at(index) != A::from(0)
 }
 
 #[inline(always)]
-fn set_bit(value: u64, index: u64) -> u64 {
+fn set_bit<A>(value: A, index: A) -> <A as BitOr>::Output
+where
+    A: Shl + Shl<Output = A> + BitOr + From<u8>,
+{
     value | bit_at(index)
 }
 
 #[inline(always)]
-fn clear_bit(value: u64, index: u64) -> u64 {
+fn clear_bit<A>(value: A, index: A) -> <A as BitAnd>::Output
+where
+    A: Shl + Shl<Output = A> + BitAnd + Not<Output = A> + From<u8>,
+{
     value & !bit_at(index)
 }
 
 #[inline(always)]
-fn toggle_bit(value: u64, index: u64) -> u64 {
+fn toggle_bit<A>(value: A, index: A) -> <A as BitXor>::Output
+where
+    A: Shl + Shl<Output = A> + BitXor + From<u8>,
+{
     value ^ bit_at(index)
 }
+
+/// associate arbitrary type which has the same number of inhabitants as there are bits in Self: Self::BITS == Inhabitants::CARDINALITY
+trait UsedBits {
+    type Inhabitants: Cardinality;
+}
+
+impl UsedBits for u8 {
+    type Inhabitants = BitSet<Option<bool>>;
+}
+
+impl UsedBits for u16 {
+    type Inhabitants = BitSet<(bool, bool)>;
+}
+
+impl UsedBits for u32 {
+    type Inhabitants = BitSet<Option<(bool, bool)>>;
+}
+
+impl UsedBits for u64 {
+    type Inhabitants = BitSet<(bool, Option<bool>)>;
+}
+
+impl UsedBits for u128 {
+    type Inhabitants = BitSet<Option<(bool, Option<bool>)>>;
+}
+
+/// compile-time proof that [`BitSet`] can store [`BitSetSize::BITS`] elements
+const _: () = {
+    assert!(<BitSetSize as UsedBits>::Inhabitants::CARDINALITY == BitSetSize::BITS as u64);
+    assert!(BitSet::<<BitSetSize as UsedBits>::Inhabitants>::USED_BITS == BitSetSize::MAX)
+};
+
 
 #[cfg(test)]
 mod test {

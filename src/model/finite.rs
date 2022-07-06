@@ -1,4 +1,7 @@
-use std::cmp::Ordering;
+use std::{
+    cmp::Ordering,
+    iter::successors,
+};
 
 use super::cardinality::{Cardinality, Void};
 
@@ -112,5 +115,22 @@ impl<A: Finite> Finite for Option<A> {
             None => 0,
             Some(x) => x.enum_to_index() + 1,
         }
+    }
+}
+
+impl<A: Finite, const N: usize> Finite for [A; N] {
+    /// start with `[<0>, <0>, ..., <0>]` then count up starting from the first element
+    fn index_to_enum(value: u64) -> Self {
+        // std::array::from_fn(|i| A::index_to_enum((value / A::CARDINALITY.pow(i as u32)) % A::CARDINALITY))
+        successors(Some(value), |x| Some(x / A::CARDINALITY))
+            .take(N)
+            .map(|x| A::index_to_enum(x % A::CARDINALITY))
+            .collect::<Vec<_>>()
+            .try_into()
+            .unwrap_or_else(|_| panic!("error: faulty implementation")) // statically known to be impossible
+    }
+
+    fn enum_to_index(&self) -> u64 {
+        self.iter().map(A::enum_to_index).sum()
     }
 }
