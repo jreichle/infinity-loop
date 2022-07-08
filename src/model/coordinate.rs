@@ -22,9 +22,47 @@ impl Coordinate<usize> {
     pub const ORIGIN: Coordinate<usize> = Self { row: 0, column: 0 };
 }
 
+impl<A> Coordinate<A> {
+    pub const fn of(value: A) -> Self
+    where
+        A: Copy,
+    {
+        Self {
+            row: value,
+            column: value,
+        }
+    }
+
+    pub fn map<B, F: Fn(A) -> B>(self, transform: F) -> Coordinate<B> {
+        Coordinate {
+            row: transform(self.row),
+            column: transform(self.column),
+        }
+    }
+
+    /// applicative liftA2 combinator
+    pub fn combine<B, C, F: Fn(A, B) -> C>(
+        self,
+        other: Coordinate<B>,
+        transform: F,
+    ) -> Coordinate<C> {
+        Coordinate {
+            row: transform(self.row, other.row),
+            column: transform(self.column, other.column),
+        }
+    }
+}
+
+impl<A> Coordinate<Option<A>> {
+    pub fn sequence(self) -> Option<Coordinate<A>> {
+        self.row
+            .and_then(|r| self.column.map(|c| Coordinate { row: r, column: c }))
+    }
+}
+
 impl<A: Display> Display for Coordinate<A> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "(x: {:04}, y: {:04})", self.row, self.column)
+        write!(f, "(row: {:04}, column: {:04})", self.row, self.column)
     }
 }
 
