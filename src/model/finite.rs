@@ -1,7 +1,4 @@
-use std::{
-    cmp::Ordering,
-    iter::successors,
-};
+use std::{cmp::Ordering, iter::successors};
 
 use super::cardinality::{Cardinality, Void};
 

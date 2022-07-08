@@ -1,6 +1,6 @@
 use crate::model::tile::Square::{Down, Left, Right, Up};
 use core::fmt::Debug;
-use std::{collections::HashSet, fmt::Display, hash::Hash};
+use std::{fmt::Display, hash::Hash};
 
 use enumset::{EnumSet, EnumSetType};
 use quickcheck::Arbitrary;
@@ -31,7 +31,7 @@ use super::{
 ///
 /// square tiles under rotational symmetry form 6 equivalence classes
 ///
-/// backtracking approach
+/// backtracking approach: propagate connection constraints based on available tile configurations to neighboring tiles
 ///
 /// constraints on tile configuration
 ///     * by symmetry tiles with no and all connections possess a singular configuration
@@ -65,10 +65,6 @@ impl<A> SentinelGrid<A> {
         A: Clone,
     {
         SentinelGrid(self.0.map(transform))
-    }
-
-    fn adjust_inner<B, F: Fn(Grid<A>) -> Grid<B>>(self, transform: F) -> SentinelGrid<B> {
-        SentinelGrid(transform(self.0))
     }
 }
 
@@ -124,15 +120,21 @@ fn neighbor(index: Coordinate<isize>, direction: Square) -> Coordinate<isize> {
     index + square_to_coordinate(direction)
 }
 
-/// systematic view on grid to facilitate construction and solving
-type Helper<A> = SentinelGrid<BitSet<Tile<A>>>;
-
 type Superposition<A> = BitSet<Tile<A>>;
+
+/// systematic view on grid to facilitate construction and solving
+type Sentinel<A> = SentinelGrid<Superposition<A>>;
 
 /// witness for the ablility of [BitSet] to store at least Tile<Square>::CARDINALITY = 16 elements
 const _: Superposition<Square> = BitSet::FULL;
 
-fn all_tile_configurations<A: EnumSetType + Finite>(tile: Tile<A>) -> BitSet<Tile<A>> {
+/// expands tile to a the superposition of all element of the tiles equivalence class under rotational symmetry
+///
+/// examples:
+/// * `[┗]` -> `{ [┗], [┏], [┓], [┛] }`
+/// * `[╻]` -> `{ [╹], [╺], [╻], [╸] }`
+/// * `[╋]` -> `{ [╋] }`
+fn superimpose_tile<A: EnumSetType + Finite>(tile: Tile<A>) -> Superposition<A> {
     // insert successively rotated tiles until encountering repeated initial tile
     iter_fix(
         (BitSet::<Tile<A>>::EMPTY, tile),
@@ -143,27 +145,30 @@ fn all_tile_configurations<A: EnumSetType + Finite>(tile: Tile<A>) -> BitSet<Til
 }
 
 /// grid of superimposed tiles in different configurations
-fn to_configuration_space<A: EnumSetType + Finite>(
-    grid: &SentinelGrid<Tile<A>>,
-) -> SentinelGrid<BitSet<Tile<A>>> {
-    grid.map(all_tile_configurations)
+fn superimpose_grid<A: EnumSetType + Finite>(grid: &SentinelGrid<Tile<A>>) -> Sentinel<A> {
+    grid.map(superimpose_tile)
 }
 
-fn unique<A: Finite + Copy>(grid: SentinelGrid<BitSet<A>>) -> Option<Grid<A>> {
+/// unwraps if all superpositions are collapsed (= only contain single state)
+fn if_unique<A: Finite + Copy>(grid: &SentinelGrid<BitSet<A>>) -> Option<Grid<A>> {
     grid.extract_grid()
         .map(BitSet::unwrap_if_singleton)
         .sequence()
 }
 
-fn is_solvable<A>(grid: &SentinelGrid<HashSet<A>>) -> bool {
-    grid.0.elements().iter().all(|s| !s.is_empty())
+fn if_solvable<A>(grid: SentinelGrid<BitSet<A>>) -> Option<SentinelGrid<BitSet<A>>> {
+    grid.0
+        .elements()
+        .iter()
+        .all(|s| !s.is_empty())
+        .then_some(grid)
 }
 
 /// restricts superposition to only include tiles with specified connection and direction
-fn restrict_tile<A: EnumSetType + Finite>(
-    connection: Connection<A>,
-    superposition: Superposition<A>,
-) -> Superposition<A> {
+fn restrict_tile<A>(connection: Connection<A>, superposition: Superposition<A>) -> Superposition<A>
+where
+    A: EnumSetType + Finite,
+{
     let iter = superposition.into_iter();
     match connection {
         Connection(ref d, Status::Absent) => iter.filter(|t| !t.0.contains(*d)).collect(),
@@ -205,23 +210,20 @@ impl Connection<Square> {
 /// eg. if there is a common [Up] connection between all superpositions, then the result includes [Connection::Present(Up)]
 ///
 /// returned directions are guaranteed unique
-fn overlaps<A: EnumSetType + Finite>(superposition: Superposition<A>) -> Vec<Connection<A>> {
+fn extract_overlaps<A: EnumSetType + Finite>(
+    superposition: Superposition<A>,
+) -> Vec<Connection<A>> {
     // empty superposition leads to propagation of Absent and Present hints simultaneously
-    let mut connections = Vec::new();
-    connections.extend(
-        Tile::meet_all(superposition.clone().into_iter())
-            .0
-            .into_iter()
-            .map(|d| Connection(d, Status::Present)),
-    );
-    connections.extend(
-        Tile::join_all(superposition.into_iter())
-            .0
-            .complement()
-            .into_iter()
-            .map(|d| Connection(d, Status::Absent)),
-    );
-    connections
+    let present_connections = Tile::meet_all(superposition)
+        .0
+        .into_iter()
+        .map(|d| Connection(d, Status::Present));
+    let absent_connections = Tile::join_all(superposition)
+        .0
+        .complement()
+        .into_iter()
+        .map(|d| Connection(d, Status::Absent));
+    present_connections.chain(absent_connections).collect()
 }
 
 /// iterative fixed point of a function
@@ -242,18 +244,7 @@ where
     }
 }
 
-pub fn solve(grid: &Grid<Tile<Square>>) -> Vec<Grid<Tile<Square>>> {
-    let helper = to_configuration_space(&with_sentinels(grid));
-    let solved = minimize(helper);
-    let r = unique(solved);
-    r.into_iter().collect()
-    // while let None = r {
-    //     let coord = solved.0.coordinates().into_iter().max_by_key(|c| solved.0[c]).expect("Expected branch in puzzle, but it there were no superpositions");
-    //     solved.0[coord].into_iter().map(|x| HashSet::from(x)).map(|s| solved.0.try_adjust_at(coord, |_| s)).map(minimize).collect()
-    // }
-}
-
-fn minimize(grid: Helper<Square>) -> Helper<Square> {
+fn minimize(grid: Sentinel<Square>) -> Sentinel<Square> {
     iter_fix(
         grid,
         |g| g.0.coordinates().into_iter().fold(g.clone(), step),
@@ -261,11 +252,26 @@ fn minimize(grid: Helper<Square>) -> Helper<Square> {
     )
 }
 
-fn step(grid: Helper<Square>, index: Coordinate<isize>) -> Helper<Square> {
+/// chooses a tile with supplied heuristic and creates a new grid with the tile fixed to one state for each state in the superposition of that tile
+fn branch<A: EnumSetType + Finite, F: Fn(&Sentinel<A>) -> Coordinate<isize>>(
+    grid: &Sentinel<A>,
+    heuristic: F,
+) -> Vec<Sentinel<A>> {
+    let coordinate = heuristic(grid);
+    grid.0
+        .get(coordinate)
+        .copied()
+        .unwrap_or_default()
+        .iter()
+        .map(|t| SentinelGrid(grid.0.try_adjust_at(coordinate, |_| BitSet::singleton(t))))
+        .collect()
+}
+
+fn step(grid: Sentinel<Square>, index: Coordinate<isize>) -> Sentinel<Square> {
     grid.0
         .get(index)
         .map(Superposition::clone)
-        .map(overlaps)
+        .map(extract_overlaps)
         .unwrap_or_default()
         .into_iter()
         .fold(grid, |acc, c| {
@@ -276,13 +282,50 @@ fn step(grid: Helper<Square>, index: Coordinate<isize>) -> Helper<Square> {
         })
 }
 
+// hide concrete iterator implementation
+pub fn solve(grid: &Grid<Tile<Square>>) -> impl Iterator<Item = Grid<Tile<Square>>> {
+    SolutionIterator(vec![superimpose_grid(&with_sentinels(grid))])
+}
+
+/// lazy generation of solutions to unify API for quarying single and multiple solutions
+///
+/// stores a stack of solution candidates, which are successively refined
 struct SolutionIterator<A>(Vec<A>);
 
-impl Iterator for SolutionIterator<Grid<Tile<Square>>> {
+impl Iterator for SolutionIterator<Sentinel<Square>> {
     type Item = Grid<Tile<Square>>;
 
+    /// algorithm: backtracking with explicit stack
+    ///
+    /// pops solutions candidate from stack if available and attempts to solve it
+    ///
+    ///     1. contradiction: pop next element from stack and repeat procedure
+    ///     2. unique solution: return in solved state
+    ///     3. branching: select 1 candidate and repeat procedure, push rest on stack
+    ///
+    /// it is yet to be determined if a contradiction after branching can actually occur
     fn next(&mut self) -> Option<Self::Item> {
-        todo!()
+        while let Some(candidate) = self.0.pop() {
+            let minimized = minimize(candidate);
+            match if_unique(&minimized) {
+                None => {
+                    // distinguish between no and several solutions
+                    if_solvable(minimized).into_iter().for_each(|g| {
+                        // current heuristic: pick superpositions with most states
+                        let branch_candidates = branch(&g, |grid| {
+                            grid.0
+                                .coordinates()
+                                .into_iter()
+                                .max_by_key(|c| grid.0[*c].len())
+                                .expect("Logical error: attempted to branch, but was unable")
+                        });
+                        self.0.extend(branch_candidates);
+                    });
+                }
+                Some(g) => return Some(g),
+            }
+        }
+        None
     }
 }
 
@@ -295,31 +338,17 @@ mod test {
     #[quickcheck]
     fn tile_configurations_have_same_number_of_connections(tile: Tile<Square>) -> bool {
         let connections = tile.0.len();
-        all_tile_configurations(tile)
+        superimpose_tile(tile)
             .into_iter()
             .all(|t| t.0.len() == connections)
     }
 
     #[quickcheck]
     fn restrict_tile_sanity_check() -> bool {
-        let superposition = BitSet::from_iter(all_tile_configurations(Tile(Up | Right)));
+        let superposition = BitSet::from_iter(superimpose_tile(Tile(Up | Right)));
         let connection = Connection(Right, Status::Present);
         restrict_tile(connection, superposition)
             == BitSet::from_iter([Tile(Up | Right), Tile(Right | Down)])
-    }
-
-    #[quickcheck]
-    fn overlaps_sanity_check(superposition: Superposition<Square>) -> bool {
-        println!(
-            "{:?} -> {:?}",
-            superposition
-                .clone()
-                .into_iter()
-                .map(|s| s.to_string())
-                .collect::<Vec<_>>(),
-            overlaps(superposition)
-        );
-        true
     }
 
     #[quickcheck]
@@ -336,11 +365,5 @@ mod test {
         // restrict coordinates to a range resembling actual values used in grid and avoid integer over- / underflows
         let index = index.map(|x| x as isize);
         EnumSet::all().into_iter().fold(index, neighbor) == index
-    }
-
-    #[quickcheck]
-    fn tile_configurations(tile: Tile<Square>) -> bool {
-        println!("{}", all_tile_configurations(tile));
-        true
     }
 }

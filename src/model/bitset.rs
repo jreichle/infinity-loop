@@ -14,9 +14,9 @@ use super::{cardinality::Cardinality, finite::Finite, lattice::BoundedLattice};
 // struct BitSet<A: Cardinality>([Width; (A::CARDINALITY + Width::BITS - 1) / Width::BITS], PhantomData<A>);
 
 /// underlying integer size for storing elements in the [BitSet]
-/// 
+///
 /// number of bits equals number of storable elements
-/// 
+///
 /// may be set to any unsigned type
 type BitSetSize = u64;
 
@@ -155,21 +155,30 @@ impl<A: Finite> BitSet<A> {
     ///
     /// immutable variant of [insert]
     pub fn inserted(self, element: A) -> Self {
-        Self(set_bit(self.0, element.enum_to_index() as BitSetSize), PhantomData)
+        Self(
+            set_bit(self.0, element.enum_to_index() as BitSetSize),
+            PhantomData,
+        )
     }
 
     /// removes given element from the set
     ///
     /// immutable variant of [remove]
     pub fn removed(self, element: A) -> Self {
-        Self(clear_bit(self.0, element.enum_to_index() as BitSetSize), PhantomData)
+        Self(
+            clear_bit(self.0, element.enum_to_index() as BitSetSize),
+            PhantomData,
+        )
     }
 
     /// toggles given element in the set
     ///
     /// immutable variant of [toggle]
     pub fn toggled(self, element: A) -> Self {
-        Self(toggle_bit(self.0, element.enum_to_index() as BitSetSize), PhantomData)
+        Self(
+            toggle_bit(self.0, element.enum_to_index() as BitSetSize),
+            PhantomData,
+        )
     }
 
     /// inserts given element into the set and indicates if the set has changed
@@ -243,16 +252,15 @@ impl<A: Finite> Iterator for Iter<A> {
     type Item = A;
 
     fn next(&mut self) -> Option<Self::Item> {
-
         if self.bits == 0 {
             None
         } else {
             let trailing = self.bits.trailing_zeros() as BitSetSize;
 
             self.bits >>= trailing;
-            self.bits &= !1; // consume element at current index 
+            self.bits &= !1; // consume element at current index
             self.index += trailing;
-    
+
             Some(A::index_to_enum(self.index as u64))
         }
     }
@@ -362,7 +370,7 @@ impl UsedBits for u32 {
 }
 
 impl UsedBits for u64 {
-    type Inhabitants = BitSet<(bool, Option<bool>)>;
+    type Inhabitants = fn(Option<bool>) -> (bool, bool); // BitSet<(bool, Option<bool>)>;
 }
 
 impl UsedBits for u128 {
@@ -370,11 +378,11 @@ impl UsedBits for u128 {
 }
 
 /// compile-time proof that [`BitSet`] can store [`BitSetSize::BITS`] elements
+#[allow(clippy::assertions_on_constants)]
 const _: () = {
     assert!(<BitSetSize as UsedBits>::Inhabitants::CARDINALITY == BitSetSize::BITS as u64);
     assert!(BitSet::<<BitSetSize as UsedBits>::Inhabitants>::USED_BITS == BitSetSize::MAX)
 };
-
 
 #[cfg(test)]
 mod test {

@@ -10,6 +10,8 @@ use super::{
 
 /// char to tile mapping
 ///
+/// assign a character to represent each equivalence class under rotational symmetry
+///
 /// | Connections | Character | Unicode                 |
 /// |:------------|:----------|:------------------------|
 /// | 0           | ' '       | `[ ]`                   |
@@ -21,7 +23,7 @@ use super::{
 pub fn char_to_tile(tile_character: char) -> Result<Tile<Square>, String> {
     match tile_character {
         ' ' => Ok(Tile(EnumSet::empty())),
-        '-' => Ok(Tile(EnumSet::only(Up))),
+        '-' => Ok(Tile(!!Up)),
         'I' => Ok(Tile(Up | Down)),
         'L' => Ok(Tile(Up | Right)),
         'T' => Ok(Tile(Up | Right | Down)),
@@ -33,14 +35,14 @@ pub fn char_to_tile(tile_character: char) -> Result<Tile<Square>, String> {
 pub fn unicode_to_tile(tile_character: char) -> Result<Tile<Square>, String> {
     match tile_character {
         ' ' => Ok(Tile(EnumSet::empty())),
-        '╹' => Ok(Tile(!Up)),
-        '╺' => Ok(Tile(!Right)),
+        '╹' => Ok(Tile(!!Up)),
+        '╺' => Ok(Tile(!!Right)),
         '┗' => Ok(Tile(Up | Right)),
-        '╻' => Ok(Tile(!Down)),
+        '╻' => Ok(Tile(!!Down)),
         '┃' => Ok(Tile(Up | Down)),
         '┏' => Ok(Tile(Right | Down)),
         '┣' => Ok(Tile(Up | Right | Down)),
-        '╸' => Ok(Tile(!Left)),
+        '╸' => Ok(Tile(!!Left)),
         '┛' => Ok(Tile(Up | Left)),
         '━' => Ok(Tile(Right | Left)),
         '┻' => Ok(Tile(Up | Right | Left)),
@@ -106,7 +108,7 @@ pub const TEST_LEVELS: [&str; 20] = [
     /* 10 */ " LLLL \nLLLLLL\nLLLLLL\n LLLL ",
     /* 11 */ " LL \n-TT-\nLTTL\nLTTL\nLIIL",
     /* 12 */ "- --\nTTLI\nL+IL\n-TL-\nIL+T\nLITL",
-    /* 13 */ "-T-\n-T-\n-I-\n-I-\n-T-\n-T-",
+    /* 13 */ "-T-\n-T-\n-I-\n-I-\n-T-\n-T-", // requires branching
     /* 14 */ "-TL\n-TL\nLL \nIT-\n-LL\n  -",
     /* 15 */ "-TL\nLTI\nILT\nI-L\nLI-",
     /* 16 */ "-LL-\nL+L-\n-T- \nLL -\nTL -\n-   ",
@@ -117,6 +119,8 @@ pub const TEST_LEVELS: [&str; 20] = [
 ];
 
 pub const TRIVIAL_LEVEL: &str = "-I-";
+
+pub const MULTIPLE_SOLUTIONS: &str = "----\n----\n----\n----";
 
 #[cfg(test)]
 mod tests {
@@ -136,141 +140,3 @@ mod tests {
         tile == unicode_to_tile(tile_char).unwrap()
     }
 }
-
-/*
-pub const LEVEL_1: &str = "
-LTL
-LTL";
-
-const LEVEL_2: &str = "
-LLLL
-LLLL";
-
-const LEVEL_3: &str = "
-LTL
-T+T
-LTL";
-
-const LEVEL_4: &str = "
-- -
-I I
-- -";
-
-const LEVEL_5: &str = "
-LITL
-TTTI
-ITTT
-LTIL";
-
-const LEVEL_6: &str = "
- LL-
-L++L
--II
- -- ";
-
-const LEVEL_7: &str = "
-LIIL
-LLLL
--II-
-----";
-
-const LEVEL_8: &str = "
-LIIIL
---T--
--I+I-
---T--
-LIIIL";
-
-const LEVEL_9: &str = "
-LTTIL
-IITIT
-TT+TT
-TITII
-LITTL";
-
-const LEVEL_10: &str = "
- LLLL
-LLLLLL
-LLLLLL
- LLLL ";
-
-const LEVEL_11: &str = "
- LL
--TT-
-LTTL
-LTTL
-LIIL";
-
-const LEVEL_12: &str = "
-- --
-TTLI
-L+IL
--TL-
-IL+T
-LITL";
-
-const LEVEL_13: &str = "
--T-
--T-
--I-
--I-
--T-
--T-";
-
-const LEVEL_14: &str = "
--TL
--TL
-LL
-IT-
--LL
-  -";
-
-const LEVEL_15: &str = "
--TL
-LTI
-ILT
-I-L
-LI-";
-
-const LEVEL_16: &str = "
--LL-
-L+L-
--T-
-LL -
-TL -
--   ";
-
-const LEVEL_17: &str = "
---LL
-L+LI
-LT -
--TL-
--LTL
-LTT-
- -L-";
-
-const LEVEL_18: &str = "
---L
--LL
-L+-
-TTL
-LIL
--I-";
-
-const LEVEL_19: &str = "
----
-ITL
-II
-IT-
-IL-
-LI-";
-
-const LEVEL_20: &str = "
-L-
-TL-
-III
-LTT
-LTL
--LL
- -L";
-*/

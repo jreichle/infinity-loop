@@ -27,15 +27,15 @@ pub trait BoundedLattice: Sized {
     /// greatest lower bound of all elements
     ///
     /// shortcut monoidal fold over several elements
-    fn meet_all<I: Iterator<Item = Self>>(elements: I) -> Self {
-        elements.fold(Self::top(), Self::meet)
+    fn meet_all<I: IntoIterator<Item = Self>>(elements: I) -> Self {
+        elements.into_iter().fold(Self::top(), Self::meet)
     }
 
     /// least upper bound of all elements
     ///
     /// shortcut monoidal fold over several elements
-    fn join_all<I: Iterator<Item = Self>>(elements: I) -> Self {
-        elements.fold(Self::bottom(), Self::join)
+    fn join_all<I: IntoIterator<Item = Self>>(elements: I) -> Self {
+        elements.into_iter().fold(Self::bottom(), Self::join)
     }
 }
 

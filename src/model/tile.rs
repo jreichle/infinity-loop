@@ -7,7 +7,7 @@ use Square::{Down, Left, Right, Up};
 use super::{cardinality::Cardinality, finite::Finite};
 
 /// represents a direction vector for a tile connection
-#[derive(Hash, Debug, EnumSetType)]
+#[derive(Debug, EnumSetType)]
 #[enumset(repr = "u32")]
 pub enum Square {
     /// Coordinate(-1, 0)
@@ -92,6 +92,9 @@ impl<A: EnumSetType> Default for Tile<A> {
 }
 
 impl<A: EnumSetType> Tile<A> {
+    fn complement(&self) -> Self {
+        Self(self.0.complement())
+    }
     /// rotates the tile clockwise by one step
     ///
     /// each step is 360 degrees / number of enum values
@@ -163,6 +166,8 @@ impl Tile<Square> {
 #[cfg(test)]
 mod tests {
 
+    use crate::model::finite::Finite;
+
     use super::{Square, Tile};
 
     #[quickcheck]
@@ -208,5 +213,10 @@ mod tests {
         rotations: u32,
     ) -> bool {
         tile.0.len() == tile.rotated_counterclockwise(rotations).0.len()
+    }
+
+    #[quickcheck]
+    fn enumset_indexing_is_same_as_finite_indexing(tile: Tile<Square>) -> bool {
+        tile.0.as_u64() == tile.0.into_iter().map(|s| 1 << s.enum_to_index()).sum()
     }
 }

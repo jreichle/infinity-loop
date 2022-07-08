@@ -11,10 +11,15 @@ mod model;
 
 use std::env;
 
-use model::testlevel::*;
+use model::{
+    grid::Grid,
+    testlevel::*,
+    tile::{Square, Tile},
+};
 
 use crate::model::solver::*;
 
+#[allow(unused_variables)] // for testing purposes
 fn main() {
     const SHOW_ERROR_CALLSTACK: bool = true;
 
@@ -26,10 +31,21 @@ fn main() {
         .map(|l| parse_level(l, char_to_tile).unwrap())
         .to_vec();
 
-    levels.iter().zip(1..).for_each(|(l, i)| {
-        println!(
-            "level {i}\n{l}\n\nlevel {i} solved\n{}\n",
-            solve(l).into_iter().next().unwrap_or_default()
-        )
-    });
+    // levels
+    //     .iter()
+    //     .zip(1..)
+    //     .for_each(|(l, i)| print_level_and_solutions(l, &i.to_string()));
+
+    print_level_and_solutions(
+        &parse_level(MULTIPLE_SOLUTIONS, char_to_tile).unwrap(),
+        "multiple",
+    );
+}
+
+fn print_level_and_solutions(level: &Grid<Tile<Square>>, level_identifier: &str) {
+    println!("\nlevel {level_identifier}\n{level}\n");
+    solve(level)
+        .into_iter()
+        .zip(1..)
+        .for_each(|(s, n)| println!("level {level_identifier} solution {n}\n{s}\n"))
 }
