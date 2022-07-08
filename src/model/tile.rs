@@ -1,4 +1,4 @@
-use std::fmt::Display;
+use std::{fmt::Display, ops::Not};
 
 use enumset::{EnumSet, EnumSetType};
 use quickcheck::{Arbitrary, Gen};
@@ -92,9 +92,6 @@ impl<A: EnumSetType> Default for Tile<A> {
 }
 
 impl<A: EnumSetType> Tile<A> {
-    fn complement(&self) -> Self {
-        Self(self.0.complement())
-    }
     /// rotates the tile clockwise by one step
     ///
     /// each step is 360 degrees / number of enum values
@@ -112,6 +109,14 @@ impl<A: EnumSetType> Tile<A> {
     pub fn rotated_counterclockwise(&self, repetitions: u32) -> Self {
         let enum_values = EnumSet::<A>::bit_width();
         self.rotated_clockwise(enum_values - repetitions % enum_values)
+    }
+}
+
+impl<A: EnumSetType> Not for Tile<A> {
+    type Output = Self;
+
+    fn not(self) -> Self::Output {
+        Self(!self.0)
     }
 }
 
