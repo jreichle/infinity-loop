@@ -8,9 +8,11 @@ extern crate quickcheck;
 extern crate quickcheck_macros;
 
 mod model;
+mod view;
+
 
 use std::env;
-
+use view::window::*;
 use model::{
     grid::Grid,
     testlevel::*,
@@ -40,6 +42,8 @@ fn main() {
         &parse_level(MULTIPLE_SOLUTIONS, char_to_tile).unwrap(),
         "multiple",
     );
+
+    initiate_window();
 }
 
 fn print_level_and_solutions(level: &Grid<Tile<Square>>, level_identifier: &str) {
@@ -48,4 +52,14 @@ fn print_level_and_solutions(level: &Grid<Tile<Square>>, level_identifier: &str)
         .into_iter()
         .zip(1..)
         .for_each(|(s, n)| println!("level {level_identifier} solution {n}\n{s}\n"))
+
+
+
+    // let levels = TEST_LEVELS
+    //     .map(|l| parse_level(l, char_to_tile).unwrap())
+    //     .to_vec();
+    // levels
+    //     .iter()
+    //     .zip(1..)
+    //     .for_each(|(l, i)| println!("level {i}\n{l}\n"));
 }
