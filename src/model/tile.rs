@@ -68,25 +68,23 @@ impl<A: EnumSetType> Default for Tile<A> {
 }
 
 impl<A: EnumSetType> Tile<A> {
-
     /// rotates the tile clockwise by one step
-    /// 
+    ///
     /// each step is 360 degrees / number of enum values
     pub fn rotated_clockwise(&self, repetitions: u32) -> Self {
         let bit_rep = self.0.as_u32();
         let enum_values = EnumSet::<A>::bit_width();
         let repetitions = repetitions % enum_values;
-        let rotated_bit_rep =
-            (bit_rep << repetitions) | (bit_rep >> (enum_values - repetitions));
+        let rotated_bit_rep = (bit_rep << repetitions) | (bit_rep >> (enum_values - repetitions));
         Self(EnumSet::from_u32_truncated(rotated_bit_rep))
     }
 
     /// rotates the tile counterclockwise by one step
-    /// 
+    ///
     /// each step is 360 degrees / number of enum values
     pub fn rotated_counterclockwise(&self, repetitions: u32) -> Self {
         let enum_values = EnumSet::<A>::bit_width();
-        self.rotated_clockwise( enum_values - repetitions % enum_values)
+        self.rotated_clockwise(enum_values - repetitions % enum_values)
     }
 }
 

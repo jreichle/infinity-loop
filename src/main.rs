@@ -7,6 +7,7 @@ extern crate quickcheck;
 #[macro_use(quickcheck)]
 extern crate quickcheck_macros;
 
+mod generator;
 mod model;
 
 use model::testlevel::*;

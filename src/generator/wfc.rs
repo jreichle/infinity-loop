@@ -1,18 +1,6 @@
 // wave function collapse (WFC)
 
-mod model;
-
-use enumset::EnumSet;
-use model::tile::{
-    Square::{self, Down, Left, Right, Up},
-    Tile,
-};
-
-use std::collections::HashMap;
-use std::collections::HashSet;
-use std::iter::FromIterator;
-
-mod model;
+use crate::model;
 
 // use model::grid::*; // model
 use enumset::EnumSet;
@@ -298,7 +286,9 @@ fn propagate(
             let mut modified = false;
 
             for i in 0..neigbor_tiles.len() {
-                if i >= neigbor_tiles.len() { break; }
+                if i >= neigbor_tiles.len() {
+                    break;
+                }
                 let neigbor_tile = neigbor_tiles[i];
                 let mut compatible_counter = 0;
                 for tile in compactible_tiles.iter() {
@@ -387,4 +377,3 @@ fn generate_grid(
     let mut game_board: Grid<Tile<Square>> = Grid::new(width, height, flat_map);
     game_board
 }
-
