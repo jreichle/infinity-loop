@@ -5,7 +5,7 @@ use std::{
 };
 
 /// Holds position for x and y axis and offers basic arithmetic operators
-#[derive(Debug, PartialEq, Eq, PartialOrd, Ord, Hash, Clone, Copy)]
+#[derive(Debug, Default, PartialEq, Eq, PartialOrd, Ord, Hash, Clone, Copy)]
 pub struct Coordinate<A> {
     pub row: A,
     pub column: A,

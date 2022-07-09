@@ -24,6 +24,12 @@ struct Unfold<S, A> {
     step: fn(S) -> (A, S),
 }
 
+impl<S: Default, A: Default> Default for Unfold<S, A> {
+    fn default() -> Self {
+        Self { state: S::default(), step: |s| (A::default(), s) }
+    }
+}
+
 impl<S, A> Unfold<S, A> {
     pub fn new(state: S, step: fn(S) -> (A, S)) -> Self {
         Self { state, step }
