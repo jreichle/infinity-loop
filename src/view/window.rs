@@ -85,10 +85,10 @@ pub fn initiate_window() {
 fn draw(frame: &mut [u8], window_size: PhysicalSize<u32>, board: &Grid<Tile<Square>>) {
     let tile_set = board.serialize_board();
 
-    let mut tile_width : usize = (window_size.width as usize) / (board.columns as usize);
+    let mut tile_width = (window_size.width as usize) / (board.columns() as usize);
     if tile_width % 2 == 0 { tile_width -= 1; }
 
-    let mut tile_height : usize = (window_size.height as usize) / (board.rows as usize);
+    let mut tile_height = (window_size.height as usize) / (board.rows() as usize);
     if tile_height % 2 == 0 { tile_height -= 1; }
 
     let tile_center_x = tile_width / 2 + 1;
@@ -107,8 +107,8 @@ fn draw(frame: &mut [u8], window_size: PhysicalSize<u32>, board: &Grid<Tile<Squa
 
         let tile;
         if let Some(result) = tile_set.get(&Coordinate {
-            column: tile_coord_y,
-            row: tile_coord_x
+            column: tile_coord_y as isize,
+            row: tile_coord_x as isize
         })
         {
             tile = result.get_value();

@@ -122,6 +122,8 @@ pub const TRIVIAL_LEVEL: &str = "-I-";
 
 pub const MULTIPLE_SOLUTIONS: &str = "----\n----\n----\n----";
 
+pub const HARD_LEVEL: &str = "----------\n----------\n----------\n----------\n----------\n----------\n----------\n----------\n----------\n----------\n";
+
 #[cfg(test)]
 mod tests {
 

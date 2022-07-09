@@ -19,15 +19,15 @@
 
 ### Model
 
-- [x] model for puzzle and functions defining relevant interactions
+- [X] model for puzzle and functions defining relevant interactions
 - [ ] test coverage
-    - [x] tile
+    - [X] tile
     - [ ] grid
-    - [ ] parsing / serializing
+    - [X] parsing / serializing
 - [ ] seperate test levels and parser / serializer into different files
 - [ ] establish way of sending gameboard status and updates to View
 - [ ] implement puzzle generator
-- [ ] implement puzzle solver
+- [X] implement puzzle solver
 
 ## Further Extensions
 

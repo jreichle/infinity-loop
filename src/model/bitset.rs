@@ -2,7 +2,7 @@ use std::{
     fmt::Display,
     hash::Hash,
     marker::PhantomData,
-    ops::{BitAnd, BitOr, BitXor, Not, Shl},
+    ops::{BitAnd, BitOr, BitXor, Not, Shl}, iter::FusedIterator,
 };
 
 use quickcheck::Arbitrary;
@@ -266,6 +266,18 @@ impl<A: Finite> Iterator for Iter<A> {
     }
 }
 
+impl<A: Finite> ExactSizeIterator for Iter<A> {
+    fn len(&self) -> usize {
+        self.bits.count_ones() as usize
+    }
+
+    // fn is_empty(&self) -> bool {
+    //     self.bits == 0
+    // }
+}
+
+impl<A: Finite> FusedIterator for Iter<A> {}
+
 impl<A: Finite> FromIterator<A> for BitSet<A> {
     fn from_iter<T: IntoIterator<Item = A>>(iter: T) -> Self {
         iter.into_iter().fold(Self::EMPTY, Self::inserted)
@@ -279,6 +291,8 @@ impl<A: Finite> Extend<A> for BitSet<A> {
         })
     }
 }
+
+
 
 impl<A: Cardinality> Not for BitSet<A> {
     type Output = Self;
