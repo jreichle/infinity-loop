@@ -1,4 +1,4 @@
-use std::{borrow::Borrow, iter::repeat, marker::PhantomData, ops::Index};
+use std::{borrow::Borrow, marker::PhantomData, ops::Index};
 
 use super::{cardinality::Cardinality, finite::Finite};
 
@@ -39,10 +39,7 @@ impl<K: Cardinality, V> BitMap<K, V> {
 
 impl<K: Cardinality, V: Clone> BitMap<K, V> {
     fn empty() -> Self {
-        Self(
-            repeat(None).take(K::CARDINALITY as usize).collect(),
-            PhantomData,
-        )
+        Self(vec![None; K::CARDINALITY as usize], PhantomData)
     }
 }
 

@@ -128,6 +128,8 @@ impl<A: Finite, const N: usize> Finite for [A; N] {
     }
 
     fn enum_to_index(&self) -> u64 {
-        self.iter().map(A::enum_to_index).sum()
+        self.iter()
+            .map(A::enum_to_index)
+            .fold(0, |acc, x| acc * A::CARDINALITY + x)
     }
 }

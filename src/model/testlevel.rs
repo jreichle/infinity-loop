@@ -95,7 +95,7 @@ pub fn serialize_level<A: Clone, F: Fn(A) -> char>(grid: Grid<A>, converter: F) 
 pub const LEVEL_MALFORMED: &str = " ";
 
 /// first 20 levels of android game infinity loop
-pub const TEST_LEVELS: [&str; 20] = [
+pub const TEST_LEVELS: [&str; 21] = [
     /* 01 */ "LTL\nLTL",
     /* 02 */ "LLLL\nLLLL",
     /* 03 */ "LTL\nT+T\nLTL",
@@ -116,6 +116,46 @@ pub const TEST_LEVELS: [&str; 20] = [
     /* 18 */ "--L\n-LL\nL+-\nTTL\nLIL\n-I-",
     /* 19 */ "---\nITL\nII \nIT-\nIL-\nLI-",
     /* 20 */ "L- \nTL-\nIII\nLTT\nLTL\n-LL\n -L",
+    /* 21 */
+    "-LLL-L-\n-LTTLLL\nLITLLL-\n -LILLL\n-LLTL-I\n-LLTLL-\n-LTLILL\nL---L--", // lvl 111
+                                                                              /* 22 */
+                                                                              /* 23 */
+                                                                              /* 24 */
+                                                                              /* 25 */
+                                                                              /* 26 */
+                                                                              /* 27 */
+                                                                              /* 28 */
+                                                                              /* 29 */
+                                                                              /* 30 */
+                                                                              /* 31 */
+                                                                              /* 32 */
+                                                                              /* 33 */
+                                                                              /* 34 */
+                                                                              /* 35 */
+                                                                              /* 36 */
+                                                                              /* 37 */
+                                                                              /* 38 */
+                                                                              /* 39 */
+                                                                              /* 40 */
+                                                                              /* 41 */
+                                                                              /* 42 */
+                                                                              /* 43 */
+                                                                              /* 44 */
+                                                                              /* 45 */
+                                                                              /* 46 */
+                                                                              /* 47 */
+                                                                              /* 48 */
+                                                                              /* 49 */
+                                                                              /* 50 */
+                                                                              /* 51 */
+                                                                              /* 52 */
+                                                                              /* 53 */
+                                                                              /* 54 */
+                                                                              /* 55 */
+                                                                              /* 56 */
+                                                                              /* 57 */
+                                                                              /* 58 */
+                                                                              /* 59 */
 ];
 
 pub const TRIVIAL_LEVEL: &str = "-I-";

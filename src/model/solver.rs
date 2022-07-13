@@ -2,11 +2,12 @@ use crate::model::tile::Square::{Down, Left, Right, Up};
 use core::fmt::Debug;
 use std::{fmt::Display, hash::Hash};
 
-use enumset::{EnumSet, EnumSetType};
+use enumset::EnumSetType;
 use quickcheck::Arbitrary;
 
 use super::{
     bitset::BitSet,
+    cardinality::Cardinality,
     coordinate::Coordinate,
     finite::Finite,
     grid::Grid,
@@ -47,8 +48,15 @@ use super::{
 ///
 ///
 
+/// simplifying function calls by associating them with their respective structs
+
+pub type Superposition<A> = BitSet<Tile<A>>;
+
+/// systematic view on grid to facilitate construction and solving
+pub type Sentinel<A> = SentinelGrid<Superposition<A>>;
+
 #[derive(Clone, Debug, Default, PartialEq, Eq, PartialOrd, Ord, Hash)]
-struct SentinelGrid<A>(Grid<A>);
+pub struct SentinelGrid<A>(pub Grid<A>);
 
 impl<A> SentinelGrid<A> {
     pub fn extract_grid(&self) -> Grid<A>
@@ -68,6 +76,13 @@ impl<A> SentinelGrid<A> {
     }
 }
 
+impl<A: EnumSetType + Finite> SentinelGrid<Tile<A>> {
+    /// grid of superimposed tiles in different configurations
+    pub fn superimpose(&self) -> Sentinel<A> {
+        self.map(Tile::superimpose)
+    }
+}
+
 impl Display for SentinelGrid<Superposition<Square>> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         let grid = self.0.map(|s| Tile::join_all(s.into_iter()));
@@ -77,80 +92,78 @@ impl Display for SentinelGrid<Superposition<Square>> {
 
 impl Arbitrary for SentinelGrid<Tile<Square>> {
     fn arbitrary(g: &mut quickcheck::Gen) -> Self {
-        with_sentinels(&Grid::arbitrary(g))
+        Grid::arbitrary(g).with_sentinels(Tile::default())
     }
 }
 
-/// function is specific to Square
-fn with_sentinels(grid: &Grid<Tile<Square>>) -> SentinelGrid<Tile<Square>> {
-    SentinelGrid(Grid::init(grid.rows() + 2, grid.columns() + 2, |c| {
-        grid.get(c - Coordinate::of(1)).copied().unwrap_or_default()
-    }))
-}
-
-fn coordinate_to_square(coordinate: Coordinate<isize>) -> Option<Square> {
-    let row = coordinate.row;
-    let column = coordinate.column;
-    match (row, column) {
-        (-1, 0) => Some(Up),
-        (0, 1) => Some(Right),
-        (1, 0) => Some(Down),
-        (0, -1) => Some(Left),
-        _ => None,
+impl<A: Copy> Grid<A> {
+    /// surrounds the whole grid with one layer of sentinel values
+    ///
+    /// `extract_grid` ∘ `with_sentinels` == identity
+    ///
+    /// function is specific to Square
+    pub fn with_sentinels(&self, sentinel: A) -> SentinelGrid<A> {
+        SentinelGrid(Grid::init(self.rows() + 2, self.columns() + 2, |c| {
+            self.get(c - Coordinate::of(1)).copied().unwrap_or(sentinel)
+        }))
     }
 }
 
-fn square_to_coordinate(square: Square) -> Coordinate<isize> {
-    match square {
-        Up => Coordinate { row: -1, column: 0 },
-        Right => Coordinate { row: 0, column: 1 },
-        Down => Coordinate { row: 1, column: 0 },
-        Left => Coordinate { row: 0, column: -1 },
+impl Square {
+    fn to_coordinate(self) -> Coordinate<isize> {
+        match self {
+            Up => Coordinate { row: -1, column: 0 },
+            Right => Coordinate { row: 0, column: 1 },
+            Down => Coordinate { row: 1, column: 0 },
+            Left => Coordinate { row: 0, column: -1 },
+        }
     }
 }
 
-///
-fn all_neighbors(index: Coordinate<isize>) -> Vec<Coordinate<isize>> {
-    EnumSet::all().iter().map(|c| neighbor(index, c)).collect()
+impl Coordinate<isize> {
+    fn to_square(self) -> Option<Square> {
+        let row = self.row;
+        let column = self.column;
+        match (row, column) {
+            (-1, 0) => Some(Up),
+            (0, 1) => Some(Right),
+            (1, 0) => Some(Down),
+            (0, -1) => Some(Left),
+            _ => None,
+        }
+    }
+
+    /// primitive operation linking [Coordinate<usize>] and [Square]
+    /// coordinate system exists outside of the grid
+    fn neighbor(self, direction: Square) -> Coordinate<isize> {
+        self + direction.to_coordinate()
+    }
+
+    fn all_neighbors(self) -> Vec<Coordinate<isize>> {
+        BitSet::FULL.iter().map(|dir| self.neighbor(dir)).collect()
+    }
 }
 
-/// primitive operation linking [Coordinate<usize>] and [Square]
-/// coordinate system exists outside of the grid
-fn neighbor(index: Coordinate<isize>, direction: Square) -> Coordinate<isize> {
-    index + square_to_coordinate(direction)
-}
-
-type Superposition<A> = BitSet<Tile<A>>;
-
-/// systematic view on grid to facilitate construction and solving
-type Sentinel<A> = SentinelGrid<Superposition<A>>;
-
-/// witness for the ablility of [BitSet] to store at least Tile<Square>::CARDINALITY = 16 elements
-const _: Superposition<Square> = BitSet::FULL;
-
-/// expands tile to a the superposition of all element of the tiles equivalence class under rotational symmetry
-///
-/// examples:
-/// * `[┗]` -> `{ [┗], [┏], [┓], [┛] }`
-/// * `[╻]` -> `{ [╹], [╺], [╻], [╸] }`
-/// * `[╋]` -> `{ [╋] }`
-fn superimpose_tile<A: EnumSetType + Finite>(tile: Tile<A>) -> Superposition<A> {
-    // insert successively rotated tiles until encountering repeated initial tile
-    iter_fix(
-        (BitSet::<Tile<A>>::EMPTY, tile),
-        |(s, t)| (s.inserted(*t), t.rotated_clockwise(1)),
-        |x, y| x.0 == y.0,
-    )
-    .0
-}
-
-/// grid of superimposed tiles in different configurations
-fn superimpose_grid<A: EnumSetType + Finite>(grid: &SentinelGrid<Tile<A>>) -> Sentinel<A> {
-    grid.map(superimpose_tile)
+impl<A: EnumSetType + Finite> Tile<A> {
+    /// expands tile to a the superposition of all element of the tiles equivalence class under rotational symmetry
+    ///
+    /// examples:
+    /// * `[┗]` -> `{ [┗], [┏], [┓], [┛] }`
+    /// * `[╻]` -> `{ [╹], [╺], [╻], [╸] }`
+    /// * `[╋]` -> `{ [╋] }`
+    fn superimpose(self) -> Superposition<A> {
+        // insert successively rotated tiles until encountering repeated initial tile
+        iter_fix(
+            (BitSet::<Tile<A>>::EMPTY, self),
+            |(s, t)| (s.inserted(*t), t.rotated_clockwise(1)),
+            |x, y| x.0 == y.0,
+        )
+        .0
+    }
 }
 
 /// unwraps if all superpositions are collapsed (= only contain single state)
-fn if_unique<A: Finite + Copy>(grid: &SentinelGrid<BitSet<A>>) -> Option<Grid<A>> {
+pub fn if_unique<A: Finite + Copy>(grid: &SentinelGrid<BitSet<A>>) -> Option<Grid<A>> {
     grid.extract_grid()
         .map(BitSet::unwrap_if_singleton)
         .sequence()
@@ -164,22 +177,75 @@ fn if_solvable<A>(grid: SentinelGrid<BitSet<A>>) -> Option<SentinelGrid<BitSet<A
         .then_some(grid)
 }
 
-/// restricts superposition to only include tiles with specified connection and direction
-fn restrict_tile<A>(connection: Connection<A>, superposition: Superposition<A>) -> Superposition<A>
-where
-    A: EnumSetType + Finite,
-{
-    let iter = superposition.into_iter();
-    match connection {
-        Connection(ref d, Status::Absent) => iter.filter(|t| !t.0.contains(*d)).collect(),
-        Connection(ref d, Status::Present) => iter.filter(|t| t.0.contains(*d)).collect(),
+impl<A: EnumSetType + Finite> Superposition<A> {
+    /// restricts superposition to only include tiles with specified connection and direction
+    pub fn restrict_tile(self, connection: Connection<A>) -> Self {
+        let iter = self.into_iter();
+        match connection {
+            Connection(ref d, Status::Absent) => iter.filter(|t| !t.0.contains(*d)).collect(),
+            Connection(ref d, Status::Present) => iter.filter(|t| t.0.contains(*d)).collect(),
+        }
+    }
+
+    /// restricts superposition to only include tiles with specified connection and direction
+    pub fn restrict_tile2(self, connection: Connection<A>) -> Self {
+        // improve by precomputing BitSets without tiles of certain connections and take intersection to achieve filtering
+        self.intersection(connection.to_filter())
+    }
+}
+
+impl<A: EnumSetType + Finite> Connection<A> {
+    fn to_filter(&self) -> BitSet<Tile<A>> {
+        BitSet::FULL
+            .into_iter()
+            .filter(|t: &Tile<A>| match self.1 {
+                Status::Absent => !t.0.contains(self.0),
+                Status::Present => t.0.contains(self.0),
+            })
+            .collect()
+    }
+}
+
+/// memoizing combinator for 1-ary functions
+fn memoize<A: Finite, B: Copy, F: Fn(A) -> B>(f: F) -> impl FnMut(A) -> B {
+    let mut cache = vec![None; A::CARDINALITY as usize];
+    move |x| {
+        let index = x.enum_to_index() as usize;
+        match cache[index] {
+            Some(x) => x,
+            None => {
+                let value = f(x);
+                cache[index] = Some(value);
+                value
+            }
+        }
     }
 }
 
 #[derive(Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Debug, Hash)]
-enum Status {
+pub enum Status {
     Absent,
     Present,
+}
+
+impl Cardinality for Status {
+    const CARDINALITY: u64 = 2;
+}
+
+impl Finite for Status {
+    fn index_to_enum(value: u64) -> Self {
+        match value % Self::CARDINALITY {
+            0 => Self::Absent,
+            _ => Self::Present,
+        }
+    }
+
+    fn enum_to_index(&self) -> u64 {
+        match self {
+            Self::Absent => 0,
+            Self::Present => 1,
+        }
+    }
 }
 
 impl Arbitrary for Status {
@@ -189,7 +255,25 @@ impl Arbitrary for Status {
 }
 
 #[derive(Clone, PartialEq, Eq, PartialOrd, Ord, Debug, Hash)]
-struct Connection<A>(A, Status);
+pub struct Connection<A>(A, Status);
+
+impl<A: Cardinality> Cardinality for Connection<A> {
+    const CARDINALITY: u64 = A::CARDINALITY * Status::CARDINALITY;
+}
+
+impl<A: Finite> Finite for Connection<A> {
+    fn index_to_enum(value: u64) -> Self {
+        let value = value % Self::CARDINALITY;
+        Self(
+            A::index_to_enum(value % A::CARDINALITY),
+            Status::index_to_enum(value / A::CARDINALITY),
+        )
+    }
+
+    fn enum_to_index(&self) -> u64 {
+        self.0.enum_to_index() + A::CARDINALITY * self.1.enum_to_index()
+    }
+}
 
 impl<A: Arbitrary> Arbitrary for Connection<A> {
     fn arbitrary(g: &mut quickcheck::Gen) -> Self {
@@ -210,7 +294,7 @@ impl Connection<Square> {
 /// eg. if there is a common [Up] connection between all superpositions, then the result includes [Connection::Present(Up)]
 ///
 /// returned directions are guaranteed unique
-fn extract_overlaps<A: EnumSetType + Finite>(
+pub fn extract_overlaps<A: EnumSetType + Finite>(
     superposition: Superposition<A>,
 ) -> Vec<Connection<A>> {
     // empty superposition leads to propagation of Absent and Present hints simultaneously
@@ -244,7 +328,7 @@ where
     }
 }
 
-fn minimize(grid: Sentinel<Square>) -> Sentinel<Square> {
+pub fn minimize(grid: Sentinel<Square>) -> Sentinel<Square> {
     iter_fix(
         grid,
         |g| g.0.coordinates().into_iter().fold(g.clone(), step),
@@ -267,7 +351,7 @@ fn branch<A: EnumSetType + Finite, F: Fn(&Sentinel<A>) -> Coordinate<isize>>(
         .collect()
 }
 
-fn step(grid: Sentinel<Square>, index: Coordinate<isize>) -> Sentinel<Square> {
+pub fn step(grid: Sentinel<Square>, index: Coordinate<isize>) -> Sentinel<Square> {
     grid.0
         .get(index)
         .map(Superposition::clone)
@@ -277,14 +361,14 @@ fn step(grid: Sentinel<Square>, index: Coordinate<isize>) -> Sentinel<Square> {
         .fold(grid, |acc, c| {
             SentinelGrid(
                 acc.0
-                    .try_adjust_at(neighbor(index, c.0), |s| restrict_tile(c.opposite(), s)),
+                    .try_adjust_at(index.neighbor(c.0), |s| s.restrict_tile(c.opposite())),
             )
         })
 }
 
 // hide concrete iterator implementation
 pub fn solve(grid: &Grid<Tile<Square>>) -> impl Iterator<Item = Grid<Tile<Square>>> {
-    SolutionIterator(vec![superimpose_grid(&with_sentinels(grid))])
+    SolutionIterator(vec![grid.with_sentinels(Tile::default()).superimpose()])
 }
 
 /// lazy generation of solutions to unify API for quarying single and multiple solutions
@@ -329,6 +413,9 @@ impl Iterator for SolutionIterator<Sentinel<Square>> {
     }
 }
 
+/// witness for the ablility of [BitSet] to store at least Tile<Square>::CARDINALITY = 16 elements
+const _: Superposition<Square> = BitSet::FULL;
+
 #[cfg(test)]
 mod test {
 
@@ -338,16 +425,16 @@ mod test {
     #[quickcheck]
     fn tile_configurations_have_same_number_of_connections(tile: Tile<Square>) -> bool {
         let connections = tile.0.len();
-        superimpose_tile(tile)
+        tile.superimpose()
             .into_iter()
             .all(|t| t.0.len() == connections)
     }
 
     #[quickcheck]
     fn restrict_tile_sanity_check() -> bool {
-        let superposition = BitSet::from_iter(superimpose_tile(Tile(Up | Right)));
+        let superposition = BitSet::from_iter(Tile(Up | Right).superimpose());
         let connection = Connection(Right, Status::Present);
-        restrict_tile(connection, superposition)
+        superposition.restrict_tile(connection)
             == BitSet::from_iter([Tile(Up | Right), Tile(Right | Down)])
     }
 
@@ -355,8 +442,8 @@ mod test {
     fn neighborhood_is_symmetric(index: Coordinate<i8>, direction: Square) -> bool {
         // restrict coordinates to a range resembling actual values used in grid and avoid integer over- / underflows
         let index = index.map(|x| x as isize);
-        let neighbor_index = neighbor(index, direction);
-        index == neighbor(neighbor_index, direction.opposite())
+        let neighbor_index = index.neighbor(direction);
+        index == neighbor_index.neighbor(direction.opposite())
     }
 
     /// successively visiting neighbors in each
@@ -364,6 +451,14 @@ mod test {
     fn neighborhood_is_euclidian(index: Coordinate<i8>) -> bool {
         // restrict coordinates to a range resembling actual values used in grid and avoid integer over- / underflows
         let index = index.map(|x| x as isize);
-        EnumSet::all().into_iter().fold(index, neighbor) == index
+        BitSet::FULL.into_iter().fold(index, Coordinate::neighbor) == index
+    }
+
+    #[quickcheck]
+    fn with_sentinels_and_then_extract_grid_is_id(
+        grid: Grid<Tile<Square>>,
+        sentinel: Tile<Square>,
+    ) -> bool {
+        grid == grid.with_sentinels(sentinel).extract_grid()
     }
 }

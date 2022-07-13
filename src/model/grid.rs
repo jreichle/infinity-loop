@@ -95,6 +95,31 @@ impl<A> Grid<A> {
             .collect()
     }
 
+    pub fn zip<B, I: IntoIterator<Item = B>>(&self, iter: I) -> Grid<(A, B)>
+    where
+        A: Clone,
+    {
+        Grid {
+            rows: self.rows,
+            columns: self.columns,
+            elements: self.elements.clone().into_iter().zip(iter).collect(),
+        }
+    }
+
+    pub fn with_index(&self) -> Grid<(Coordinate<isize>, A)>
+    where
+        A: Clone,
+    {
+        let coordinates = (0..self.rows as isize).flat_map(|r| {
+            (0..self.columns as isize).map(move |c| Coordinate { row: r, column: c })
+        });
+        Grid {
+            rows: self.rows,
+            columns: self.columns,
+            elements: coordinates.zip(self.elements.clone()).collect(),
+        }
+    }
+
     /// see [Grid::elements] for memory layout
     fn get_vec_index(&self, index: Coordinate<isize>) -> usize {
         index.column as usize + self.columns * index.row as usize

@@ -51,6 +51,13 @@ impl<A> Coordinate<A> {
             column: transform(self.column, other.column),
         }
     }
+
+    pub fn sum(self) -> A::Output
+    where
+        A: Add,
+    {
+        self.row + self.column
+    }
 }
 
 impl<A> Coordinate<Option<A>> {

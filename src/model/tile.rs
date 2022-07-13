@@ -7,7 +7,7 @@ use Square::{Down, Left, Right, Up};
 use super::{cardinality::Cardinality, finite::Finite};
 
 /// represents a direction vector for a tile connection
-#[derive(Debug, EnumSetType)]
+#[derive(Debug, Hash, EnumSetType)]
 #[enumset(repr = "u32")]
 pub enum Square {
     /// Coordinate(-1, 0)

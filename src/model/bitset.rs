@@ -1,8 +1,9 @@
 use std::{
     fmt::Display,
     hash::Hash,
+    iter::FusedIterator,
     marker::PhantomData,
-    ops::{BitAnd, BitOr, BitXor, Not, Shl}, iter::FusedIterator,
+    ops::{BitAnd, BitOr, BitXor, Not, Shl},
 };
 
 use quickcheck::Arbitrary;
@@ -292,8 +293,6 @@ impl<A: Finite> Extend<A> for BitSet<A> {
     }
 }
 
-
-
 impl<A: Cardinality> Not for BitSet<A> {
     type Output = Self;
 
@@ -394,8 +393,9 @@ impl UsedBits for u128 {
 /// compile-time proof that [`BitSet`] can store [`BitSetSize::BITS`] elements
 #[allow(clippy::assertions_on_constants)]
 const _: () = {
-    assert!(<BitSetSize as UsedBits>::Inhabitants::CARDINALITY == BitSetSize::BITS as u64);
-    assert!(BitSet::<<BitSetSize as UsedBits>::Inhabitants>::USED_BITS == BitSetSize::MAX)
+    type BitSetSizeInhabitants = <BitSetSize as UsedBits>::Inhabitants;
+    assert!(BitSetSizeInhabitants::CARDINALITY == BitSetSize::BITS as u64);
+    assert!(BitSet::<BitSetSizeInhabitants>::USED_BITS == BitSetSize::MAX)
 };
 
 #[cfg(test)]

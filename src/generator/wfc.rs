@@ -1,12 +1,10 @@
 // wave function collapse (WFC)
 
-mod model;
-
-use enumset::EnumSet;
-use model::tile::{
+use crate::model::tile::{
     Square::{self, Down, Left, Right, Up},
     Tile,
 };
+use enumset::EnumSet;
 
 use std::collections::HashMap;
 use std::collections::HashSet;
@@ -17,7 +15,7 @@ fn get_opposite_direction(dir: Square) -> Square {
         Up => Down,
         Right => Left,
         Down => Up,
-        Left => Right
+        Left => Right,
     }
 }
 
@@ -58,17 +56,16 @@ fn get_all_possible_tiles() -> Vec<Tile<Square>> {
 fn parse_rules(
     available_tiles: &Vec<Tile<Square>>,
 ) -> HashMap<Tile<Square>, HashMap<Square, Vec<Tile<Square>>>> {
-
-    /// Get rules set for each direction 
+    /// Get rules set for each direction
     /// # Arguments
-    /// `is_connected` - if the rule set should be for connecting matches 
+    /// `is_connected` - if the rule set should be for connecting matches
     fn parse_direction_rules(
         available_tiles: &Vec<Tile<Square>>,
         is_connected: bool,
     ) -> HashMap<Square, Vec<Tile<Square>>> {
         let mut rule_map = HashMap::new();
 
-        // check if tile matches 
+        // check if tile matches
         let tile_matches: fn(&Tile<Square>, Square) -> bool = match is_connected {
             true => |tile, dir| tile.0.contains(get_opposite_direction(dir)),
             false => |tile, dir| !tile.0.contains(get_opposite_direction(dir)),
