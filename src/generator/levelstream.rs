@@ -1,4 +1,4 @@
-use std::iter::repeat;
+use std::iter::{repeat, FusedIterator};
 
 use crate::model::{
     coordinate::Coordinate,
@@ -11,7 +11,7 @@ use crate::model::{
 ///! level generator is an infinite stream of functions from integer seed value to level
 ///! and is defined by an anamorphism
 
-/// all relevant metadata about levels for generating them
+/// all relevant metadata about levels in the context of level generation
 #[derive(Clone, Copy, Debug, Hash, PartialEq, Eq, PartialOrd, Ord)]
 pub struct LevelProperty {
     pub dimension: Coordinate<usize>,
@@ -19,9 +19,12 @@ pub struct LevelProperty {
     // ...
 }
 
-/// stream anamorphism / unfold
-/// infinite by design
-#[derive(Copy, Clone, Debug)]
+/// holds the information to generate successive values in an infinite iterator stream
+///
+/// represents canonical stream anamorphism / unfold with step function is the coalgebra of the stream type
+///
+/// resulting iterator is infinite by design
+#[derive(Copy, Clone)]
 struct Unfold<S, A> {
     state: S,
     step: fn(S) -> (A, S),
@@ -42,15 +45,17 @@ impl<S, A> Unfold<S, A> {
     }
 }
 
-impl<S: Copy, A> Iterator for Unfold<S, A> {
+impl<S: Clone, A> Iterator for Unfold<S, A> {
     type Item = A;
 
     fn next(&mut self) -> Option<Self::Item> {
-        let (value, next_state) = (self.step)(self.state);
+        let (value, next_state) = (self.step)(self.state.clone());
         self.state = next_state;
         Some(value)
     }
 }
+
+impl<S: Clone, A> FusedIterator for Unfold<S, A> {}
 
 // do not change the carefully crafted signatures in the following functions!!!
 
@@ -84,9 +89,53 @@ fn hardcoded_levels() -> impl Iterator<Item = Box<dyn Fn(u64) -> Grid<Tile<Squar
         .map(constant)
 }
 
-/// stream of hardcoded levels followed by randomly generated levels
+/// stream of the hardcoded levels followed by infinitely many randomly generated levels
 pub fn level_stream(
     property: LevelProperty,
 ) -> impl Iterator<Item = impl Fn(u64) -> Grid<Tile<Square>>> {
     hardcoded_levels().chain(generate_levels(property))
 }
+
+/*
+// unfold with mutable state
+struct UnfoldMut<S, A> {
+    state: S,
+    step: fn(&mut S) -> A,
+}
+
+impl<S, A> UnfoldMut<S, A> {
+    pub fn new(state: S, step: fn(&mut S) -> A) -> Self {
+        Self { state, step }
+    }
+}
+
+impl<S, A> Iterator for UnfoldMut<S, A> {
+    type Item = A;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        Some((self.step)(&mut self.state))
+    }
+}
+
+fn generate_levels2(
+    property: LevelProperty,
+) -> impl Iterator<Item = Box<dyn Fn(u64) -> Grid<Tile<Square>>>> {
+    UnfoldMut::new(property, |p| {
+        let dimension = p.dimension;
+        p.dimension += Coordinate::of(1);
+        move |seed| generate(dimension, seed)
+    })
+    .flat_map(|l| repeat(l).take(10))
+    .map(|x| Box::new(x) as Box<_>)
+}
+
+struct Iterate<A> {
+    state: A,
+    step: fn(A) -> A,
+}
+
+struct IterateMut<A> {
+    state: A,
+    step: fn(&mut A),
+}
+*/

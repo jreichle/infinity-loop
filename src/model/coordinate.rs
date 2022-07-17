@@ -11,15 +11,65 @@ pub struct Coordinate<A> {
     pub column: A,
 }
 
-// how to implement for generic numeric value?
-impl Coordinate<isize> {
+// it is currently impossible to generically cast number literals in a constant expression outside of macros
+impl Coordinate<u8> {
     /// neutral element for [Coordinate] with regards to addition
-    pub const ORIGIN: Coordinate<isize> = Self { row: 0, column: 0 };
+    pub const ORIGIN: Coordinate<u8> = Self::of(0);
+}
+
+impl Coordinate<u16> {
+    /// neutral element for [Coordinate] with regards to addition
+    pub const ORIGIN: Coordinate<u16> = Self::of(0);
+}
+
+impl Coordinate<u32> {
+    /// neutral element for [Coordinate] with regards to addition
+    pub const ORIGIN: Coordinate<u32> = Self::of(0);
+}
+
+impl Coordinate<u64> {
+    /// neutral element for [Coordinate] with regards to addition
+    pub const ORIGIN: Coordinate<u64> = Self::of(0);
+}
+
+impl Coordinate<u128> {
+    /// neutral element for [Coordinate] with regards to addition
+    pub const ORIGIN: Coordinate<u128> = Self::of(0);
 }
 
 impl Coordinate<usize> {
     /// neutral element for [Coordinate] with regards to addition
-    pub const ORIGIN: Coordinate<usize> = Self { row: 0, column: 0 };
+    pub const ORIGIN: Coordinate<usize> = Self::of(0);
+}
+
+impl Coordinate<i8> {
+    /// neutral element for [Coordinate] with regards to addition
+    pub const ORIGIN: Coordinate<i8> = Self::of(0);
+}
+
+impl Coordinate<i16> {
+    /// neutral element for [Coordinate] with regards to addition
+    pub const ORIGIN: Coordinate<i16> = Self::of(0);
+}
+
+impl Coordinate<i32> {
+    /// neutral element for [Coordinate] with regards to addition
+    pub const ORIGIN: Coordinate<i32> = Self::of(0);
+}
+
+impl Coordinate<i64> {
+    /// neutral element for [Coordinate] with regards to addition
+    pub const ORIGIN: Coordinate<i64> = Self::of(0);
+}
+
+impl Coordinate<i128> {
+    /// neutral element for [Coordinate] with regards to addition
+    pub const ORIGIN: Coordinate<i128> = Self::of(0);
+}
+
+impl Coordinate<isize> {
+    /// neutral element for [Coordinate] with regards to addition
+    pub const ORIGIN: Coordinate<isize> = Self::of(0);
 }
 
 impl<A> Coordinate<A> {

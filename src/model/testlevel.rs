@@ -95,7 +95,7 @@ pub fn serialize_level<A: Clone, F: Fn(A) -> char>(grid: Grid<A>, converter: F) 
 pub const LEVEL_MALFORMED: &str = " ";
 
 /// first 20 levels of android game infinity loop
-pub const TEST_LEVELS: [&str; 21] = [
+pub const TEST_LEVELS: [&str; 30] = [
     /* 01 */ "LTL\nLTL",
     /* 02 */ "LLLL\nLLLL",
     /* 03 */ "LTL\nT+T\nLTL",
@@ -108,7 +108,8 @@ pub const TEST_LEVELS: [&str; 21] = [
     /* 10 */ " LLLL \nLLLLLL\nLLLLLL\n LLLL ",
     /* 11 */ " LL \n-TT-\nLTTL\nLTTL\nLIIL",
     /* 12 */ "- --\nTTLI\nL+IL\n-TL-\nIL+T\nLITL",
-    /* 13 */ "-T-\n-T-\n-I-\n-I-\n-T-\n-T-", // requires branching
+    /* 13 */
+    "-T-\n-T-\n-I-\n-I-\n-T-\n-T-", // requires branching "-I-\n-I-\nLIL\nLIL\n-I-\n-I-"
     /* 14 */ "-TL\n-TL\nLL \nIT-\n-LL\n  -",
     /* 15 */ "-TL\nLTI\nILT\nI-L\nLI-",
     /* 16 */ "-LL-\nL+L-\n-T- \nLL -\nTL -\n-   ",
@@ -116,47 +117,49 @@ pub const TEST_LEVELS: [&str; 21] = [
     /* 18 */ "--L\n-LL\nL+-\nTTL\nLIL\n-I-",
     /* 19 */ "---\nITL\nII \nIT-\nIL-\nLI-",
     /* 20 */ "L- \nTL-\nIII\nLTT\nLTL\n-LL\n -L",
-    /* 21 */
-    "-LLL-L-\n-LTTLLL\nLITLLL-\n -LILLL\n-LLTL-I\n-LLTLL-\n-LTLILL\nL---L--", // lvl 111
-                                                                              /* 22 */
-                                                                              /* 23 */
-                                                                              /* 24 */
-                                                                              /* 25 */
-                                                                              /* 26 */
-                                                                              /* 27 */
-                                                                              /* 28 */
-                                                                              /* 29 */
-                                                                              /* 30 */
-                                                                              /* 31 */
-                                                                              /* 32 */
-                                                                              /* 33 */
-                                                                              /* 34 */
-                                                                              /* 35 */
-                                                                              /* 36 */
-                                                                              /* 37 */
-                                                                              /* 38 */
-                                                                              /* 39 */
-                                                                              /* 40 */
-                                                                              /* 41 */
-                                                                              /* 42 */
-                                                                              /* 43 */
-                                                                              /* 44 */
-                                                                              /* 45 */
-                                                                              /* 46 */
-                                                                              /* 47 */
-                                                                              /* 48 */
-                                                                              /* 49 */
-                                                                              /* 50 */
-                                                                              /* 51 */
-                                                                              /* 52 */
-                                                                              /* 53 */
-                                                                              /* 54 */
-                                                                              /* 55 */
-                                                                              /* 56 */
-                                                                              /* 57 */
-                                                                              /* 58 */
-                                                                              /* 59 */
+    /* 21 */ "--  \nITIL\nI-LL\nTLI-\nITTL\n----",
+    /* 22 */ " -- \nLTTL\nL++L\n LL ",
+    /* 23 */ "-IIIL\nLTI-I\nT+L I\nI-LIL\nTL- -\nIILL-\nLTIT-",
+    /* 24 */ "- --\nI --\nI-LL\n-LL-\nLTI-\nILI-\nL-  ",
+    /* 25 */ "L-L-\nI-TL\nT--T\nL--T\n-ILI\n  LL",
+    /* 26 */ "LL-L\nITTL\nLTL-\nL+L \nT+T \nIILL\n-L--",
+    /* 27 */ "LL L-\nLTLT-\nL-TTL\nI-LL-\nIILTL\n--TTL\n -TL ",
+    /* 28 */ "LLLTL\nTTT+T\nLL LT\nLTLIT\nLTILT\n-TTL-",
+    /* 29 */ "LLLIL\nII-LT\n-I-LT\nLLI-I\nLTTTT\n-T- -",
+    /* 30 */
+    "  LL\n -TL\nLLLL\nT- I\nLL I\nLL--\n- L-",
+    /* 31 */
+    /* 32 */
+    /* 33 */
+    /* 34 */
+    /* 35 */
+    /* 36 */
+    /* 37 */
+    /* 38 */
+    /* 39 */
+    /* 40 */
+    /* 41 */
+    /* 42 */
+    /* 43 */
+    /* 44 */
+    /* 45 */
+    /* 46 */
+    /* 47 */
+    /* 48 */
+    /* 49 */
+    /* 50 */
+    /* 51 */
+    /* 52 */
+    /* 53 */
+    /* 54 */
+    /* 55 */
+    /* 56 */
+    /* 57 */
+    /* 58 */
+    /* 59 */
 ];
+
+// lvl 111 "-LLL-L-\n-LTTLLL\nLITLLL-\n -LILLL\n-LLTL-I\n-LLTLL-\n-LTLILL\nL---L--"
 
 pub const TRIVIAL_LEVEL: &str = "-I-";
 
