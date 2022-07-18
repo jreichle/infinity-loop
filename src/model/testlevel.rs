@@ -1,4 +1,4 @@
-use enumset::EnumSet;
+use enumset::{EnumSet, enum_set};
 
 use super::{
     grid::Grid,
@@ -29,6 +29,18 @@ pub fn char_to_tile(tile_character: char) -> Result<Tile<Square>, String> {
         'T' => Ok(Tile(Up | Right | Down)),
         '+' => Ok(Tile(EnumSet::all())),
         c => Err(format!("parsing error: unknown character {c}")),
+    }
+}
+
+pub const fn char_to_tile_const(tile_character: char) -> Result<Tile<Square>, &'static str> {
+    match tile_character {
+        ' ' => Ok(Tile(enum_set!())),
+        '-' => Ok(Tile(enum_set!(Up))),
+        'I' => Ok(Tile(enum_set!(Up | Down))),
+        'L' => Ok(Tile(enum_set!(Up | Right))),
+        'T' => Ok(Tile(enum_set!(Up | Right | Down))),
+        '+' => Ok(Tile(enum_set!(Up | Right | Down | Left))),
+        _ => Err("parsing error: unknown character"),
     }
 }
 
@@ -79,6 +91,38 @@ where
         .collect::<Result<_, _>>()
         .map(|v| Grid::new(rows, columns, v))
 }
+
+/*
+pub const fn parse_level_const<A, F>(leveldata: &str, converter: F) -> Result<Grid<A>, &'static str>
+where
+    F: Fn(char) -> Result<A, String>,
+{
+    let tiles: Vec<Tile<Square>> = vec![];
+    let bytes = leveldata.as_bytes();
+    let x = leveldata.
+    let mut column_index = 0;
+    let mut index = 0;
+    while index < bytes.len() {
+        let char = bytes[index] as char;
+        match char_to_tile_const(char) {
+            Err(e) => panic!(),
+            Ok(tile) => {
+                // tiles[index] = tile;
+            },
+            
+        }
+        
+        
+
+        index += 1;
+    }
+
+
+
+
+    Ok(Grid { rows: 0, columns: 0, elements: vec![] })
+}
+*/
 
 /// relies on internal vector layout in grid
 pub fn serialize_level<A: Clone, F: Fn(A) -> char>(grid: Grid<A>, converter: F) -> String {
