@@ -317,6 +317,24 @@ fn propagate(
     }
 }
 
+fn print_incomplete_map(map: & Vec<Vec<Tile<Square>>>, width: usize) {
+    for (index, cell) in map.iter().enumerate() {
+        let cell_len = cell.len();
+        if cell_len > 1 {
+            print!(" ");
+        } else if cell_len == 1 {
+            print!("{}", cell[0]);
+        } else if cell_len == 0 {
+            print!("?");
+        }
+
+        if(index % width == width-1){
+            print!("\n");
+        }
+        // println!("cell -> {:?}\n\n", cell);
+    }    
+}
+
 // 1. Generate tiles and rules
 // 2. Create matrix with each cell filled with all possiblie tiles
 // 3. Find min Entropy (cell with least weight, least likely)
@@ -324,7 +342,7 @@ fn propagate(
 // 5. Propagate, check picked cell neighbors.
 // DO...WHILE(!is_all_collapsed())
 
-static PASS_LMT: usize = 400; // How many passes to go through the matrix
+static PASS_LMT: usize = 10; // How many passes to go through the matrix
 static PROP_LMT: usize = 1000; // How many passes in the propagate to allow
 static WIDTH: usize = 10;
 static HEIGHT: usize = 10;
@@ -334,9 +352,9 @@ fn generate_grid(
     height: usize,
     available_tiles: Vec<Tile<Square>>,
 ) -> Grid<Tile<Square>> {
-
-    let total_cells = width * height;
     let rule_map = parse_rules(&available_tiles);
+    
+    let total_cells = width * height;
 
     let wrapper_width = width + 2;
     let wrapper_height = height + 2;
@@ -345,21 +363,21 @@ fn generate_grid(
     // let mut cell_map: Vec<Vec<Tile<Square>>> = vec![available_tiles.clone(); wrapper_size];
     let mut cell_map: Vec<Vec<Tile<Square>>> = vec![vec![Tile(EnumSet::empty())]; wrapper_size];
 
-    // fill non-edge tile with all available tiles
     for index in 0..wrapper_size {
+        
         // check if top or buttom edge
         if index / wrapper_width == 0 || index / wrapper_width == wrapper_height-1 {
             continue;
         }
+
         // check if left or right edge
         if index % wrapper_width == 0 || index % wrapper_width == wrapper_width-1 {
             continue;
         }
-        
+
+
         cell_map[index] = available_tiles.clone();
     }
-
-
 
     let mut tile_weights: HashMap<&Tile<Square>, usize> = HashMap::new();
     for tile in available_tiles.iter() {
@@ -380,6 +398,10 @@ fn generate_grid(
 
         passes += 1;
 
+        println!("PASS #{}\n", passes);
+        print_incomplete_map(&cell_map, wrapper_width);
+        println!("\n-------------------\n");
+
         if is_all_collapsed() || passes >= PASS_LMT {
             break;
         }
@@ -387,16 +409,19 @@ fn generate_grid(
 
     println!("PASS COUNT: {}", passes);
 
+    let mut counter = 0;
     for cell in cell_map.iter_mut() {
-        if cell.len() == 0 {
+        if cell.len() != 1 {
             *cell = vec![Tile(EnumSet::empty())];
+            counter += 1;
         }
         // println!("cell -> {:?}\n\n", cell);
     }
+    println!("invaild count: {}", counter);
 
     let flat_map: Vec<Tile<Square>> = cell_map.into_iter().flatten().collect();
     // println!("flat map length: {}", flat_map.len());
 
-    let mut game_board: Grid<Tile<Square>> = Grid::new(width, height, flat_map);
+    let game_board: Grid<Tile<Square>> = Grid::new(width+2, height+2, flat_map);
     game_board
 }
