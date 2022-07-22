@@ -334,10 +334,33 @@ fn generate_grid(
     height: usize,
     available_tiles: Vec<Tile<Square>>,
 ) -> Grid<Tile<Square>> {
+
     let total_cells = width * height;
     let rule_map = parse_rules(&available_tiles);
 
-    let mut cell_map: Vec<Vec<Tile<Square>>> = vec![available_tiles.clone(); total_cells];
+    let wrapper_width = width + 2;
+    let wrapper_height = height + 2;
+    let wrapper_size = wrapper_width * wrapper_height;
+
+    // let mut cell_map: Vec<Vec<Tile<Square>>> = vec![available_tiles.clone(); wrapper_size];
+    let mut cell_map: Vec<Vec<Tile<Square>>> = vec![vec![Tile(EnumSet::empty())]; wrapper_size];
+
+    // fill non-edge tile with all available tiles
+    for index in 0..wrapper_size {
+        // check if top or buttom edge
+        if index / wrapper_width == 0 || index / wrapper_width == wrapper_height-1 {
+            continue;
+        }
+        // check if left or right edge
+        if index % wrapper_width == 0 || index % wrapper_width == wrapper_width-1 {
+            continue;
+        }
+        
+        cell_map[index] = available_tiles.clone();
+    }
+
+
+
     let mut tile_weights: HashMap<&Tile<Square>, usize> = HashMap::new();
     for tile in available_tiles.iter() {
         tile_weights.insert(tile, total_cells);
