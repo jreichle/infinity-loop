@@ -300,11 +300,10 @@ fn propagate(
 
             let mut modified = false;
 
-            for i in 0..neigbor_tiles.len() {
-                if i >= neigbor_tiles.len() {
-                    break;
-                }
-                let neigbor_tile = neigbor_tiles[i];
+            let mut remove_list: Vec<usize> = vec![];
+            for (i, neigbor_tile) in neigbor_tiles.iter().enumerate() {
+
+                // let neigbor_tile = neigbor_tiles[i];
                 let mut compatible_counter = 0;
                 for tile in compactible_tiles.iter() {
                     let tile_dir_rule = rule_map.get(tile).unwrap().get(&dir).unwrap();
@@ -315,10 +314,15 @@ fn propagate(
                 }
 
                 if compatible_counter == 0 {
-                    neigbor_tiles.remove(i);
+                    // remove function shifts vector
+                    // neigbor_tiles.remove(i);
+                    remove_list.push(i);
                     modified = true;
                 }
             }
+
+            let mut remove_counter = 0_usize; 
+            neigbor_tiles.retain(|tile| { remove_counter += 1; !remove_list.contains(&(remove_counter - 1)) });
 
             if modified {
                 stack.push(neigbor_index)
@@ -358,10 +362,10 @@ fn print_incomplete_map(map: & Vec<Vec<Tile<Square>>>, width: usize) {
 // DO...WHILE(!is_all_collapsed())
 
 
-static PASS_LMT: usize = 10000; // How many passes to go through the matrix
+static PASS_LMT: usize = 400; // How many passes to go through the matrix
 static PROP_LMT: usize = 1000; // How many passes in the propagate to allow
-static WIDTH: usize = 3;
-static HEIGHT: usize = 3;
+static WIDTH: usize = 5;
+static HEIGHT: usize = 5;
 
 fn generate_grid(
     width: usize,
