@@ -9,15 +9,47 @@ extern crate quickcheck_macros;
 
 mod generator;
 mod model;
+mod view;
 
-use model::testlevel::*;
+use model::{
+    grid::Grid,
+    tile::{Square, Tile},
+};
+use std::{env, time::Instant};
+use view::window::*;
 
+use crate::{
+    generator::levelstream::{level_stream, LevelProperty},
+    model::{coordinate::Coordinate, solver::*},
+};
+
+#[allow(unused_variables)] // for testing purposes
 fn main() {
-    let levels = TEST_LEVELS
-        .map(|l| parse_level(l, char_to_tile).unwrap())
-        .to_vec();
-    levels
-        .iter()
+    const SHOW_ERROR_CALLSTACK: bool = true;
+
+    if SHOW_ERROR_CALLSTACK {
+        env::set_var("RUST_BACKTRACE", "1");
+    }
+
+    // initiate_window();
+
+    let property = LevelProperty {
+        dimension: Coordinate::of(5),
+    };
+
+    level_stream(property)
         .zip(1..)
-        .for_each(|(l, i)| println!("level {i}\n{l}\n"));
+        .take(60)
+        .for_each(|(l, n)| print_level_and_solutions(&l(n), &format!("generated {n}")));
+}
+
+fn print_level_and_solutions(level: &Grid<Tile<Square>>, level_identifier: &str) {
+    println!("\nlevel {level_identifier}\n{level}\n");
+    solve(level).into_iter().zip(1..).for_each(|(s, n)| {
+        let start = Instant::now();
+
+        println!("level {level_identifier} solution {n}\n{s}\n");
+        let duration = start.elapsed().as_millis();
+        println!("{duration}ms")
+    })
 }

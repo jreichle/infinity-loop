@@ -1,6 +1,7 @@
 // wave function collapse (WFC)
 
 use crate::model;
+use crate::model::coordinate::Coordinate;
 use enumset::EnumSet;
 use model::grid::Grid;
 
@@ -457,7 +458,7 @@ fn generate_grid(
     let flat_map: Vec<Tile<Square>> = cell_map.into_iter().flatten().collect();
     // println!("flat map length: {}", flat_map.len());
 
-    let game_board: Grid<Tile<Square>> = Grid::new(wrapper_width, wrapper_height, flat_map);
+    let game_board: Grid<Tile<Square>> = Grid::new(Coordinate::new(wrapper_width, wrapper_height), flat_map);
     game_board
 }
 

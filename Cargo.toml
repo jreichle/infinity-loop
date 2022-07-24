@@ -10,3 +10,7 @@ rand = "0.8.4"
 quickcheck = "1"
 quickcheck_macros = "1"
 enumset = "1.0.11"
+winit = "0.26.1"
+winit_input_helper = "0.12.0"
+pixels = "0.9.0"
+
