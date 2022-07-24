@@ -339,8 +339,9 @@ impl Not for Connection<Square> {
 ///
 /// eg. if there is a common [Up] connection between all states, then the result includes [Connection::Present(Up)]
 pub fn extract_common_connections<A: EnumSetType + Finite>(
-    superposition: Superposition<A>,
+    superposition: &Superposition<A>,
 ) -> Vec<Connection<A>> {
+    let superposition = superposition.clone();
     // an empty superposition leads to all overlaps simultaneously but since
     // an empty superposition cannot be further reduced and already signifies
     // no solution, the result does not matter
@@ -404,7 +405,6 @@ where
 pub fn step(grid: Sentinel<Square>, index: Coordinate<isize>) -> Sentinel<Square> {
     grid.0
         .get(index)
-        .map(Superposition::clone)
         .map(extract_common_connections)
         .unwrap_or_default()
         .into_iter()
