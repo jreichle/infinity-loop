@@ -489,7 +489,6 @@ name = "infinity-loop-rust"
 version = "0.1.0"
 dependencies = [
  "enumset",
- "num-traits",
  "pixels",
  "quickcheck",
  "quickcheck_macros",
