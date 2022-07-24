@@ -14,24 +14,48 @@ use super::{
     tile::{Square, Tile},
 };
 
-/// gameboard as 2D-grid implemented with a flattened [Vec]
+/// Defines a fully filled 2D-grid with coordinate-based access
 ///
-/// defines the geometry of the puzzle
+/// ## Layout
 ///
-/// * invariant through game design: gameboard forms a recangle completely filled with [Tile]s
-/// * invariant: ∀g: Grid. g.rows * g.columns == g.elements.len()
+/// | ↓ row ╲ column → | 0      | 1      | 2      | ⋯ | c      |
+/// |------------------|--------|--------|--------|---|--------|
+/// | 0                | (0, 0) | (0, 1) | (0, 2) | ⋯ | (0, c) |
+/// | 1                | (1, 0) | (1, 1) | (1, 2) | ⋯ | (1, c) |
+/// | 2                | (2, 0) | (2, 1) | (2, 2) | ⋯ | (2, c) |
+/// | ⋮               | ⋮      | ⋮     | ⋮     | ⋱ | ⋮     |
+/// | r                | (r, 0) | (r, 1) | (r, 2) | ⋯ | (r, c) |
+///
+/// ## Invariants
+///
+/// 1. [`Grid<A>`] forms a rectangle entirely filled with elements of type [`A`]
+/// 2. `∀g : Grid. g.rows * g.columns ≡ g.elements.len()`
+/// 3. [`Grid`] is positioned at Coordinate (0, 0) and extends in positive directions
 #[derive(Debug, PartialEq, Eq, PartialOrd, Ord, Clone, Hash)]
 pub struct Grid<A> {
     rows: usize,
     columns: usize,
-    /// layout: `[Coordinate(0, 0), Coordinate(0, 1), Coordinate(0, 2), ..., Coordinate(1, 0), Coordinate(1, 1), Coordinate(1, 2), ...]`
+    /// layout: `[(0, 0), (0, 1), (0, 2), ..., (1, 0), (1, 1), (1, 2), ...]`
     elements: Vec<A>,
 }
 
 impl<A> Grid<A> {
-    /// primary constructor
-    pub fn new(rows: usize, columns: usize, elements: Vec<A>) -> Self {
-        // ensure all invariants hold
+    /// Empty grid
+    pub const EMPTY: Self = Grid {
+        rows: 0,
+        columns: 0,
+        elements: vec![],
+    };
+
+    /// Constructs a new grid
+    ///
+    /// Requirement: `rows * columns == elements.len()`
+    pub fn new(dimensions: Coordinate<usize>, elements: Vec<A>) -> Self {
+        // ensure invariant #2
+        let Coordinate {
+            row: rows,
+            column: columns,
+        } = dimensions;
         assert!(
             rows * columns == elements.len(),
             "Grid::new: rows = {rows} * columns = {columns} must match length of elements = {}",
@@ -44,29 +68,30 @@ impl<A> Grid<A> {
         }
     }
 
-    pub fn init<F: Fn(Coordinate<isize>) -> A>(rows: usize, columns: usize, init: F) -> Self {
-        let mut elements = Vec::with_capacity(rows * columns);
+    /// Creates grid based on given initialization function
+    pub fn init<F: Fn(Coordinate<isize>) -> A>(dimensions: Coordinate<usize>, init: F) -> Self {
+        let mut elements = Vec::with_capacity(dimensions.product());
 
-        for row in 0..rows {
-            for column in 0..columns {
-                elements.push(init(Coordinate {
-                    row: row as isize,
-                    column: column as isize,
-                }));
+        for row in 0..dimensions.row as isize {
+            for column in 0..dimensions.column as isize {
+                elements.push(init(Coordinate { row, column }));
             }
         }
 
-        Grid::new(rows, columns, elements)
+        Grid::new(dimensions, elements)
     }
 
+    /// Returns the number of grid rows
     pub const fn rows(&self) -> usize {
         self.rows
     }
 
+    /// Returns the number of grid columns
     pub const fn columns(&self) -> usize {
         self.columns
     }
 
+    /// Returns the grid dimensions
     pub const fn dimensions(&self) -> Coordinate<usize> {
         Coordinate {
             row: self.rows,
@@ -74,15 +99,18 @@ impl<A> Grid<A> {
         }
     }
 
+    /// Returns the number of elements the grid can hold
     pub const fn size(&self) -> usize {
         self.rows * self.columns
     }
 
-    pub fn elements(&self) -> &[A] {
+    /// View of the elements in the grid
+    pub fn as_slice(&self) -> &[A] {
         &self.elements[..]
     }
 
-    pub fn elements2(&self) -> Vec<A>
+    ///
+    pub fn elements(&self) -> Vec<A>
     where
         A: Clone,
     {
@@ -175,22 +203,24 @@ impl<A> Grid<A> {
 }
 
 impl<A: Clone> Grid<A> {
-    pub fn filled_with(rows: usize, columns: usize, element: A) -> Self {
-        Grid::new(rows, columns, vec![element; rows * columns])
+    pub fn filled_with(dimensions: Coordinate<usize>, element: A) -> Self {
+        Grid::new(dimensions, vec![element; dimensions.product()])
     }
 
     /// constructs Grids from array of arrays
     ///
     /// for hardcoding Grids in source code
     pub fn from_array<const R: usize, const C: usize>(elements: [[A; C]; R]) -> Self {
-        Grid::new(R, C, elements.map(Vec::from).to_vec().concat())
+        Grid::new(
+            Coordinate::new(R, C),
+            elements.map(Vec::from).to_vec().concat(),
+        )
     }
 
     // vec cannot be safely mapped over in-place, therefore map for Grid creates a new instance
     pub fn map<B, F: Fn(A) -> B>(&self, transform: F) -> Grid<B> {
         Grid::new(
-            self.rows,
-            self.columns,
+            self.dimensions(),
             self.elements.clone().into_iter().map(transform).collect(),
         )
     }
@@ -284,7 +314,7 @@ impl GameBoard for Grid<Tile<Square>> {
     }
 
     fn serialize_board(&self) -> std::collections::HashMap<Self::Index, &Self::Tile> {
-        self.elements()
+        self.as_slice()
             .iter()
             .zip(0..)
             .map(|(x, i)| {
@@ -320,7 +350,7 @@ impl<A> IndexMut<Coordinate<isize>> for Grid<A> {
 
 impl<A> Default for Grid<A> {
     fn default() -> Self {
-        Self::new(Default::default(), Default::default(), Default::default())
+        Self::EMPTY
     }
 }
 
@@ -371,36 +401,34 @@ impl<A: Arbitrary> Arbitrary for Grid<A> {
 #[cfg(test)]
 mod grid_tests {
 
+    use crate::model::coordinate::Coordinate;
+
     use super::Grid;
 
-    // restrict size of rows and columns to avoid excessive vector allocation
+    // restrict size grid to avoid excessive vector allocation
     #[quickcheck]
-    fn ensure_dimensions(rows: u8, columns: u8) -> bool {
-        let rows = rows as usize;
-        let columns = columns as usize;
-        let board = Grid::filled_with(rows, columns, 0);
-        board.rows() == rows && board.columns() == columns
+    fn ensure_dimensions(dimensions: Coordinate<u8>) -> bool {
+        let dimensions = dimensions.map(|v| v as usize);
+        let board = Grid::filled_with(dimensions, 0);
+        board.dimensions() == dimensions
     }
 }
 
 #[cfg(test)]
 mod gameboard_tests {
 
+    use crate::model::coordinate::Coordinate;
+
     use super::{GameBoard, Grid, Square, Tile};
 
     #[quickcheck]
     fn empty_gameboard_is_solved() -> bool {
-        Grid::new(0, 0, vec![]).is_solved()
+        Grid::EMPTY.is_solved()
     }
 
     // single tile gameboard is solved iff tile has no connections
     #[quickcheck]
     fn single_tile_gameboard_is_solved(tile: Tile<Square>) -> bool {
-        let is_solved = Grid::new(1, 1, vec![tile]).is_solved();
-        if tile.0.is_empty() {
-            is_solved
-        } else {
-            !is_solved
-        }
+        Grid::new(Coordinate::of(1), vec![tile]).is_solved() == tile.0.is_empty()
     }
 }

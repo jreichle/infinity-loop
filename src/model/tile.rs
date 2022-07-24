@@ -6,7 +6,7 @@ use Square::{Down, Left, Right, Up};
 
 use super::{cardinality::Cardinality, finite::Finite};
 
-/// represents a direction vector for a tile connection
+/// Represents a direction for a tile connection
 #[derive(Debug, Hash, EnumSetType)]
 #[enumset(repr = "u32")]
 pub enum Square {
@@ -21,6 +21,7 @@ pub enum Square {
 }
 
 impl Square {
+    /// Returns the opposite direction
     pub fn opposite(self) -> Self {
         match self {
             Up => Down,
@@ -76,7 +77,8 @@ impl Finite for Square {
     }
 }
 
-/// A tile is a 2D-shape with possible connections to orthogonal neighbor tiles.
+/// Tilable 2D shape with individual binary connection indicators towards neighboring tiles
+///
 /// The possible directions for connections correspond to the number of enum values in the EnumSetType
 ///
 /// it is guaranteed to implement the [Copy] trait
@@ -91,24 +93,23 @@ impl<A: EnumSetType> Default for Tile<A> {
     }
 }
 
-impl<A: EnumSetType> Tile<A> {
-    /// rotates the tile clockwise by one step
+impl<A: EnumSetType + Finite> Tile<A> {
+    /// Rotates the tile clockwise by 360° / [`A::CARDINALITY`]
     ///
-    /// each step is 360 degrees / number of enum values
-    pub fn rotated_clockwise(&self, repetitions: u32) -> Self {
-        let bit_rep = self.0.as_u32();
-        let enum_values = EnumSet::<A>::bit_width();
-        let repetitions = repetitions % enum_values;
-        let rotated_bit_rep = (bit_rep << repetitions) | (bit_rep >> (enum_values - repetitions));
-        Self(EnumSet::from_u32_truncated(rotated_bit_rep))
+    /// Performing [`A::CARDINALITY`] rotations returns the original tile
+    pub fn rotated_clockwise(&self, repetitions: u64) -> Self {
+        let bit_rep = self.0.as_u64();
+        let repetitions = repetitions % A::CARDINALITY;
+        let rotated_bit_rep =
+            (bit_rep << repetitions) | (bit_rep >> (A::CARDINALITY - repetitions));
+        Self(EnumSet::from_u64_truncated(rotated_bit_rep))
     }
 
-    /// rotates the tile counterclockwise by one step
+    /// Rotates the tile counterclockwise by 360° / [`A::CARDINALITY`]
     ///
-    /// each step is 360 degrees / number of enum values
-    pub fn rotated_counterclockwise(&self, repetitions: u32) -> Self {
-        let enum_values = EnumSet::<A>::bit_width();
-        self.rotated_clockwise(enum_values - repetitions % enum_values)
+    /// Performing [`A::CARDINALITY`] rotations returns the original tile
+    pub fn rotated_counterclockwise(&self, repetitions: u64) -> Self {
+        self.rotated_clockwise(A::CARDINALITY - repetitions % A::CARDINALITY)
     }
 }
 
@@ -156,32 +157,22 @@ impl<A: 'static + EnumSetType> Arbitrary for Tile<A> {
 
 impl Display for Tile<Square> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        let index = self.0.iter().map(|s| 1 << s.enum_to_index()).sum::<usize>();
+        let index: usize = self.0.iter().map(|s| 1 << s.enum_to_index()).sum();
         write!(f, "{}", Self::UNICODE_TILES[index])
     }
 }
 
 impl Tile<Square> {
-    /// visualization for each configuration as UNICODE symbol
-    const UNICODE_TILES: [&'static str; 16] = [
-        " ", "╹", "╺", "┗", "╻", "┃", "┏", "┣", "╸", "┛", "━", "┻", "┓", "┫", "┳", "╋",
+    /// visualization for each tile state as UNICODE character
+    const UNICODE_TILES: [char; 16] = [
+        ' ', '╹', '╺', '┗', '╻', '┃', '┏', '┣', '╸', '┛', '━', '┻', '┓', '┫', '┳', '╋',
     ];
 
-    pub fn get_value(&self) -> &str {
-        let set = self.0;
-        let mut index = 0;
-        if set.contains(Up) {
-            index += 1
-        }
-        if set.contains(Right) {
-            index += 2
-        }
-        if set.contains(Down) {
-            index += 4
-        }
-        if set.contains(Left) {
-            index += 8
-        }
+    #[deprecated(
+        note = "please use Tile::to_string to display the tile instead or use a Tile object"
+    )]
+    pub fn get_value(&self) -> char {
+        let index: usize = self.0.iter().map(|s| 1 << s.enum_to_index()).sum();
         Self::UNICODE_TILES[index]
     }
 }
@@ -189,13 +180,13 @@ impl Tile<Square> {
 #[cfg(test)]
 mod tests {
 
-    use crate::model::finite::Finite;
+    use crate::model::{cardinality::Cardinality, finite::Finite};
 
     use super::{Square, Tile};
 
     #[quickcheck]
-    fn rotate_clockwise_4_times_is_identity(tile: Tile<Square>) -> bool {
-        tile == tile.rotated_clockwise(4)
+    fn rotate_clockwise_cardinality_times_is_identity(tile: Tile<Square>) -> bool {
+        tile == tile.rotated_clockwise(Square::CARDINALITY)
     }
 
     #[quickcheck]
@@ -205,20 +196,20 @@ mod tests {
     ) -> bool {
         let repeated = (0..repetitions).fold(tile, |acc, _| acc.rotated_clockwise(1));
 
-        repeated == tile.rotated_clockwise(repetitions as u32)
+        repeated == tile.rotated_clockwise(repetitions as u64)
     }
 
     #[quickcheck]
     fn rotate_clockwise_preserves_number_of_connections(
         tile: Tile<Square>,
-        rotations: u32,
+        rotations: u64,
     ) -> bool {
         tile.0.len() == tile.rotated_clockwise(rotations).0.len()
     }
 
     #[quickcheck]
-    fn rotate_counterclockwise_4_times_is_identity(tile: Tile<Square>) -> bool {
-        tile == tile.rotated_counterclockwise(4)
+    fn rotate_counterclockwise_cardinality_times_is_identity(tile: Tile<Square>) -> bool {
+        tile == tile.rotated_counterclockwise(Square::CARDINALITY)
     }
 
     #[quickcheck]
@@ -227,13 +218,13 @@ mod tests {
         repetitions: u8,
     ) -> bool {
         let repeated = (0..repetitions).fold(tile, |acc, _| acc.rotated_counterclockwise(1));
-        repeated == tile.rotated_counterclockwise(repetitions as u32)
+        repeated == tile.rotated_counterclockwise(repetitions as u64)
     }
 
     #[quickcheck]
     fn rotate_counterclockwise_preserves_number_of_connections(
         tile: Tile<Square>,
-        rotations: u32,
+        rotations: u64,
     ) -> bool {
         tile.0.len() == tile.rotated_counterclockwise(rotations).0.len()
     }

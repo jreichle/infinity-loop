@@ -2,6 +2,21 @@ use std::cmp::Ordering;
 use std::collections::{HashMap, HashSet};
 use std::hash::Hash;
 
+/// Defines the number of inhabitants of a type `|t|`
+///
+/// Implementations are restricted to types with finite number of elements ≤ [`u64::MAX`]
+///
+/// # Examples
+///
+/// ```
+/// // bool = { false, true }
+/// assert!(bool::CARDINALITY == 2);
+///
+/// // Maybe<bool> = { None, Some(false), Some(true) }
+/// assert!(Maybe<bool>::CARDINALITY == 3);
+///
+/// assert!(Result<[bool; 5], Ordering>)::CARDINALITY == 35);
+/// ```
 pub trait Cardinality: Sized {
     /// number of inhabitants in the type
     const CARDINALITY: u64;
@@ -10,6 +25,10 @@ pub trait Cardinality: Sized {
 /// replace with [!] type once it is stabilized
 #[derive(Clone, Copy, Hash, PartialEq, Eq, PartialOrd, Ord, Debug)]
 pub enum Void {}
+
+impl<A: Cardinality> Cardinality for &A {
+    const CARDINALITY: u64 = A::CARDINALITY;
+}
 
 impl Cardinality for Void {
     const CARDINALITY: u64 = 0;
@@ -72,7 +91,7 @@ impl<A: Cardinality, B: Cardinality, C: Cardinality> Cardinality for (A, B, C) {
 }
 
 impl<A: Cardinality, const N: usize> Cardinality for [A; N] {
-    const CARDINALITY: u64 = A::CARDINALITY * N as u64;
+    const CARDINALITY: u64 = A::CARDINALITY.pow(N as u32);
 }
 
 impl<A: Cardinality, B: Cardinality> Cardinality for fn(A) -> B {

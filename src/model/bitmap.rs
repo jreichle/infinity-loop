@@ -15,7 +15,7 @@ type BitMapSize = u64;
 /// dense structure, preallocates all memory instead of growing dynamically
 ///
 /// for use case in enums and assuming even distribution,
-/// 87.5% of inhabitants require vec with capacity of half or more of total capacity
+/// 87.5% of inhabitants require vec of size of half or more of total capacity
 ///
 /// one notable exception is single element sets
 #[derive(PartialEq, Eq, PartialOrd, Ord, Debug, Hash)]

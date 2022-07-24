@@ -32,7 +32,7 @@ impl<A: Finite> BitSet<A> {
 }
 
 pub fn generate(dimension: Coordinate<usize>, seed: u64) -> Grid<Tile<Square>> {
-    let sentinel = Grid::init(dimension.row, dimension.column, |_| BitSet::FULL)
+    let sentinel = Grid::init(dimension, |_| BitSet::FULL)
         .with_sentinels(BitSet::singleton(Tile(EnumSet::empty())));
     let grid = SentinelGrid(
         minimize(sentinel)
@@ -47,7 +47,7 @@ pub fn generate(dimension: Coordinate<usize>, seed: u64) -> Grid<Tile<Square>> {
                 }
             }),
     );
-    if_unique(&minimize(grid)).unwrap()
+    extract_if_collapsed(&minimize(grid)).unwrap()
 }
 
 /*

@@ -1,7 +1,7 @@
 use quickcheck::{Arbitrary, Gen};
 use std::{
     fmt::Display,
-    ops::{Add, AddAssign, Neg, Sub, SubAssign},
+    ops::{Add, AddAssign, Mul, Neg, Sub, SubAssign},
 };
 
 /// Holds position for x and y axis and offers basic arithmetic operators
@@ -73,16 +73,20 @@ impl Coordinate<isize> {
 }
 
 impl<A> Coordinate<A> {
+    #[inline(always)]
     pub const fn of(value: A) -> Self
     where
         A: Copy,
     {
-        Self {
-            row: value,
-            column: value,
-        }
+        Self::new(value, value)
     }
 
+    #[inline(always)]
+    pub const fn new(row: A, column: A) -> Self {
+        Coordinate { row, column }
+    }
+
+    #[inline(always)]
     pub fn map<B, F: Fn(A) -> B>(self, transform: F) -> Coordinate<B> {
         Coordinate {
             row: transform(self.row),
@@ -91,6 +95,7 @@ impl<A> Coordinate<A> {
     }
 
     /// applicative liftA2 combinator
+    #[inline(always)]
     pub fn combine<B, C, F: Fn(A, B) -> C>(
         self,
         other: Coordinate<B>,
@@ -102,11 +107,20 @@ impl<A> Coordinate<A> {
         }
     }
 
+    #[inline(always)]
     pub fn sum(self) -> A::Output
     where
         A: Add,
     {
         self.row + self.column
+    }
+
+    #[inline(always)]
+    pub fn product(self) -> A::Output
+    where
+        A: Mul,
+    {
+        self.row * self.column
     }
 }
 

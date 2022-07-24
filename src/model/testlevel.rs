@@ -1,6 +1,7 @@
-use enumset::{EnumSet, enum_set};
+use enumset::{enum_set, EnumSet};
 
 use super::{
+    coordinate::Coordinate,
     grid::Grid,
     tile::{
         Square::{self, Down, Left, Right, Up},
@@ -89,7 +90,7 @@ where
         .chars()
         .map(converter)
         .collect::<Result<_, _>>()
-        .map(|v| Grid::new(rows, columns, v))
+        .map(|v| Grid::new(Coordinate::new(rows, columns), v))
 }
 
 /*
@@ -109,10 +110,10 @@ where
             Ok(tile) => {
                 // tiles[index] = tile;
             },
-            
+
         }
-        
-        
+
+
 
         index += 1;
     }
@@ -126,7 +127,7 @@ where
 
 /// relies on internal vector layout in grid
 pub fn serialize_level<A: Clone, F: Fn(A) -> char>(grid: Grid<A>, converter: F) -> String {
-    grid.elements2()
+    grid.elements()
         .into_iter()
         .map(converter)
         .collect::<Vec<char>>()

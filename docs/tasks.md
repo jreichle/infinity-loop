@@ -26,7 +26,7 @@
     - [X] parsing / serializing
 - [ ] seperate test levels and parser / serializer into different files
 - [ ] establish way of sending gameboard status and updates to View
-- [ ] implement puzzle generator
+- [X] implement puzzle generator
 - [X] implement puzzle solver
 
 ## Further Extensions

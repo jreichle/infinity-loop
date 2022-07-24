@@ -128,7 +128,7 @@ fn draw(frame: &mut [u8], window_size: PhysicalSize<u32>, board: &Grid<Tile<Squa
             && norm_x <= tile_center_x + center_square_size
             && norm_y >= tile_center_y - center_square_size
             && norm_y <= tile_center_y + center_square_size
-            && tile != " "
+            && tile != ' '
         {
             // Centered box
             color2

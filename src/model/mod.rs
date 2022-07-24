@@ -8,6 +8,7 @@ pub mod finite;
 pub mod gameboard;
 pub mod grid;
 pub mod lattice;
+pub mod monoid;
 pub mod representable;
 pub mod solver;
 pub mod testlevel;

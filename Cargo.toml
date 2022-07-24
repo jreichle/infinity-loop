@@ -13,4 +13,5 @@ enumset = "1.0.11"
 winit = "0.26.1"
 winit_input_helper = "0.12.0"
 pixels = "0.9.0"
+num-traits = "0.2.15"
 

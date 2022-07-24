@@ -10,26 +10,34 @@ use quickcheck::Arbitrary;
 
 use super::{cardinality::Cardinality, finite::Finite, lattice::BoundedLattice};
 
-// prefered representation
-// type Width = u64;
-// struct BitSet<A: Cardinality>([Width; (A::CARDINALITY + Width::BITS - 1) / Width::BITS], PhantomData<A>);
+// prefered representation, supports sets with arbitrary capacity
+// struct BitSet<A: Cardinality>([BitStorage; (A::CARDINALITY + CAPACITY - 1) / CAPACITY], PhantomData<A>);
 
-/// underlying integer size for storing elements in the [BitSet]
+/// Defines the runtime representation and storage [`CAPACITY`] of a [`BitSet`]
 ///
-/// number of bits equals number of storable elements
+/// May be set to any unsigned integer type
+type BitStorage = u64;
+
+/// Indicates the maximum number of elements that can be stored in a [`BitSet`]
 ///
-/// may be set to any unsigned type
-type BitSetSize = u64;
+/// This is based on the number of bits in the underlying [`BitStorage`] type
+const CAPACITY: u64 = BitStorage::BITS as u64;
 
 /// Set for storing elements of statically enumerable types with known cardinality, as witnessed by the traits [Cardinality] and [Finite]
 ///
-/// the implementation uses a fixed amount of memory and does not grow dynamically
+/// The capacity is determined at compile-time by the type of the stored elements and precludes the need for user management
 ///
-/// trying to use types that exceed the storing capacity leads to a compile-time error
+/// This implementation uses a fixed amount of memory and does not grow dynamically
 ///
-/// invariant ensuring canonical representation: bits exceeding A::Cardinality are always 0
+/// Using types that exceed the maximum storing capacity leads to a compile-time error: [`BitStorage::BITS`] ≥ [`A::CARDINALITY`]
+///
+/// # Invariants
+///
+/// 1. bits exceeding [`A::Cardinality`] are always set to 0
+///
+/// Invariant #1 ensures canonical representation for equality checks
 #[derive(Debug, PartialEq, Eq, PartialOrd, Ord, Default, Hash)]
-pub struct BitSet<A>(BitSetSize, PhantomData<A>);
+pub struct BitSet<A>(BitStorage, PhantomData<A>);
 
 // ability to [Clone] independent of generic argument
 impl<A> Clone for BitSet<A> {
@@ -54,12 +62,13 @@ impl<A: Display + Finite> Display for BitSet<A> {
 }
 
 impl<A: Cardinality> Cardinality for BitSet<A> {
+    // a BitSet with 64 elements works fine, except in that case calling CARDINALITY causes an overflow
     const CARDINALITY: u64 = 1 << A::CARDINALITY;
 }
 
 impl<A: Finite> Finite for BitSet<A> {
     fn index_to_enum(value: u64) -> Self {
-        Self(value as BitSetSize & Self::USED_BITS, PhantomData) // truncating
+        Self(value as BitStorage & Self::USED_BITS, PhantomData) // truncating
     }
 
     fn enum_to_index(&self) -> u64 {
@@ -68,148 +77,156 @@ impl<A: Finite> Finite for BitSet<A> {
 }
 
 impl<A> BitSet<A> {
-    /// set containing 0 elements
-    pub const EMPTY: Self = Self(BitSetSize::MIN, PhantomData);
+    /// Set containing 0 elements
+    pub const EMPTY: Self = Self(BitStorage::MIN, PhantomData);
 
-    /// indicates if the set contains 0 elements
+    /// Indicates if the set contains 0 elements
     pub const fn is_empty(self) -> bool {
-        self.0 == BitSetSize::MIN
+        self.0 == BitStorage::MIN
     }
 
-    /// returns number of elements in the set
+    /// Returns number of elements in the set
     pub const fn len(self) -> u32 {
         self.0.count_ones()
     }
 
-    /// returns a set containing every element present in both sets
+    /// Returns a set containing every element present in both sets
     pub const fn intersection(self, other: Self) -> Self {
         Self(self.0 & other.0, PhantomData)
     }
 
-    /// returns a set containing any elements present in either set
+    /// Returns a set containing any elements present in either set
     pub const fn union(self, other: Self) -> Self {
         Self(self.0 | other.0, PhantomData)
     }
 
-    /// returns a set containing all elements in the first set without the elements in the second set
+    /// Returns a set containing all elements in the first set without the elements in the second set
     pub const fn difference(self, other: Self) -> Self {
         Self(self.0 & !other.0, PhantomData)
     }
 
-    /// returns a set containing all the elements that are contained in exactly one set
+    /// Returns a set containing all the elements that are contained in exactly one set
     pub const fn symmetric_difference(self, other: Self) -> Self {
         Self(self.0 ^ other.0, PhantomData)
     }
 
-    /// indicates if the other set contains at least all elements of this one
+    /// Indicates if the other set contains at least all elements of this one
     pub const fn is_subset(self, other: Self) -> bool {
         self.0 | other.0 == self.0
     }
 
-    /// indicates if this set contains at least all elements of the other one
+    /// Indicates if this set contains at least all elements of the other one
     pub const fn is_superset(self, other: Self) -> bool {
         other.is_subset(self)
     }
 
-    /// indicates if both sets share no common elements
+    /// Indicates if both sets share no common elements
     pub const fn is_disjoint(self, other: Self) -> bool {
-        self.0 & other.0 == BitSetSize::MIN
+        self.0 & other.0 == BitStorage::MIN
     }
 }
 
 impl<A: Cardinality> BitSet<A> {
-    /// mask of all used bits
+    /// Bitmask with the [`A:CARDINALITY`] least significant bits set to 1
     ///
-    /// laws:
-    /// * `∀s: BitSet. s.0 & USED_BITS == s.0`
-    /// * equivalent: `∀s: BitSet. s.intersection(BitSet::FULL) == s`
-    const USED_BITS: BitSetSize = if A::CARDINALITY <= BitSetSize::BITS as u64 {
-        // == `1 << A:CARDINALITY - 1` without overflow
-        BitSetSize::MAX >> (BitSetSize::BITS as BitSetSize - A::CARDINALITY as BitSetSize)
+    /// # Examples
+    ///
+    /// `BitSet::<bool>::USED_BITS == 0b0...0011`
+    ///
+    /// # Invariant
+    ///
+    /// `∀s : BitSet. s.0 & USED_BITS == s.0`
+    ///
+    /// or equivalently
+    ///
+    /// `∀s : BitSet. s.intersection(BitSet::FULL) == s`
+    const USED_BITS: BitStorage = if CAPACITY >= A::CARDINALITY {
+        // == `Self::CARDINALITY - 1` without risk of overflow
+        BitStorage::MAX >> (CAPACITY - A::CARDINALITY) as BitStorage
     } else {
         panic!("BitSet only supports up to 64 elements")
     };
 
-    /// set containing all possible elements
+    /// Set containing all possible elements
     pub const FULL: Self = Self(Self::USED_BITS, PhantomData);
 
-    /// returns a set containing all elements not in this set
+    /// Returns a set containing all elements not in this set
     ///
-    /// mutable variant of [not]
+    /// Mutable variant of [`BitSet::not`]
     pub fn complement(mut self) {
         self.0 = !self.0 & Self::USED_BITS
     }
 }
 
 impl<A: Finite> BitSet<A> {
-    /// set only containing the given element
+    /// Set only containing the given element
     pub fn singleton(element: A) -> Self {
         Self::EMPTY.inserted(element)
     }
 
-    /// checks if set contains a given element
+    /// Checks if set contains a given element
     pub fn contains(self, element: A) -> bool {
-        test_bit(self.0, element.enum_to_index() as BitSetSize)
+        test_bit(self.0, element.enum_to_index() as BitStorage)
     }
 
-    /// inserts given element into the set
+    /// Inserts given element into the set
     ///
-    /// immutable variant of [insert]
+    /// Immutable variant of [`BitSet::insert`]
     pub fn inserted(self, element: A) -> Self {
         Self(
-            set_bit(self.0, element.enum_to_index() as BitSetSize),
+            set_bit(self.0, element.enum_to_index() as BitStorage),
             PhantomData,
         )
     }
 
-    /// removes given element from the set
+    /// Removes given element from the set
     ///
-    /// immutable variant of [remove]
+    /// Immutable variant of [`BitSet::remove`]
     pub fn removed(self, element: A) -> Self {
         Self(
-            clear_bit(self.0, element.enum_to_index() as BitSetSize),
+            clear_bit(self.0, element.enum_to_index() as BitStorage),
             PhantomData,
         )
     }
 
-    /// toggles given element in the set
+    /// Toggles given element in the set
     ///
-    /// immutable variant of [toggle]
+    /// Immutable variant of [`BitSet::toggle`]
     pub fn toggled(self, element: A) -> Self {
         Self(
-            toggle_bit(self.0, element.enum_to_index() as BitSetSize),
+            toggle_bit(self.0, element.enum_to_index() as BitStorage),
             PhantomData,
         )
     }
 
-    /// inserts given element into the set and indicates if the set has changed
+    /// Inserts given element into the set and indicates if the set has changed
     ///
-    /// mutable variant of [inserted]
+    /// Mutable variant of [`BitSet::inserted`]
     pub fn insert(mut self, element: A) -> bool {
         let old = self.0;
-        self.0 = set_bit(self.0, element.enum_to_index() as BitSetSize);
+        self.0 = set_bit(self.0, element.enum_to_index() as BitStorage);
         self.0 != old
     }
 
-    /// removes given element from the set and indicates if the set has changed
+    /// Removes given element from the set and indicates if the set has changed
     ///
-    /// mutable variant of [removed]
+    /// Mutable variant of [`BitSet::removed`]
     pub fn remove(mut self, element: A) -> bool {
         let old = self.0;
-        self.0 = clear_bit(self.0, element.enum_to_index() as BitSetSize);
+        self.0 = clear_bit(self.0, element.enum_to_index() as BitStorage);
         self.0 != old
     }
 
-    /// toggles given element in the set
+    /// Toggles given element in the set
     ///
-    /// mutable variant of [toggled]
+    /// Mutable variant of [`BitSet::toggled`]
     pub fn toggle(mut self, element: A) {
-        self.0 = toggle_bit(self.0, element.enum_to_index() as BitSetSize);
+        self.0 = toggle_bit(self.0, element.enum_to_index() as BitStorage);
     }
 
-    /// unwraps the only element of the set
+    /// Unwraps the only element of the set
     ///
-    /// * return `Some(e)` if set contains `e` as only element
+    /// * returns `Some(e)` if set is a singleton
     /// * returns `None` if set contains several elements or is empty
     pub fn unwrap_if_singleton(self) -> Option<A> {
         if self.len() == 1 {
@@ -219,7 +236,7 @@ impl<A: Finite> BitSet<A> {
         }
     }
 
-    /// reference is sufficient to construct iterator
+    /// Returns an iterator over the elements in the set
     pub fn iter(&self) -> Iter<A> {
         Iter {
             bits: self.0,
@@ -243,9 +260,12 @@ impl<A: Finite> IntoIterator for BitSet<A> {
     }
 }
 
+/// Iterator for [`BitSet`]
+///
+/// The Iterator implementation currently successively consumes the bits until reaching 0 and therefore cannot implement [`DoubleEndedIterator`]
 pub struct Iter<A> {
-    bits: BitSetSize,
-    index: BitSetSize,
+    bits: BitStorage,
+    index: BitStorage,
     phantom: PhantomData<A>,
 }
 
@@ -256,7 +276,7 @@ impl<A: Finite> Iterator for Iter<A> {
         if self.bits == 0 {
             None
         } else {
-            let trailing = self.bits.trailing_zeros() as BitSetSize;
+            let trailing = self.bits.trailing_zeros() as BitStorage;
 
             self.bits >>= trailing;
             self.bits &= !1; // consume element at current index
@@ -296,9 +316,9 @@ impl<A: Finite> Extend<A> for BitSet<A> {
 impl<A: Cardinality> Not for BitSet<A> {
     type Output = Self;
 
-    /// returns a set containing all elements not in this set
+    /// Returns a set containing all elements not in this set
     ///
-    /// immutable variant of [complement]
+    /// Immutable variant of [`BitSet::complement`]
     fn not(self) -> Self::Output {
         Self(!self.0 & Self::USED_BITS, PhantomData)
     }
@@ -393,9 +413,9 @@ impl UsedBits for u128 {
 /// compile-time proof that [`BitSet`] can store [`BitSetSize::BITS`] elements
 #[allow(clippy::assertions_on_constants)]
 const _: () = {
-    type BitSetSizeInhabitants = <BitSetSize as UsedBits>::Inhabitants;
-    assert!(BitSetSizeInhabitants::CARDINALITY == BitSetSize::BITS as u64);
-    assert!(BitSet::<BitSetSizeInhabitants>::USED_BITS == BitSetSize::MAX)
+    type BitSetSizeInhabitants = <BitStorage as UsedBits>::Inhabitants;
+    assert!(BitSetSizeInhabitants::CARDINALITY == CAPACITY);
+    assert!(BitSet::<BitSetSizeInhabitants>::USED_BITS == BitStorage::MAX)
 };
 
 #[cfg(test)]

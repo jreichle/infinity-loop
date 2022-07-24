@@ -2,25 +2,33 @@ use std::{cmp::Ordering, iter::successors};
 
 use super::cardinality::{Cardinality, Void};
 
-/// witness for the bijection between enumeration and natural numbers
+/// Witnesses the bijection between [`Self`] and the finite subset of [natural numbers `ℕ`](https://en.wikipedia.org/wiki/Natural_number) up to [`Self::CARDINALITY`]
 ///
+/// With [`Cardinality`] as supertrait, implementations of [`Finite`] are restricted to types with finite number of inhabitants ≤ [`u64::MAX`]
 ///
+/// This requirement particularly excludes implementations for types with dynamic sizes like lists, vectors and graphs
 ///
-/// __laws__
-/// * all indices are between `0` inclusive and `[Self::CARDINALITY]` exclusive
-/// * `index_to_enum` ∘ `enum_to_index` == `identity` == `enum_to_index` ∘ `index_to_enum`
+/// # Laws
+///
+/// * all indices are between `0` inclusive and [`Self::CARDINALITY`] exclusive
+/// * [`index_to_enum`] ∘ [`enum_to_index`] ≡ [`identity`][std::convert::identity] ≡ [`enum_to_index`] ∘ [`index_to_enum`]
 pub trait Finite: Cardinality {
-    /// converts an integer index into the corresponding [Self]
+    /// Converts an integer index into the corresponding [Self]
     ///
-    /// implementations may use modulo on the integer argument, since the domain is defined by the [Cardinality] trait
+    /// The caller must ensure that this method is only called with values between 0 and [`Self::CARDINALITY`] exclusive
+    ///
+    /// Implementors may either
+    ///
+    /// 1. use the value modulo [`Self::CARDINALITY`]
+    /// 2. panic, if value ≥ [`Self::CARDINALITY`]
     fn index_to_enum(value: u64) -> Self;
 
-    /// converts a [Self] into the corresponding integer index
+    /// Converts a [Self] into the corresponding natural number index
     fn enum_to_index(&self) -> u64;
 
-    fn successor(value: Self) -> Option<Self> {
-        // untested for correct behavior around under- / overflow
-        let next_index = value.enum_to_index() + 1;
+    /// Returns the next element in the enumeration
+    fn successor(&self) -> Option<Self> {
+        let next_index = self.enum_to_index().checked_add(1)?;
         if next_index < Self::CARDINALITY {
             Some(Self::index_to_enum(next_index))
         } else {
@@ -28,24 +36,25 @@ pub trait Finite: Cardinality {
         }
     }
 
-    fn predecessor(value: Self) -> Option<Self> {
-        u64::checked_sub(value.enum_to_index(), 1).map(Self::index_to_enum)
+    /// Returns the previous element in the enumeration
+    fn predecessor(&self) -> Option<Self> {
+        self.enum_to_index().checked_sub(1).map(Self::index_to_enum)
     }
 
-    /// end exclusive
-    fn range(from: Self, to: Self) -> Vec<Self> {
-        (from.enum_to_index()..to.enum_to_index())
+    /// Returns all values between two elements of the enumeration
+    fn range(start: Self, end_exclusive: Self) -> Vec<Self> {
+        (start.enum_to_index()..end_exclusive.enum_to_index())
             .map(Self::index_to_enum)
             .collect()
     }
 
-    /// collection of all enum values
+    /// Returns all inhabitants in ascending order
     ///
-    /// implementation should return lazy iterator, but returning `impl <trait>` is disallowed in traits
+    /// # Note
+    ///
+    /// Implementation should return lazy iterator, but returning `impl <trait>` is disallowed in traits as of Rust 1.6.3
     fn all_enums_ascending() -> Vec<Self> {
-        (0..=Self::CARDINALITY - 1)
-            .map(Self::index_to_enum)
-            .collect()
+        (0..Self::CARDINALITY).map(Self::index_to_enum).collect()
     }
 }
 
