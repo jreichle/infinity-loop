@@ -460,3 +460,8 @@ fn generate_grid(
     let game_board: Grid<Tile<Square>> = Grid::new(wrapper_width, wrapper_height, flat_map);
     game_board
 }
+
+pub fn example() {
+    let game_board = generate_grid(10, 10, get_all_possible_tiles());
+    println!("{}", game_board);
+}
