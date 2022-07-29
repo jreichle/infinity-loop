@@ -2,7 +2,7 @@ use std::{cmp::Ordering, iter::successors};
 
 use super::cardinality::{Cardinality, Void};
 
-/// Witnesses the bijection between [`Self`] and the finite subset of [natural numbers `ℕ`](https://en.wikipedia.org/wiki/Natural_number) up to [`Self::CARDINALITY`]
+/// Witnesses the bijection between [`Self`] and the finite subset of [natural numbers `ℕ`](https://en.wikipedia.org/wiki/Natural_number) up to [`Self::CARDINALITY`] exclusive
 ///
 /// With [`Cardinality`] as supertrait, implementations of [`Finite`] are restricted to types with finite number of inhabitants ≤ [`u64::MAX`]
 ///
@@ -11,7 +11,7 @@ use super::cardinality::{Cardinality, Void};
 /// # Laws
 ///
 /// * all indices are between `0` inclusive and [`Self::CARDINALITY`] exclusive
-/// * [`index_to_enum`] ∘ [`enum_to_index`] ≡ [`identity`][std::convert::identity] ≡ [`enum_to_index`] ∘ [`index_to_enum`]
+/// * [`Finite::index_to_enum`] ∘ [`Finite::enum_to_index`] ≡ [`identity`][std::convert::identity] ≡ [`Finite::enum_to_index`] ∘ [`Finite::index_to_enum`]
 pub trait Finite: Cardinality {
     /// Converts an integer index into the corresponding [Self]
     ///

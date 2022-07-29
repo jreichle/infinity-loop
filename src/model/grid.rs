@@ -387,8 +387,8 @@ impl<A: Display> Display for Grid<A> {
 
 impl<A: Arbitrary> Arbitrary for Grid<A> {
     fn arbitrary(g: &mut Gen) -> Self {
-        let rows = usize::arbitrary(g);
-        let columns = usize::arbitrary(g);
+        let rows = u8::arbitrary(g) as usize;
+        let columns = u8::arbitrary(g) as usize;
         let elements = (0..rows * columns).map(|_| A::arbitrary(g)).collect();
         Self {
             rows,
@@ -417,8 +417,6 @@ mod grid_tests {
 #[cfg(test)]
 mod gameboard_tests {
 
-    use crate::model::coordinate::Coordinate;
-
     use super::{GameBoard, Grid, Square, Tile};
 
     #[quickcheck]
@@ -429,6 +427,6 @@ mod gameboard_tests {
     // single tile gameboard is solved iff tile has no connections
     #[quickcheck]
     fn single_tile_gameboard_is_solved(tile: Tile<Square>) -> bool {
-        Grid::new(Coordinate::of(1), vec![tile]).is_solved() == tile.0.is_empty()
+        Grid::new(1.into(), vec![tile]).is_solved() == tile.0.is_empty()
     }
 }

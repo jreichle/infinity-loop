@@ -19,7 +19,7 @@ use super::{
 ///
 /// # Win Condition
 ///
-/// A level is solved if all connections of a all tiles match their the connections of their respective neighbors. In particular this means that
+/// A level is solved if all connections of a all tiles match the connections of their respective neighbors. In particular this means that
 ///
 /// 1. a tile with a connection to the right must have a neighbor to the right with a connection to the left, e.g. `[┏][━]`
 /// 2. a tile without connection to the right
@@ -50,7 +50,7 @@ use super::{
 
 /// enables dot notation for function calls by associating them with their respective structs
 
-/// superposed tiles of different states, superposition with only single state is called collapsed
+/// set of superimposed tiles in different states, superposition with only single state is called collapsed
 pub type Superposition<A> = BitSet<Tile<A>>;
 
 /// systematic view on grid to facilitate generation and solving
@@ -58,7 +58,7 @@ pub type Sentinel<A> = SentinelGrid<Superposition<A>>;
 
 /// Grid enclosed with a single layer of sentinel tiles
 ///
-/// Distinct type from normal grid and serves as a helper structure to enforce the prohibition of tile connections pointing outwards
+/// It is a distinct type through wrapping the grid struct and serves as a helper structure to enforce the rule that tile connections must not point outwards
 ///
 /// # Examples
 ///
@@ -84,12 +84,10 @@ pub struct SentinelGrid<A>(pub Grid<A>);
 impl<A: Clone> SentinelGrid<A> {
     /// Deletes the layer of sentinel values and returns the original grid
     pub fn extract_grid(&self) -> Grid<A> {
-        Grid::init(self.0.dimensions() - Coordinate::of(2), |c| {
-            self.0[c + Coordinate::of(1)].clone()
-        })
+        Grid::init(self.0.dimensions() - 2, |c| self.0[c + 1].clone())
     }
 
-    /// Applies a function to all elements
+    /// Applies a function to all elements of the SentinelGrid
     fn map<B, F: Fn(A) -> B>(&self, transform: F) -> SentinelGrid<B> {
         SentinelGrid(self.0.map(transform))
     }
@@ -124,8 +122,8 @@ impl<A: Copy> Grid<A> {
     ///
     /// function is specific to Square
     pub fn with_sentinels(&self, sentinel: A) -> SentinelGrid<A> {
-        SentinelGrid(Grid::init(self.dimensions() + Coordinate::of(2), |c| {
-            self.get(c - Coordinate::of(1)).copied().unwrap_or(sentinel)
+        SentinelGrid(Grid::init(self.dimensions() + 2, |c| {
+            self.get(c - 1).copied().unwrap_or(sentinel)
         }))
     }
 }
@@ -134,10 +132,10 @@ impl Square {
     /// Converts a direction to the respective delta coordinate
     fn to_coordinate(self) -> Coordinate<isize> {
         match self {
-            Up => Coordinate { row: -1, column: 0 },
-            Right => Coordinate { row: 0, column: 1 },
-            Down => Coordinate { row: 1, column: 0 },
-            Left => Coordinate { row: 0, column: -1 },
+            Up => Coordinate::new(-1, 0),
+            Right => Coordinate::new(0, 1),
+            Down => Coordinate::new(1, 0),
+            Left => Coordinate::new(0, -1),
         }
     }
 
@@ -150,9 +148,7 @@ impl Square {
 impl Coordinate<isize> {
     /// Converts a coordinate to the respective direction, if it is a delta coordinate
     fn to_square(self) -> Option<Square> {
-        let row = self.row;
-        let column = self.column;
-        match (row, column) {
+        match self.to_tuple() {
             (-1, 0) => Some(Up),
             (0, 1) => Some(Right),
             (1, 0) => Some(Down),
@@ -196,27 +192,29 @@ impl<A: EnumSetType + Finite> Tile<A> {
     }
 }
 
-/// unwraps if all superpositions are collapsed (= only contain single state)
-pub fn extract_if_collapsed<A: Finite + Copy>(grid: &SentinelGrid<BitSet<A>>) -> Option<Grid<A>> {
-    grid.extract_grid()
-        .map(BitSet::unwrap_if_singleton)
-        .sequence()
+impl<A: Finite + Copy> SentinelGrid<BitSet<A>> {
+    /// unwraps if all superpositions are collapsed (= only contain single state)
+    pub fn extract_if_collapsed(&self) -> Option<Grid<A>> {
+        self.extract_grid()
+            .map(BitSet::unwrap_if_singleton)
+            .sequence()
+    }
 }
 
-/// Ensures there is no empty superposition
-///
-/// An empty superposition immediately implies that the given level is without solution
-///
-/// The signature of function is chosen according to the rule "parse, don't validate"
-/// While no parsing takes place, the caller cannot ignore the wrapped return value
-fn check_no_empty_superposition<A>(
-    grid: SentinelGrid<BitSet<A>>,
-) -> Option<SentinelGrid<BitSet<A>>> {
-    grid.0
-        .as_slice()
-        .iter()
-        .all(|s| !s.is_empty())
-        .then_some(grid)
+impl<A> SentinelGrid<BitSet<A>> {
+    /// Ensures there is no empty superposition
+    ///
+    /// An empty superposition immediately implies that the given level is without solution
+    ///
+    /// The signature of function is chosen according to the rule "parse, don't validate"
+    /// While no parsing takes place, the caller cannot ignore the wrapped return value
+    fn check_no_empty_superposition(self) -> Option<SentinelGrid<BitSet<A>>> {
+        self.0
+            .as_slice()
+            .iter()
+            .all(|s| !s.is_empty())
+            .then_some(self)
+    }
 }
 
 impl<A: EnumSetType + Finite> Superposition<A> {
@@ -254,7 +252,7 @@ fn memoize<A: Finite, B: Copy, F: Fn(A) -> B>(f: F) -> impl FnMut(A) -> B {
     move |x| {
         let index = x.enum_to_index() as usize;
         match cache[index] {
-            Some(x) => x,
+            Some(value) => value,
             None => {
                 let value = f(x);
                 cache[index] = Some(value);
@@ -335,26 +333,26 @@ impl Not for Connection<Square> {
     }
 }
 
-/// Extracts the common connections over all states from the superposition
-///
-/// eg. if there is a common [Up] connection between all states, then the result includes [Connection::Present(Up)]
-pub fn extract_common_connections<A: EnumSetType + Finite>(
-    superposition: &Superposition<A>,
-) -> Vec<Connection<A>> {
-    let superposition = superposition.clone();
-    // an empty superposition leads to all overlaps simultaneously but since
-    // an empty superposition cannot be further reduced and already signifies
-    // no solution, the result does not matter
-    let present_connections = Tile::meet_all(superposition)
-        .0
-        .into_iter()
-        .map(|d| Connection(d, Status::Present));
-    let absent_connections = Tile::join_all(superposition)
-        .0
-        .complement()
-        .into_iter()
-        .map(|d| Connection(d, Status::Absent));
-    present_connections.chain(absent_connections).collect()
+impl<A: EnumSetType + Finite> Superposition<A> {
+    /// Extracts the common connections over all states from the superposition
+    ///
+    /// eg. if there is a common [Up] connection between all states, then the result includes [Connection::Present(Up)]
+    pub fn extract_common_connections(&self) -> Vec<Connection<A>> {
+        let superposition = self.clone();
+        // an empty superposition leads to all overlaps simultaneously but since
+        // an empty superposition cannot be further reduced and already signifies
+        // no solution, the result does not matter
+        let present_connections = Tile::meet_all(superposition)
+            .0
+            .into_iter()
+            .map(|d| Connection(d, Status::Present));
+        let absent_connections = Tile::join_all(superposition)
+            .0
+            .complement()
+            .into_iter()
+            .map(|d| Connection(d, Status::Absent));
+        present_connections.chain(absent_connections).collect()
+    }
 }
 
 /// iterative fixed point of a function
@@ -375,13 +373,15 @@ where
     }
 }
 
-/// Minimizes the superpositions of the grid as far as possible through applying the logical deductions
-pub fn minimize(grid: Sentinel<Square>) -> Sentinel<Square> {
-    iter_fix(
-        grid,
-        |g| g.0.coordinates().into_iter().fold(g.clone(), step),
-        SentinelGrid::eq,
-    )
+impl Sentinel<Square> {
+    /// Minimizes the superpositions of the grid as far as possible through applying the logical deductions
+    pub fn minimize(self) -> Sentinel<Square> {
+        iter_fix(
+            self,
+            |g| g.0.coordinates().into_iter().fold(g.clone(), step),
+            SentinelGrid::eq,
+        )
+    }
 }
 
 /// Chooses a tile through the supplied heuristic and for each state
@@ -405,7 +405,7 @@ where
 pub fn step(grid: Sentinel<Square>, index: Coordinate<isize>) -> Sentinel<Square> {
     grid.0
         .get(index)
-        .map(extract_common_connections)
+        .map(Superposition::extract_common_connections)
         .unwrap_or_default()
         .into_iter()
         .fold(grid, |acc, c| {
@@ -416,12 +416,14 @@ pub fn step(grid: Sentinel<Square>, index: Coordinate<isize>) -> Sentinel<Square
         })
 }
 
-/// Returns all puzzle solutions
-// hide concrete iterator implementation
-pub fn solve(grid: &Grid<Tile<Square>>) -> impl Iterator<Item = Grid<Tile<Square>>> {
-    SolutionIterator(vec![grid
-        .with_sentinels(Tile(EnumSet::empty()))
-        .superimpose()])
+impl Grid<Tile<Square>> {
+    /// Returns all puzzle solutions
+    // hide concrete iterator implementation
+    pub fn solve(&self) -> impl Iterator<Item = Grid<Tile<Square>>> {
+        SolutionIterator(vec![self
+            .with_sentinels(Tile(EnumSet::empty()))
+            .superimpose()])
+    }
 }
 
 /// lazy generation of solutions to unify API for quarying single and multiple solutions
@@ -443,11 +445,13 @@ impl Iterator for SolutionIterator<Sentinel<Square>> {
     /// it is yet to be determined if a contradiction after branching can actually occur
     fn next(&mut self) -> Option<Self::Item> {
         while let Some(candidate) = self.0.pop() {
-            let minimized = minimize(candidate);
-            match extract_if_collapsed(&minimized) {
+            let minimized = candidate.minimize();
+            match minimized.extract_if_collapsed() {
+                Some(g) => return Some(g),
                 None => {
                     // distinguish between no and several solutions
-                    check_no_empty_superposition(minimized)
+                    minimized
+                        .check_no_empty_superposition()
                         .into_iter()
                         .for_each(|g| {
                             // current heuristic: pick superpositions with most states
@@ -461,7 +465,6 @@ impl Iterator for SolutionIterator<Sentinel<Square>> {
                             self.0.extend(branch_candidates);
                         });
                 }
-                Some(g) => return Some(g),
             }
         }
         None

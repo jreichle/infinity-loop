@@ -3,7 +3,7 @@ use std::{
     hash::Hash,
     iter::FusedIterator,
     marker::PhantomData,
-    ops::{BitAnd, BitOr, BitXor, Not, Shl},
+    ops::{BitAnd, BitOr, BitXor, Not, Shl, BitOrAssign, BitAndAssign},
 };
 
 use quickcheck::Arbitrary;
@@ -321,6 +321,34 @@ impl<A: Cardinality> Not for BitSet<A> {
     /// Immutable variant of [`BitSet::complement`]
     fn not(self) -> Self::Output {
         Self(!self.0 & Self::USED_BITS, PhantomData)
+    }
+}
+
+impl<A: Finite> BitOr for BitSet<A> {
+    type Output = Self;
+
+    fn bitor(self, rhs: Self) -> Self::Output {
+        self.union(rhs)
+    }
+}
+
+impl<A: Finite> BitOrAssign for BitSet<A> {
+    fn bitor_assign(&mut self, rhs: Self) {
+        self.0 |= rhs.0
+    }
+}
+
+impl<A: Finite> BitAnd for BitSet<A> {
+    type Output = Self;
+
+    fn bitand(self, rhs: Self) -> Self::Output {
+        self.intersection(rhs)
+    }
+}
+
+impl<A: Finite> BitAndAssign for BitSet<A> {
+    fn bitand_assign(&mut self, rhs: Self) {
+        self.0 &= rhs.0
     }
 }
 

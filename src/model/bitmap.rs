@@ -44,34 +44,60 @@ impl<K: Cardinality, V: Clone> BitMap<K, V> {
 }
 
 impl<K: Finite, V: Clone> BitMap<K, V> {
-    fn inserted(&self, key: K, value: V) -> Self {
-        let mut set = Self::empty();
-        set.insert(key, value);
+    fn inserted(self, key: K, value: V) -> Self {
+        let mut set = self.clone();
+        set.0[key.enum_to_index() as usize] = Some(value);
+        set
+    }
+
+    fn removed(self, key: K) -> Self {
+        let mut set = self.clone();
+        set.0[key.enum_to_index() as usize] = None;
         set
     }
 }
 
 impl<K: Finite, V> BitMap<K, V> {
     fn contains(self, key: K) -> bool {
-        self.0[key.enum_to_index() as usize].is_some()
+        self.get(key).is_some()
     }
 
-    fn insert(&mut self, key: K, value: V) {
-        self.0[key.enum_to_index() as usize] = Some(value);
+    /*
+    fn insert(&mut self, key: K, value: V) -> bool
+    where
+        V: PartialEq
+    {
+        let pointer = &mut self.0[key.enum_to_index() as usize];
+        let old = pointer;
+        let new = Some(value);
+        pointer = new;
+        old != new
     }
 
-    fn remove(&mut self, key: K) {
-        self.0[key.enum_to_index() as usize] = None;
+
+    fn remove(&mut self, key: K) -> bool
+    where
+        V: PartialEq
+    {
+        // self.0[key.enum_to_index() as usize] = None;
+        let pointer = &self.0[key.enum_to_index() as usize];
+        let old = *pointer;
+        *pointer = None;
+        old != None
     }
+    */
 
     fn clear(&mut self) {
         self.0.clear()
     }
 
-    fn get<B: Borrow<K> + Finite>(&self, _key: &B) -> Option<&V> {
-        // self.0[key.enum_to_index() as usize];
-        todo!()
+    fn get(&self, key: K) -> Option<&V> {
+        self.0[key.enum_to_index() as usize].as_ref()
     }
+
+    // fn union(self, other: &Self) -> Self {
+    //     self.into_iter().zip(other.iter()).map(|(x, y)| x.and(y)).collect()
+    // }
 }
 
 impl<K: Finite, V> Index<K> for BitMap<K, V> {
@@ -79,5 +105,13 @@ impl<K: Finite, V> Index<K> for BitMap<K, V> {
 
     fn index(&self, index: K) -> &Self::Output {
         &self.0[index.enum_to_index() as usize]
+    }
+}
+
+impl<K: Finite, V: Clone> FromIterator<(K, V)> for BitMap<K, V> {
+    // TODO: use faster insert
+    fn from_iter<T: IntoIterator<Item = (K, V)>>(iter: T) -> Self {
+        iter.into_iter()
+            .fold(Self::empty(), |acc, (k, v)| acc.inserted(k, v))
     }
 }

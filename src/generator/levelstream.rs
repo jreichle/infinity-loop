@@ -1,5 +1,7 @@
 use std::iter::{repeat, FusedIterator};
 
+use quickcheck::Arbitrary;
+
 use crate::model::{
     coordinate::Coordinate,
     fastgen::generate,
@@ -17,6 +19,15 @@ pub struct LevelProperty {
     pub dimension: Coordinate<usize>,
     // maybe some notion of difficulty
     // ...
+}
+
+impl Arbitrary for LevelProperty {
+    fn arbitrary(g: &mut quickcheck::Gen) -> Self {
+        const MAX: usize = 10;
+        LevelProperty {
+            dimension: Coordinate::<usize>::arbitrary(g).map(|v| v % MAX),
+        }
+    }
 }
 
 /// holds the information to generate successive values in an infinite iterator stream
@@ -68,7 +79,7 @@ fn generate_levels(
         (
             move |seed| generate(dimension, seed),
             LevelProperty {
-                dimension: dimension + Coordinate::of(1),
+                dimension: dimension + 1,
             },
         )
     })
@@ -139,3 +150,18 @@ struct IterateMut<A> {
     step: fn(&mut A),
 }
 */
+
+#[cfg(test)]
+mod test {
+
+    use super::*;
+
+    #[quickcheck]
+    fn level_stream_is_solvable(property: LevelProperty) -> bool {
+        // hylomorphism
+        generate_levels(property)
+            .take(10)
+            .enumerate()
+            .all(|(i, f)| f(i as u64).solve().next().is_some())
+    }
+}

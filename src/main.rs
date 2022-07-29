@@ -18,10 +18,7 @@ use model::{
 use std::{env, time::Instant};
 use view::window::*;
 
-use crate::{
-    generator::levelstream::{level_stream, LevelProperty},
-    model::{coordinate::Coordinate, solver::*},
-};
+use crate::generator::levelstream::{level_stream, LevelProperty};
 
 #[allow(unused_variables)] // for testing purposes
 fn main() {
@@ -34,7 +31,7 @@ fn main() {
     // initiate_window();
 
     let property = LevelProperty {
-        dimension: Coordinate::of(5),
+        dimension: 5.into(),
     };
 
     level_stream(property)
@@ -45,7 +42,7 @@ fn main() {
 
 fn print_level_and_solutions(level: &Grid<Tile<Square>>, level_identifier: &str) {
     println!("\nlevel {level_identifier}\n{level}\n");
-    solve(level).into_iter().zip(1..).for_each(|(s, n)| {
+    level.solve().zip(1..).for_each(|(s, n)| {
         let start = Instant::now();
 
         println!("level {level_identifier} solution {n}\n{s}\n");

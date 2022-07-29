@@ -1,10 +1,10 @@
-use std::{fmt::Display, ops::Not};
+use std::{fmt::Display, ops::{Not, BitOr}};
 
 use enumset::{EnumSet, EnumSetType};
 use quickcheck::{Arbitrary, Gen};
 use Square::{Down, Left, Right, Up};
 
-use super::{cardinality::Cardinality, finite::Finite};
+use super::{cardinality::Cardinality, finite::Finite, bitset::BitSet};
 
 /// Represents a direction for a tile connection
 #[derive(Debug, Hash, EnumSetType)]
@@ -31,6 +31,37 @@ impl Square {
         }
     }
 }
+
+/*
+impl BitOr for Square {
+    type Output = BitSet<Square>;
+
+    fn bitor(self, rhs: Self) -> Self::Output {
+        BitSet::singleton(self).inserted(rhs)
+    }
+}
+
+impl<A: Finite> BitOr<A> for BitSet<A> {
+    type Output = BitSet<A>;
+
+    fn bitor(self, rhs: A) -> Self::Output {
+        self.inserted(rhs)
+    }
+}
+
+impl Not for Square {
+    type Output = Square;
+
+    fn not(self) -> Self::Output {
+        match self {
+            Up => Down,
+            Right => Left,
+            Down => Up,
+            Left => Right,
+        }
+    }
+}
+ */
 
 impl Display for Square {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {

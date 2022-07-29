@@ -35,7 +35,8 @@ pub fn generate(dimension: Coordinate<usize>, seed: u64) -> Grid<Tile<Square>> {
     let sentinel = Grid::init(dimension, |_| BitSet::FULL)
         .with_sentinels(BitSet::singleton(Tile(EnumSet::empty())));
     let grid = SentinelGrid(
-        minimize(sentinel)
+        sentinel
+            .minimize()
             .0
             .with_index()
             .zip(StdRng::seed_from_u64(seed).sample_iter(Standard))
@@ -47,7 +48,9 @@ pub fn generate(dimension: Coordinate<usize>, seed: u64) -> Grid<Tile<Square>> {
                 }
             }),
     );
-    extract_if_collapsed(&minimize(grid)).unwrap()
+    grid.minimize()
+        .extract_if_collapsed()
+        .expect("error in algorithm")
 }
 
 /*
@@ -147,3 +150,17 @@ trait IsTrue {}
 impl IsTrue for Assert<true> {}
 
 */
+
+#[cfg(test)]
+mod test {
+
+    use super::*;
+
+    #[quickcheck]
+    fn generated_levels_are_solvable(dimension: Coordinate<usize>, seed: u64) -> bool {
+        generate(dimension.map(|v| v % 20), seed)
+            .solve()
+            .next()
+            .is_some()
+    }
+}

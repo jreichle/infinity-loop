@@ -4,17 +4,24 @@ pub trait Representable<A> {
 
     fn tabulate<F: Fn(Self::Index) -> A>(f: F) -> Self;
 
-    fn index(self, index: Self::Index) -> A;
+    fn index(&self, index: Self::Index) -> A;
+
+    fn index_fn(&self) -> Box<dyn Fn(Self::Index) -> A + '_>
+    where
+        Self: Copy + Sized,
+    {
+        Box::new(move |i| Self::index(self, i))
+    }
 }
 
-impl<A> Representable<A> for (A, A) {
+impl<A: Copy> Representable<A> for (A, A) {
     type Index = bool;
 
     fn tabulate<F: Fn(Self::Index) -> A>(f: F) -> Self {
         (f(false), f(true))
     }
 
-    fn index(self, index: Self::Index) -> A {
+    fn index(&self, index: Self::Index) -> A {
         if index {
             self.1
         } else {
@@ -22,15 +29,3 @@ impl<A> Representable<A> for (A, A) {
         }
     }
 }
-
-// impl<A: Representable, B: Representable> Representable<A> for  {
-//     type Index = (A::Index, B::Index);
-//
-//     fn tabulate<F: Fn(Self::Index) -> A>(f: F) -> Self {
-//         todo!()
-//     }
-//
-//     fn index(&self, index: Self::Index) -> A {
-//         todo!()
-//     }
-// }
