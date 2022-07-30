@@ -170,7 +170,7 @@ impl Coordinate<isize> {
     }
 
     /// Returns the position of all neighboring tiles in arbitrary order
-    fn all_neighbor_indices(self) -> Vec<Coordinate<isize>> {
+    pub fn all_neighbor_indices(self) -> Vec<Coordinate<isize>> {
         BitSet::FULL
             .iter()
             .map(|dir| self.get_neighbor_index(dir))
