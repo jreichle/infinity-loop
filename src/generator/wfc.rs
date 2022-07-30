@@ -1,7 +1,7 @@
 // wave function collapse (WFC)
 
 use crate::model::{
-    bitset::BitSet,
+    enumset::EnumSet,
     finite::Finite,
     tile::{
         Square::{self, Down, Left, Right, Up},
@@ -91,7 +91,7 @@ fn parse_rules(
 
 // Print all possible tiles
 fn print_all_tiles() {
-    BitSet::<Square>::all_enums_ascending()
+    EnumSet::<Square>::all_enums_ascending()
         .iter()
         .for_each(|tile| println!("{tile}"));
 }

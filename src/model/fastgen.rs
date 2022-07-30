@@ -1,7 +1,7 @@
 use rand::{distributions::Standard, prelude::StdRng, Rng, SeedableRng};
 
 use super::{
-    bitset::BitSet,
+    enumset::EnumSet,
     coordinate::Coordinate,
     finite::Finite,
     grid::Grid,
@@ -22,17 +22,17 @@ use super::{
 ///
 ///! adjustment in implementation: instead of directly propagating collapsed superpositions, the whole grid is minimized at the end
 
-impl<A: Finite> BitSet<A> {
+impl<A: Finite> EnumSet<A> {
     fn collapse_random(self, random: usize) -> Self {
         usize::checked_rem(random, self.len() as usize)
-            .and_then(|i| self.into_iter().nth(i).map(BitSet::singleton))
+            .and_then(|i| self.into_iter().nth(i).map(EnumSet::singleton))
             .unwrap_or(self)
     }
 }
 
 pub fn generate(dimension: Coordinate<usize>, seed: u64) -> Grid<Tile<Square>> {
-    let sentinel = Grid::init(dimension, |_| BitSet::FULL)
-        .with_sentinels(BitSet::singleton(Tile::EMPTY));
+    let sentinel = Grid::init(dimension, |_| EnumSet::FULL)
+        .with_sentinels(EnumSet::singleton(Tile::EMPTY));
     let grid = SentinelGrid(
         sentinel
             .minimize()

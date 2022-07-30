@@ -6,7 +6,7 @@ use std::{
 use quickcheck::{Arbitrary, Gen};
 use Square::{Down, Left, Right, Up};
 
-use super::{bitset::BitSet, cardinality::Cardinality, finite::Finite};
+use super::{enumset::EnumSet, cardinality::Cardinality, finite::Finite};
 
 /// Represents a direction for a tile connection
 #[derive(Debug, Hash, Copy, Clone, PartialEq, Eq, PartialOrd, Ord)]
@@ -34,15 +34,15 @@ impl Square {
 }
 
 impl BitOr for Square {
-    type Output = BitSet<Square>;
+    type Output = EnumSet<Square>;
 
     fn bitor(self, rhs: Self) -> Self::Output {
-        BitSet::singleton(self).inserted(rhs)
+        EnumSet::singleton(self).inserted(rhs)
     }
 }
 
-impl<A: Finite> BitOr<A> for BitSet<A> {
-    type Output = BitSet<A>;
+impl<A: Finite> BitOr<A> for EnumSet<A> {
+    type Output = EnumSet<A>;
 
     fn bitor(self, rhs: A) -> Self::Output {
         self.inserted(rhs)
@@ -115,7 +115,7 @@ impl Finite for Square {
 ///
 /// Basic operations are checking present connections and rotating tiles
 #[derive(Debug, Hash, PartialEq, Eq, PartialOrd, Ord)]
-pub struct Tile<A>(pub BitSet<A>);
+pub struct Tile<A>(pub EnumSet<A>);
 
 impl<A> Clone for Tile<A> {
     fn clone(&self) -> Self {
@@ -132,11 +132,11 @@ impl<A> Default for Tile<A> {
 }
 
 impl<A> Tile<A> {
-    pub const EMPTY: Tile<A> = Self(BitSet::EMPTY);
+    pub const EMPTY: Tile<A> = Self(EnumSet::EMPTY);
 }
 
 impl<A: Cardinality> Tile<A> {
-    pub const FULL: Tile<A> = Self(BitSet::FULL);
+    pub const FULL: Tile<A> = Self(EnumSet::FULL);
 }
 
 impl<A: Finite> Tile<A> {
@@ -148,7 +148,7 @@ impl<A: Finite> Tile<A> {
         let repetitions = repetitions % A::CARDINALITY;
         let rotated_bit_rep =
             (bit_rep << repetitions) | (bit_rep >> (A::CARDINALITY - repetitions));
-        Self(BitSet::index_to_enum(rotated_bit_rep))
+        Self(EnumSet::index_to_enum(rotated_bit_rep))
     }
 
     /// Rotates the tile counterclockwise by 360° / [`A::CARDINALITY`]
@@ -168,12 +168,12 @@ impl<A: Cardinality> Not for Tile<A> {
 }
 
 impl<A: Cardinality> Cardinality for Tile<A> {
-    const CARDINALITY: u64 = BitSet::<A>::CARDINALITY;
+    const CARDINALITY: u64 = EnumSet::<A>::CARDINALITY;
 }
 
 impl<A: Finite> Finite for Tile<A> {
     fn index_to_enum(value: u64) -> Self {
-        Self(BitSet::index_to_enum(value))
+        Self(EnumSet::index_to_enum(value))
     }
 
     fn enum_to_index(&self) -> u64 {
@@ -183,7 +183,7 @@ impl<A: Finite> Finite for Tile<A> {
 
 impl<A: 'static + Clone + Finite> Arbitrary for Tile<A> {
     fn arbitrary(g: &mut Gen) -> Self {
-        Self(BitSet::index_to_enum(u64::arbitrary(g)))
+        Self(EnumSet::index_to_enum(u64::arbitrary(g)))
     }
 }
 

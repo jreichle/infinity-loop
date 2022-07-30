@@ -1,5 +1,5 @@
 use super::{
-    bitset::BitSet,
+    enumset::EnumSet,
     coordinate::Coordinate,
     grid::Grid,
     tile::{
@@ -23,7 +23,7 @@ use super::{
 pub fn char_to_tile(tile_character: char) -> Result<Tile<Square>, String> {
     match tile_character {
         ' ' => Ok(Tile::EMPTY),
-        '-' => Ok(Tile(BitSet::singleton(Up))),
+        '-' => Ok(Tile(EnumSet::singleton(Up))),
         'I' => Ok(Tile(Up | Down)),
         'L' => Ok(Tile(Up | Right)),
         'T' => Ok(Tile(Up | Right | Down)),
@@ -35,14 +35,14 @@ pub fn char_to_tile(tile_character: char) -> Result<Tile<Square>, String> {
 pub fn unicode_to_tile(tile_character: char) -> Result<Tile<Square>, String> {
     match tile_character {
         ' ' => Ok(Tile::EMPTY),
-        '╹' => Ok(Tile(BitSet::singleton(Up))),
-        '╺' => Ok(Tile(BitSet::singleton(Right))),
+        '╹' => Ok(Tile(EnumSet::singleton(Up))),
+        '╺' => Ok(Tile(EnumSet::singleton(Right))),
         '┗' => Ok(Tile(Up | Right)),
-        '╻' => Ok(Tile(BitSet::singleton(Down))),
+        '╻' => Ok(Tile(EnumSet::singleton(Down))),
         '┃' => Ok(Tile(Up | Down)),
         '┏' => Ok(Tile(Right | Down)),
         '┣' => Ok(Tile(Up | Right | Down)),
-        '╸' => Ok(Tile(BitSet::singleton(Left))),
+        '╸' => Ok(Tile(EnumSet::singleton(Left))),
         '┛' => Ok(Tile(Up | Left)),
         '━' => Ok(Tile(Right | Left)),
         '┻' => Ok(Tile(Up | Right | Left)),

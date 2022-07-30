@@ -5,7 +5,7 @@ use std::{fmt::Display, hash::Hash, ops::Not};
 use quickcheck::Arbitrary;
 
 use super::{
-    bitset::BitSet,
+    enumset::EnumSet,
     cardinality::Cardinality,
     coordinate::Coordinate,
     finite::Finite,
@@ -50,7 +50,7 @@ use super::{
 /// enables dot notation for function calls by associating them with their respective structs
 
 /// set of superimposed tiles in different states, superposition with only single state is called collapsed
-pub type Superposition<A> = BitSet<Tile<A>>;
+pub type Superposition<A> = EnumSet<Tile<A>>;
 
 /// systematic view on grid to facilitate generation and solving
 pub type Sentinel<A> = SentinelGrid<Superposition<A>>;
@@ -166,7 +166,7 @@ impl Coordinate<isize> {
 
     /// Returns the position of all neighboring tiles in arbitrary order
     fn all_neighbor_indices(self) -> Vec<Coordinate<isize>> {
-        BitSet::FULL
+        EnumSet::FULL
             .iter()
             .map(|dir| self.get_neighbor_index(dir))
             .collect()
@@ -183,7 +183,7 @@ impl<A: Finite> Tile<A> {
     fn superimpose(self) -> Superposition<A> {
         // insert successively rotated tiles until encountering repeated initial tile
         iter_fix(
-            (BitSet::<Tile<A>>::EMPTY, self),
+            (EnumSet::<Tile<A>>::EMPTY, self),
             |(s, t)| (s.inserted(*t), t.rotated_clockwise(1)),
             |x, y| x.0 == y.0,
         )
@@ -191,23 +191,23 @@ impl<A: Finite> Tile<A> {
     }
 }
 
-impl<A: Finite + Copy> SentinelGrid<BitSet<A>> {
+impl<A: Finite + Copy> SentinelGrid<EnumSet<A>> {
     /// unwraps if all superpositions are collapsed (= only contain single state)
     pub fn extract_if_collapsed(&self) -> Option<Grid<A>> {
         self.extract_grid()
-            .map(BitSet::unwrap_if_singleton)
+            .map(EnumSet::unwrap_if_singleton)
             .sequence()
     }
 }
 
-impl<A> SentinelGrid<BitSet<A>> {
+impl<A> SentinelGrid<EnumSet<A>> {
     /// Ensures there is no empty superposition
     ///
     /// An empty superposition immediately implies that the given level is without solution
     ///
     /// The signature of function is chosen according to the rule "parse, don't validate"
     /// While no parsing takes place, the caller cannot ignore the wrapped return value
-    fn check_no_empty_superposition(self) -> Option<SentinelGrid<BitSet<A>>> {
+    fn check_no_empty_superposition(self) -> Option<SentinelGrid<EnumSet<A>>> {
         self.0
             .as_slice()
             .iter()
@@ -234,8 +234,8 @@ impl<A: Finite + Copy> Superposition<A> {
 }
 
 impl<A: Finite + Copy> Connection<A> {
-    fn to_filter(&self) -> BitSet<Tile<A>> {
-        BitSet::FULL
+    fn to_filter(&self) -> EnumSet<Tile<A>> {
+        EnumSet::FULL
             .into_iter()
             .filter(|t: &Tile<A>| match self.1 {
                 Status::Absent => !t.0.contains(self.0),
@@ -396,7 +396,7 @@ where
         .copied()
         .unwrap_or_default()
         .iter()
-        .map(|t| SentinelGrid(grid.0.try_adjust_at(coordinate, |_| BitSet::singleton(t))))
+        .map(|t| SentinelGrid(grid.0.try_adjust_at(coordinate, |_| EnumSet::singleton(t))))
         .collect()
 }
 
@@ -469,7 +469,7 @@ impl Iterator for SolutionIterator<Sentinel<Square>> {
 }
 
 /// witness for the ablility of [BitSet] to store at least Tile<Square>::CARDINALITY = 16 elements
-const _: Superposition<Square> = BitSet::FULL;
+const _: Superposition<Square> = EnumSet::FULL;
 
 #[cfg(test)]
 mod test {
@@ -487,10 +487,10 @@ mod test {
 
     #[quickcheck]
     fn restrict_tile_sanity_check() -> bool {
-        let superposition = BitSet::from_iter(Tile(Up | Right).superimpose());
+        let superposition = EnumSet::from_iter(Tile(Up | Right).superimpose());
         let connection = Connection(Right, Status::Present);
         superposition.restrict_tile(connection)
-            == BitSet::from_iter([Tile(Up | Right), Tile(Right | Down)])
+            == EnumSet::from_iter([Tile(Up | Right), Tile(Right | Down)])
     }
 
     #[quickcheck]
@@ -506,7 +506,7 @@ mod test {
     fn neighborhood_is_euclidian(index: Coordinate<i8>) -> bool {
         // restrict coordinates to a range resembling actual values used in grid and avoid integer over- / underflows
         let index = index.map(|x| x as isize);
-        BitSet::FULL
+        EnumSet::FULL
             .into_iter()
             .fold(index, Coordinate::get_neighbor_index)
             == index

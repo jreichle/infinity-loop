@@ -1,6 +1,6 @@
 pub mod accesserror;
-pub mod bitmap;
-pub mod bitset;
+pub mod enummap;
+pub mod enumset;
 pub mod cardinality;
 pub mod coordinate;
 pub mod fastgen;
