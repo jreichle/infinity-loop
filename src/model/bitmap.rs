@@ -1,4 +1,4 @@
-use std::{borrow::Borrow, marker::PhantomData, ops::Index};
+use std::{marker::PhantomData, ops::Index};
 
 use super::{cardinality::Cardinality, finite::Finite};
 

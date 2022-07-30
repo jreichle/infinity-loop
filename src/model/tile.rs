@@ -1,14 +1,15 @@
-use std::{fmt::Display, ops::{Not, BitOr}};
+use std::{
+    fmt::Display,
+    ops::{BitOr, Not},
+};
 
-use enumset::{EnumSet, EnumSetType};
 use quickcheck::{Arbitrary, Gen};
 use Square::{Down, Left, Right, Up};
 
-use super::{cardinality::Cardinality, finite::Finite, bitset::BitSet};
+use super::{bitset::BitSet, cardinality::Cardinality, finite::Finite};
 
 /// Represents a direction for a tile connection
-#[derive(Debug, Hash, EnumSetType)]
-#[enumset(repr = "u32")]
+#[derive(Debug, Hash, Copy, Clone, PartialEq, Eq, PartialOrd, Ord)]
 pub enum Square {
     /// Coordinate(-1, 0)
     Up,
@@ -32,7 +33,6 @@ impl Square {
     }
 }
 
-/*
 impl BitOr for Square {
     type Output = BitSet<Square>;
 
@@ -61,7 +61,6 @@ impl Not for Square {
         }
     }
 }
- */
 
 impl Display for Square {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
@@ -115,25 +114,41 @@ impl Finite for Square {
 /// it is guaranteed to implement the [Copy] trait
 ///
 /// Basic operations are checking present connections and rotating tiles
-#[derive(Debug, Clone, Copy, Hash, PartialEq, Eq, PartialOrd, Ord)]
-pub struct Tile<A: EnumSetType>(pub EnumSet<A>);
+#[derive(Debug, Hash, PartialEq, Eq, PartialOrd, Ord)]
+pub struct Tile<A>(pub BitSet<A>);
 
-impl<A: EnumSetType> Default for Tile<A> {
-    fn default() -> Self {
-        Self(EnumSet::default())
+impl<A> Clone for Tile<A> {
+    fn clone(&self) -> Self {
+        Self(self.0)
     }
 }
 
-impl<A: EnumSetType + Finite> Tile<A> {
+impl<A> Copy for Tile<A> {}
+
+impl<A> Default for Tile<A> {
+    fn default() -> Self {
+        Self::EMPTY
+    }
+}
+
+impl<A> Tile<A> {
+    pub const EMPTY: Tile<A> = Self(BitSet::EMPTY);
+}
+
+impl<A: Cardinality> Tile<A> {
+    pub const FULL: Tile<A> = Self(BitSet::FULL);
+}
+
+impl<A: Finite> Tile<A> {
     /// Rotates the tile clockwise by 360° / [`A::CARDINALITY`]
     ///
     /// Performing [`A::CARDINALITY`] rotations returns the original tile
     pub fn rotated_clockwise(&self, repetitions: u64) -> Self {
-        let bit_rep = self.0.as_u64();
+        let bit_rep = self.enum_to_index();
         let repetitions = repetitions % A::CARDINALITY;
         let rotated_bit_rep =
             (bit_rep << repetitions) | (bit_rep >> (A::CARDINALITY - repetitions));
-        Self(EnumSet::from_u64_truncated(rotated_bit_rep))
+        Self(BitSet::index_to_enum(rotated_bit_rep))
     }
 
     /// Rotates the tile counterclockwise by 360° / [`A::CARDINALITY`]
@@ -144,7 +159,7 @@ impl<A: EnumSetType + Finite> Tile<A> {
     }
 }
 
-impl<A: EnumSetType> Not for Tile<A> {
+impl<A: Cardinality> Not for Tile<A> {
     type Output = Self;
 
     fn not(self) -> Self::Output {
@@ -152,27 +167,13 @@ impl<A: EnumSetType> Not for Tile<A> {
     }
 }
 
-impl<A: Cardinality + EnumSetType> Cardinality for EnumSet<A> {
-    const CARDINALITY: u64 = 1 << A::CARDINALITY;
+impl<A: Cardinality> Cardinality for Tile<A> {
+    const CARDINALITY: u64 = BitSet::<A>::CARDINALITY;
 }
 
-impl<A: Finite + EnumSetType> Finite for EnumSet<A> {
+impl<A: Finite> Finite for Tile<A> {
     fn index_to_enum(value: u64) -> Self {
-        EnumSet::from_u64_truncated(value)
-    }
-
-    fn enum_to_index(&self) -> u64 {
-        self.as_u64()
-    }
-}
-
-impl<A: Cardinality + EnumSetType> Cardinality for Tile<A> {
-    const CARDINALITY: u64 = EnumSet::<A>::CARDINALITY;
-}
-
-impl<A: Finite + EnumSetType> Finite for Tile<A> {
-    fn index_to_enum(value: u64) -> Self {
-        Self(EnumSet::index_to_enum(value))
+        Self(BitSet::index_to_enum(value))
     }
 
     fn enum_to_index(&self) -> u64 {
@@ -180,9 +181,9 @@ impl<A: Finite + EnumSetType> Finite for Tile<A> {
     }
 }
 
-impl<A: 'static + EnumSetType> Arbitrary for Tile<A> {
+impl<A: 'static + Clone + Finite> Arbitrary for Tile<A> {
     fn arbitrary(g: &mut Gen) -> Self {
-        Self(EnumSet::from_u32_truncated(u32::arbitrary(g)))
+        Self(BitSet::index_to_enum(u64::arbitrary(g)))
     }
 }
 
@@ -211,7 +212,7 @@ impl Tile<Square> {
 #[cfg(test)]
 mod tests {
 
-    use crate::model::{cardinality::Cardinality, finite::Finite};
+    use crate::model::cardinality::Cardinality;
 
     use super::{Square, Tile};
 
@@ -258,10 +259,5 @@ mod tests {
         rotations: u64,
     ) -> bool {
         tile.0.len() == tile.rotated_counterclockwise(rotations).0.len()
-    }
-
-    #[quickcheck]
-    fn enumset_indexing_is_same_as_finite_indexing(tile: Tile<Square>) -> bool {
-        tile.0.as_u64() == tile.0.into_iter().map(|s| 1 << s.enum_to_index()).sum()
     }
 }

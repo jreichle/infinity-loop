@@ -3,7 +3,7 @@ use std::{
     hash::Hash,
     iter::FusedIterator,
     marker::PhantomData,
-    ops::{BitAnd, BitOr, BitXor, Not, Shl, BitOrAssign, BitAndAssign},
+    ops::{BitAnd, BitAndAssign, BitOr, BitOrAssign, BitXor, Not, Shl},
 };
 
 use quickcheck::Arbitrary;
@@ -36,7 +36,7 @@ const CAPACITY: u64 = BitStorage::BITS as u64;
 /// 1. bits exceeding [`A::Cardinality`] are always set to 0
 ///
 /// Invariant #1 ensures canonical representation for equality checks
-#[derive(Debug, PartialEq, Eq, PartialOrd, Ord, Default, Hash)]
+#[derive(Debug, PartialOrd, Ord, Default, Hash)]
 pub struct BitSet<A>(BitStorage, PhantomData<A>);
 
 // ability to [Clone] independent of generic argument
@@ -48,6 +48,14 @@ impl<A> Clone for BitSet<A> {
 
 // ability to [Copy] independent of generic argument
 impl<A> Copy for BitSet<A> {}
+
+impl<A> PartialEq for BitSet<A> {
+    fn eq(&self, other: &Self) -> bool {
+        self.0 == other.0
+    }
+}
+
+impl<A> Eq for BitSet<A> {}
 
 impl<A: Display + Finite> Display for BitSet<A> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
@@ -449,8 +457,6 @@ const _: () = {
 #[cfg(test)]
 mod test {
 
-    use enumset::EnumSet;
-
     use crate::model::{bitset::*, tile::Square};
 
     #[quickcheck]
@@ -460,7 +466,7 @@ mod test {
 
     #[quickcheck]
     fn id2(value: u8) -> bool {
-        type Set = BitSet<EnumSet<Square>>;
+        type Set = BitSet<BitSet<Square>>;
         let value = value as u64 % Set::CARDINALITY;
         value == Set::index_to_enum(value).enum_to_index()
     }

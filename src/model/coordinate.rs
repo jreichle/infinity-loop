@@ -333,7 +333,10 @@ impl<A> IntoIterator for Coordinate<A> {
 impl<A: Default> FromIterator<A> for Coordinate<A> {
     fn from_iter<I: IntoIterator<Item = A>>(iter: I) -> Self {
         let mut iter = iter.into_iter();
-        Self::new(iter.next().unwrap_or_default(), iter.next().unwrap_or_default())
+        Self::new(
+            iter.next().unwrap_or_default(),
+            iter.next().unwrap_or_default(),
+        )
         // Coordinate::new(iter.next(), iter.next()).sequence().unwrap_or_default()
     }
 }

@@ -1,4 +1,3 @@
-use enumset::EnumSet;
 use rand::{distributions::Standard, prelude::StdRng, Rng, SeedableRng};
 
 use super::{
@@ -33,7 +32,7 @@ impl<A: Finite> BitSet<A> {
 
 pub fn generate(dimension: Coordinate<usize>, seed: u64) -> Grid<Tile<Square>> {
     let sentinel = Grid::init(dimension, |_| BitSet::FULL)
-        .with_sentinels(BitSet::singleton(Tile(EnumSet::empty())));
+        .with_sentinels(BitSet::singleton(Tile::EMPTY));
     let grid = SentinelGrid(
         sentinel
             .minimize()

@@ -1,14 +1,15 @@
 // wave function collapse (WFC)
 
-use crate::model::tile::{
-    Square::{self, Down, Left, Right, Up},
-    Tile,
+use crate::model::{
+    bitset::BitSet,
+    finite::Finite,
+    tile::{
+        Square::{self, Down, Left, Right, Up},
+        Tile,
+    },
 };
-use enumset::EnumSet;
 
 use std::collections::HashMap;
-use std::collections::HashSet;
-use std::iter::FromIterator;
 
 fn get_opposite_direction(dir: Square) -> Square {
     match dir {
@@ -17,40 +18,6 @@ fn get_opposite_direction(dir: Square) -> Square {
         Down => Up,
         Left => Right,
     }
-}
-
-// Get Tile object with given bool for all four directions (Up, Right, Down, Left)
-fn get_tile_from_bool(up: bool, right: bool, down: bool, left: bool) -> Tile<Square> {
-    let mut tile_enum: EnumSet<Square> = EnumSet::new();
-
-    if up {
-        tile_enum.insert_all(EnumSet::only(Up));
-    }
-    if right {
-        tile_enum.insert_all(EnumSet::only(Right));
-    }
-    if down {
-        tile_enum.insert_all(EnumSet::only(Down));
-    }
-    if left {
-        tile_enum.insert_all(EnumSet::only(Left));
-    }
-
-    Tile(tile_enum)
-}
-
-fn get_all_possible_tiles() -> Vec<Tile<Square>> {
-    let mut tiles: Vec<Tile<Square>> = vec![];
-    for i in 0..=0b1111 {
-        let up = (i & 1) == 1;
-        let right = (i >> 1 & 1) == 1;
-        let down = (i >> 2 & 1) == 1;
-        let left = (i >> 3 & 1) == 1;
-        let tile = get_tile_from_bool(up, right, down, left);
-        tiles.push(tile);
-        // println!("U: {:5}, R: {:5}, D: {:5}, L: {:5} -> {:?}", up, right, down, left, tile);
-    }
-    tiles
 }
 
 fn parse_rules(
@@ -124,6 +91,7 @@ fn parse_rules(
 
 // Print all possible tiles
 fn print_all_tiles() {
-    let tiles = get_all_possible_tiles();
-    tiles.iter().for_each(|tile| println!("{}", tile));
+    BitSet::<Square>::all_enums_ascending()
+        .iter()
+        .for_each(|tile| println!("{tile}"));
 }

@@ -2,7 +2,6 @@ use crate::model::tile::Square::{Down, Left, Right, Up};
 use core::fmt::Debug;
 use std::{fmt::Display, hash::Hash, ops::Not};
 
-use enumset::{EnumSet, EnumSetType};
 use quickcheck::Arbitrary;
 
 use super::{
@@ -93,7 +92,7 @@ impl<A: Clone> SentinelGrid<A> {
     }
 }
 
-impl<A: EnumSetType + Finite> SentinelGrid<Tile<A>> {
+impl<A: Finite + Clone> SentinelGrid<Tile<A>> {
     /// Creates a Grid of all superimposed tiles
     ///
     /// see: [`Tile::superimpose`]
@@ -174,7 +173,7 @@ impl Coordinate<isize> {
     }
 }
 
-impl<A: EnumSetType + Finite> Tile<A> {
+impl<A: Finite> Tile<A> {
     /// Superimposes all tiles of the same equivalence class under rotational symmetry
     ///
     /// examples:
@@ -217,7 +216,7 @@ impl<A> SentinelGrid<BitSet<A>> {
     }
 }
 
-impl<A: EnumSetType + Finite> Superposition<A> {
+impl<A: Finite + Copy> Superposition<A> {
     /// restricts superposition to only include tiles with specified connection and direction
     pub fn restrict_tile(self, connection: Connection<A>) -> Self {
         let iter = self.into_iter();
@@ -234,7 +233,7 @@ impl<A: EnumSetType + Finite> Superposition<A> {
     }
 }
 
-impl<A: EnumSetType + Finite> Connection<A> {
+impl<A: Finite + Copy> Connection<A> {
     fn to_filter(&self) -> BitSet<Tile<A>> {
         BitSet::FULL
             .into_iter()
@@ -333,7 +332,7 @@ impl Not for Connection<Square> {
     }
 }
 
-impl<A: EnumSetType + Finite> Superposition<A> {
+impl<A: Finite> Superposition<A> {
     /// Extracts the common connections over all states from the superposition
     ///
     /// eg. if there is a common [Up] connection between all states, then the result includes [Connection::Present(Up)]
@@ -348,7 +347,7 @@ impl<A: EnumSetType + Finite> Superposition<A> {
             .map(|d| Connection(d, Status::Present));
         let absent_connections = Tile::join_all(superposition)
             .0
-            .complement()
+            .not()
             .into_iter()
             .map(|d| Connection(d, Status::Absent));
         present_connections.chain(absent_connections).collect()
@@ -388,7 +387,7 @@ impl Sentinel<Square> {
 /// in the superposition of that tile create a new grid with that tile in one of the states
 fn branch<A, F>(grid: &Sentinel<A>, heuristic: F) -> Vec<Sentinel<A>>
 where
-    A: EnumSetType + Finite,
+    A: Finite,
     F: Fn(&Sentinel<A>) -> Coordinate<isize>,
 {
     let coordinate = heuristic(grid);
@@ -420,9 +419,7 @@ impl Grid<Tile<Square>> {
     /// Returns all puzzle solutions
     // hide concrete iterator implementation
     pub fn solve(&self) -> impl Iterator<Item = Grid<Tile<Square>>> {
-        SolutionIterator(vec![self
-            .with_sentinels(Tile(EnumSet::empty()))
-            .superimpose()])
+        SolutionIterator(vec![self.with_sentinels(Tile::EMPTY).superimpose()])
     }
 }
 

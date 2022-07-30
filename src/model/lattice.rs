@@ -1,6 +1,4 @@
-use enumset::{EnumSet, EnumSetType};
-
-use super::tile::Tile;
+use super::{finite::Finite, tile::Tile};
 
 /// [Bounded Lattice](https://en.wikipedia.org/wiki/Lattice_(order)) consisting of 2 commutative monoids "meet" and "join" over a poset
 pub trait BoundedLattice: Sized {
@@ -39,21 +37,21 @@ pub trait BoundedLattice: Sized {
     }
 }
 
-impl<A: EnumSetType> BoundedLattice for Tile<A> {
+impl<A: Finite> BoundedLattice for Tile<A> {
     fn bottom() -> Tile<A> {
-        Tile(EnumSet::empty())
+        Self::EMPTY
     }
 
     fn top() -> Tile<A> {
-        Tile(EnumSet::all())
+        Self::FULL
     }
 
     fn meet(self, other: Self) -> Self {
-        Tile(self.0.intersection(other.0))
+        Self(self.0.intersection(other.0))
     }
 
     fn join(self, other: Self) -> Self {
-        Tile(self.0.union(other.0))
+        Self(self.0.union(other.0))
     }
 }
 
