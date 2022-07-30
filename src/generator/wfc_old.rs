@@ -9,13 +9,23 @@ use model::tile::{
     Square::{self, Down, Left, Right, Up},
     Tile,
 };
+
 use rand::Rng;
 use std::collections::HashMap;
 
+static PASS_LMT: usize = 40000; // How many passes to go through the matrix
+static PROP_LMT: usize = 1000; // How many passes in the propagate to allow
+                               // static WIDTH: usize = 5;
+                               // static HEIGHT: usize = 5;
+
+pub fn example(width: usize, height: usize) -> Grid<Tile<Square>> {
+    generate_grid(width, height, get_all_possible_tiles())
+}
+
 fn is_edge_index(index: usize, width: usize, height: usize) -> bool {
-    if index / width == 0 || index / width == height-1 {
+    if index / width == 0 || index / width == height - 1 {
         true
-    } else if index % width == 0 || index % width == width-1 {
+    } else if index % width == 0 || index % width == width - 1 {
         true
     } else {
         false
@@ -51,7 +61,7 @@ fn get_tile_from_bool(up: bool, right: bool, down: bool, left: bool) -> Tile<Squ
     Tile(tile_enum)
 }
 
-fn get_all_possible_tiles() -> Vec<Tile<Square>> {
+pub fn get_all_possible_tiles() -> Vec<Tile<Square>> {
     let mut tiles: Vec<Tile<Square>> = vec![];
     for i in 0..=0b1111 {
         let up = (i & 1) == 1;
@@ -136,15 +146,15 @@ fn parse_rules(
 }
 
 // Print all possible tiles
-fn print_all_tiles() {
+fn _print_all_tiles() {
     let tiles = get_all_possible_tiles();
     tiles.iter().for_each(|tile| println!("{}", tile));
 }
 
-fn is_all_collapsed(map: & Vec<Vec<Tile<Square>>>) -> bool {
+fn is_all_collapsed(map: &Vec<Vec<Tile<Square>>>) -> bool {
     for tile in map.iter() {
         if tile.len() > 1 {
-            return false
+            return false;
         }
     }
     true
@@ -230,20 +240,21 @@ fn collapse_cell(
     }
 }
 
-
 fn propagate(
     cell_map: &mut Vec<Vec<Tile<Square>>>,
     map_size: (usize, usize),
     cell_index: usize,
-    tile_weights: &mut HashMap<&Tile<Square>, usize>,
+    _tile_weights: &mut HashMap<&Tile<Square>, usize>,
     rule_map: &HashMap<Tile<Square>, HashMap<Square, Vec<Tile<Square>>>>,
 ) {
-
     let (width, height) = map_size;
     let mut stack: Vec<usize> = vec![cell_index];
 
     fn get_row_col_index(index: usize, width: usize, height: usize) -> (isize, isize) {
-        let row = (index / width) as isize;
+        let mut row = (index / width) as isize;
+        if row >= height as isize {
+            row = -1;
+        }
         let col = (index % width) as isize;
         (row, col)
     }
@@ -252,7 +263,12 @@ fn propagate(
         row as usize * width + col as usize
     }
 
-    fn get_index_by_dir(cell_index: usize, width: usize, height: usize, dir: Square) -> (isize, isize) {
+    fn get_index_by_dir(
+        cell_index: usize,
+        width: usize,
+        height: usize,
+        dir: Square,
+    ) -> (isize, isize) {
         let (mut row, mut col) = get_row_col_index(cell_index, width, height);
 
         match dir {
@@ -303,7 +319,6 @@ fn propagate(
 
             let mut remove_list: Vec<usize> = vec![];
             for (i, neigbor_tile) in neigbor_tiles.iter().enumerate() {
-
                 // let neigbor_tile = neigbor_tiles[i];
                 let mut compatible_counter = 0;
                 for tile in compactible_tiles.iter() {
@@ -322,8 +337,11 @@ fn propagate(
                 }
             }
 
-            let mut remove_counter = 0_usize; 
-            neigbor_tiles.retain(|tile| { remove_counter += 1; !remove_list.contains(&(remove_counter - 1)) });
+            let mut remove_counter = 0_usize;
+            neigbor_tiles.retain(|_tile| {
+                remove_counter += 1;
+                !remove_list.contains(&(remove_counter - 1))
+            });
 
             if modified {
                 stack.push(neigbor_index)
@@ -337,7 +355,7 @@ fn propagate(
     }
 }
 
-fn print_incomplete_map(map: & Vec<Vec<Tile<Square>>>, width: usize) {
+fn print_incomplete_map(map: &Vec<Vec<Tile<Square>>>, width: usize) {
     for (index, cell) in map.iter().enumerate() {
         let cell_len = cell.len();
         if cell_len > 1 {
@@ -348,11 +366,11 @@ fn print_incomplete_map(map: & Vec<Vec<Tile<Square>>>, width: usize) {
             print!("?");
         }
 
-        if index % width == width-1 {
+        if index % width == width - 1 {
             print!("\n");
         }
         // println!("cell -> {:?}\n\n", cell);
-    }    
+    }
 }
 
 // 1. Generate tiles and rules
@@ -362,19 +380,13 @@ fn print_incomplete_map(map: & Vec<Vec<Tile<Square>>>, width: usize) {
 // 5. Propagate, check picked cell neighbors.
 // DO...WHILE(!is_all_collapsed())
 
-
-static PASS_LMT: usize = 400; // How many passes to go through the matrix
-static PROP_LMT: usize = 1000; // How many passes in the propagate to allow
-static WIDTH: usize = 5;
-static HEIGHT: usize = 5;
-
-fn generate_grid(
+pub fn generate_grid(
     width: usize,
     height: usize,
     available_tiles: Vec<Tile<Square>>,
 ) -> Grid<Tile<Square>> {
     let rule_map = parse_rules(&available_tiles);
-    
+
     let total_cells = width * height;
 
     let wrapper_width = width + 2;
@@ -385,7 +397,6 @@ fn generate_grid(
     let mut cell_map: Vec<Vec<Tile<Square>>> = vec![available_tiles.clone(); wrapper_size];
 
     for index in 0..wrapper_size {
-        
         // check if top or buttom edge
         if is_edge_index(index, wrapper_width, wrapper_height) {
             cell_map[index] = vec![Tile(EnumSet::empty())];
@@ -430,9 +441,19 @@ fn generate_grid(
     loop {
         current_index = find_entropy_cell(&cell_map, &mut tile_weights);
         collapse_cell(&mut cell_map, current_index, &tile_weights);
-        propagate(&mut cell_map, (wrapper_width, wrapper_height), current_index, &mut tile_weights, &rule_map);
+        propagate(
+            &mut cell_map,
+            (wrapper_width, wrapper_height),
+            current_index,
+            &mut tile_weights,
+            &rule_map,
+        );
 
         passes += 1;
+
+        println!("PASS #{}\n", passes);
+        print_incomplete_map(&cell_map, wrapper_width);
+        print!("{esc}[2J{esc}[1;1H", esc = 27 as char);
 
         if is_all_collapsed(&cell_map) || passes >= PASS_LMT {
             break;
@@ -444,7 +465,6 @@ fn generate_grid(
     print_incomplete_map(&cell_map, wrapper_width);
 
     println!("PASS COUNT: {}", passes);
-
 
     let mut counter = 0;
     for cell in cell_map.iter_mut() {
@@ -458,11 +478,22 @@ fn generate_grid(
     let flat_map: Vec<Tile<Square>> = cell_map.into_iter().flatten().collect();
     // println!("flat map length: {}", flat_map.len());
 
-    let game_board: Grid<Tile<Square>> = Grid::new(Coordinate::new(wrapper_width, wrapper_height), flat_map);
+    let game_board: Grid<Tile<Square>> =
+        Grid::new(Coordinate::new(wrapper_width, wrapper_height), flat_map);
     game_board
 }
 
-pub fn example() {
-    let game_board = generate_grid(10, 10, get_all_possible_tiles());
-    println!("{}", game_board);
+
+#[cfg(test)]
+mod test {
+    // use crate::generator::wfc::example;
+    // use crate::generator::wfc::generate_grid;
+    // use crate::model::solver::solve;
+    // use std::time::Instant;
+
+    #[quickcheck]
+    fn test_wfc() -> bool {
+        // let level = example(10, 5);
+        return true
+    }
 }
