@@ -18,8 +18,7 @@ impl<A: Finite + Eq + Hash + Clone + Copy + Display> BitSet<A> {
         self.len() <= 1
     }
 
-    fn collapse(self, weights: &HashMap<A, usize>) {
-        // println!("before collapse => {}", self);
+    fn collapse(&mut self, weights: &HashMap<A, usize>) {
         let mut weight: f64;
         let mut option_weights: HashMap<A, f64> = HashMap::new();
         let mut total_weight: f64 = 0.0;
@@ -33,25 +32,18 @@ impl<A: Finite + Eq + Hash + Clone + Copy + Display> BitSet<A> {
         }
 
         let mut rng_weights = total_weight * rng.gen_range(2..10) as f64 * 0.1;
-
         for (option, weight) in option_weights.iter() {
             rng_weights -= weight;
             if rng_weights < 0.0 {
                 let full_set: BitSet<A> = BitSet::FULL;
                 for tile in full_set.iter() {
                     if &tile != option && self.contains(tile) {
-                        // println!("removing: {}", tile);
                         self.remove(tile.clone());
                     }
                 }
                 break;
-                // TODO
-                // self.remove(element);
-                // self.singleton(element)
-                // self::BitSet::EMPTY.insert();
             }
         }
-        // println!("after collapse => {}", self);
     }
 }
 
@@ -91,9 +83,9 @@ impl WfcGenerator {
 
         // remove weights from empty edges
 
-        let width = board.0.columns();
-        let height = board.0.rows();
-        *weights.get_mut(&Tile(EnumSet::empty())).unwrap() -= 2 * (width + height) + 4;
+        // let width = board.0.columns();
+        // let height = board.0.rows();
+        // *weights.get_mut(&Tile(EnumSet::empty())).unwrap() -= 2 * (width + height) + 4;
     }
 
     fn shannon_entropy(cell: &Superposition<Square>, weights: &HashMap<Tile<Square>, usize>) -> f64 {
@@ -137,17 +129,19 @@ impl WfcGenerator {
         min_coordinate
     }
 
-    fn collapse_cell(board: &Sentinel<Square>, weights: &HashMap<Tile<Square>, usize>, cell_coordinate: Coordinate<isize>) {
-        let cell = board.0.get(cell_coordinate).unwrap();
+    fn collapse_cell(board: &mut Sentinel<Square>, weights: &HashMap<Tile<Square>, usize>, cell_coordinate: Coordinate<isize>) {
+        let cell = board.0.get_mut(cell_coordinate).unwrap();
         cell.collapse(weights);
     }
 
-    fn propagate(board: &Sentinel<Square>, cell_coordinate: Coordinate<isize>, prop_limit: usize) {
+    fn propagate(board: &mut Sentinel<Square>, cell_coordinate: Coordinate<isize>, prop_limit: usize) {
         let mut stack: Vec<Coordinate<isize>> = vec![cell_coordinate];
 
         let mut passes = 0_usize;
         let mut cell: Superposition<Square>;
         while let Some(index) = stack.pop() {
+            
+            // TODO: cloned cell, original board unchanged.
             cell = board.0.get(index).unwrap().clone();
 
             if cell.is_collapsed() {
@@ -176,7 +170,8 @@ impl WfcGenerator {
                     }
 
                     if compatible_counter == 0 {
-                        neighbor_cell.remove(neighbor_tile);
+                        let neighbor_cell_mut = board.0.get_mut(neighbor_index.clone()).unwrap();
+                        neighbor_cell_mut.remove(neighbor_tile);
                         modified = true;
                     }
                 }
@@ -202,7 +197,7 @@ impl WfcGenerator {
         true
     }
 
-    fn print_incomplete_map(board: &Sentinel<Square>) {
+    fn print_map(board: &Sentinel<Square>) {
         let map = board.0.elements();
         let width = board.0.columns();
 
@@ -222,7 +217,7 @@ impl WfcGenerator {
         }
     }
 
-    pub fn generate(self) {
+    pub fn generate(self) -> Sentinel<Square> {
         let dimension = Coordinate {
             row: self.height,
             column: self.width,
@@ -231,7 +226,7 @@ impl WfcGenerator {
         // initialize board with all possiblities, then update edge tiles
         let board: Sentinel<Square> = Grid::init(dimension, |_| BitSet::FULL)
             .with_sentinels(BitSet::singleton(Tile(EnumSet::empty())));
-        let board = board.0.coordinates().into_iter().fold(board.clone(), step);
+        let mut board = board.0.coordinates().into_iter().fold(board.clone(), step);
 
         let mut weights: HashMap<Tile<Square>, usize> = HashMap::new();
 
@@ -243,8 +238,10 @@ impl WfcGenerator {
 
         loop {
             current_coordinate = WfcGenerator::find_entropy_cell(&board, &weights);
-            WfcGenerator::collapse_cell(&board, &weights, current_coordinate);
-            WfcGenerator::propagate(&board,current_coordinate, self.prop_limit);
+            WfcGenerator::collapse_cell(&mut board, &weights, current_coordinate);
+
+            // WfcGenerator::propagate(&board,current_coordinate, self.prop_limit);
+            board = board.0.coordinates().into_iter().fold(board.clone(), step);
 
             // println!("before update {:?}", weights);
             WfcGenerator::update_weights(&board, &mut weights);
@@ -253,7 +250,7 @@ impl WfcGenerator {
             passes += 1;
 
             println!("PASS #{}\n", passes);
-            WfcGenerator::print_incomplete_map(&board);
+            WfcGenerator::print_map(&board);
             print!("{esc}[2J{esc}[1;1H", esc = 27 as char);
 
             if WfcGenerator::is_all_collapsed(&board) || passes >= self.pass_limit {
@@ -261,11 +258,13 @@ impl WfcGenerator {
             }
         }
 
-        println!("Final board: {:?}", board);
+        board
     }
 }
 
 pub fn test() {
     let wfc_generator = WfcGenerator::new(10, 10, 40000, 1000);
-    wfc_generator.generate();
+    let board = wfc_generator.generate();
+    println!("Final board: \n");
+    WfcGenerator::print_map(&board);
 }

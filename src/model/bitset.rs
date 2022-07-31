@@ -202,7 +202,7 @@ impl<A: Finite> BitSet<A> {
     /// Inserts given element into the set and indicates if the set has changed
     ///
     /// Mutable variant of [`BitSet::inserted`]
-    pub fn insert(mut self, element: A) -> bool {
+    pub fn insert(&mut self, element: A) -> bool {
         let old = self.0;
         self.0 = set_bit(self.0, element.enum_to_index() as BitStorage);
         self.0 != old
@@ -211,7 +211,7 @@ impl<A: Finite> BitSet<A> {
     /// Removes given element from the set and indicates if the set has changed
     ///
     /// Mutable variant of [`BitSet::removed`]
-    pub fn remove(mut self, element: A) -> bool {
+    pub fn remove(&mut self, element: A) -> bool {
         let old = self.0;
         self.0 = clear_bit(self.0, element.enum_to_index() as BitStorage);
         self.0 != old
@@ -220,7 +220,7 @@ impl<A: Finite> BitSet<A> {
     /// Toggles given element in the set
     ///
     /// Mutable variant of [`BitSet::toggled`]
-    pub fn toggle(mut self, element: A) {
+    pub fn toggle(&mut self, element: A) {
         self.0 = toggle_bit(self.0, element.enum_to_index() as BitStorage);
     }
 
