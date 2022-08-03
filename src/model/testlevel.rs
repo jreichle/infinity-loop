@@ -1,5 +1,6 @@
+use crate::{enumset, tile};
+
 use super::{
-    enumset::EnumSet,
     coordinate::Coordinate,
     grid::Grid,
     tile::{
@@ -21,37 +22,37 @@ use super::{
 /// | 3           | 'T'       | `[┣]`/`[┻]`/`[┫]`/`[┳]` |
 /// | 4           | '+'       | `[╋]`                   |
 pub fn char_to_tile(tile_character: char) -> Result<Tile<Square>, String> {
-    match tile_character {
-        ' ' => Ok(Tile::EMPTY),
-        '-' => Ok(Tile(EnumSet::singleton(Up))),
-        'I' => Ok(Tile(Up | Down)),
-        'L' => Ok(Tile(Up | Right)),
-        'T' => Ok(Tile(Up | Right | Down)),
-        '+' => Ok(Tile::FULL),
-        c => Err(format!("parsing error: unknown character {c}")),
-    }
+    Ok(match tile_character {
+        ' ' => Tile::NO_CONNECTIONS,
+        '-' => tile!(Up),
+        'I' => tile!(Up, Down),
+        'L' => tile!(Up, Right),
+        'T' => tile!(Up, Right, Down),
+        '+' => Tile::ALL_CONNECTIONS,
+        c => Err(format!("parsing error: unknown character {c}"))?,
+    })
 }
 
 pub fn unicode_to_tile(tile_character: char) -> Result<Tile<Square>, String> {
-    match tile_character {
-        ' ' => Ok(Tile::EMPTY),
-        '╹' => Ok(Tile(EnumSet::singleton(Up))),
-        '╺' => Ok(Tile(EnumSet::singleton(Right))),
-        '┗' => Ok(Tile(Up | Right)),
-        '╻' => Ok(Tile(EnumSet::singleton(Down))),
-        '┃' => Ok(Tile(Up | Down)),
-        '┏' => Ok(Tile(Right | Down)),
-        '┣' => Ok(Tile(Up | Right | Down)),
-        '╸' => Ok(Tile(EnumSet::singleton(Left))),
-        '┛' => Ok(Tile(Up | Left)),
-        '━' => Ok(Tile(Right | Left)),
-        '┻' => Ok(Tile(Up | Right | Left)),
-        '┓' => Ok(Tile(Down | Left)),
-        '┫' => Ok(Tile(Up | Down | Left)),
-        '┳' => Ok(Tile(Right | Down | Left)),
-        '╋' => Ok(Tile::FULL),
-        c => Err(format!("parsing error: unknown character {c}")),
-    }
+    Ok(match tile_character {
+        ' ' => Tile::NO_CONNECTIONS,
+        '╹' => tile!(Up),
+        '╺' => tile!(Right),
+        '┗' => tile!(Up, Right),
+        '╻' => tile!(Down),
+        '┃' => tile!(Up, Down),
+        '┏' => tile!(Right, Down),
+        '┣' => tile!(Up, Right, Down),
+        '╸' => tile!(Left),
+        '┛' => tile!(Up, Left),
+        '━' => tile!(Right, Left),
+        '┻' => tile!(Up, Right, Left),
+        '┓' => tile!(Down, Left),
+        '┫' => tile!(Up, Down, Left),
+        '┳' => tile!(Right, Down, Left),
+        '╋' => Tile::ALL_CONNECTIONS,
+        c => Err(format!("parsing error: unknown character {c}"))?,
+    })
 }
 
 /// parses level from string representation
@@ -79,38 +80,6 @@ where
         .collect::<Result<_, _>>()
         .map(|v| Grid::new(Coordinate::new(rows, columns), v))
 }
-
-/*
-pub const fn parse_level_const<A, F>(leveldata: &str, converter: F) -> Result<Grid<A>, &'static str>
-where
-    F: Fn(char) -> Result<A, String>,
-{
-    let tiles: Vec<Tile<Square>> = vec![];
-    let bytes = leveldata.as_bytes();
-    let x = leveldata.
-    let mut column_index = 0;
-    let mut index = 0;
-    while index < bytes.len() {
-        let char = bytes[index] as char;
-        match char_to_tile_const(char) {
-            Err(e) => panic!(),
-            Ok(tile) => {
-                // tiles[index] = tile;
-            },
-
-        }
-
-
-
-        index += 1;
-    }
-
-
-
-
-    Ok(Grid { rows: 0, columns: 0, elements: vec![] })
-}
-*/
 
 /// relies on internal vector layout in grid
 pub fn serialize_level<A: Clone, F: Fn(A) -> char>(grid: Grid<A>, converter: F) -> String {

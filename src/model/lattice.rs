@@ -39,11 +39,11 @@ pub trait BoundedLattice: Sized {
 
 impl<A: Finite> BoundedLattice for Tile<A> {
     fn bottom() -> Tile<A> {
-        Self::EMPTY
+        Self::NO_CONNECTIONS
     }
 
     fn top() -> Tile<A> {
-        Self::FULL
+        Self::ALL_CONNECTIONS
     }
 
     fn meet(self, other: Self) -> Self {

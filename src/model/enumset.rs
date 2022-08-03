@@ -1,9 +1,10 @@
 use std::{
+    cmp::Ordering,
     fmt::Display,
     hash::Hash,
     iter::FusedIterator,
     marker::PhantomData,
-    ops::{BitAnd, BitAndAssign, BitOr, BitOrAssign, BitXor, Not, Shl},
+    ops::{BitAnd, BitAndAssign, BitOr, BitOrAssign, BitXor, Not, Shl, Sub, SubAssign},
 };
 
 use quickcheck::Arbitrary;
@@ -36,17 +37,12 @@ const CAPACITY: u64 = BitStorage::BITS as u64;
 /// 1. bits exceeding [`A::Cardinality`] are always set to 0
 ///
 /// Invariant #1 ensures canonical representation for equality checks
-#[derive(Debug, PartialOrd, Ord, Default, Hash)]
-pub struct EnumSet<A>(BitStorage, PhantomData<A>);
+/// [`Finite`] of EnumSet<A> is order isomprphic ⟺ [`Finite`] of A is order isomorphic
+/// ∀x, y : A, s1, s2 : EnumSet<A>. (s1 ≤ s2 ⟺ s1.enum_to_index() ≤ s2.enum_to_index()) ⟺ (x ≤ y ⟺ x.enum_to_index() ≤ y.enum_to_index())
+#[derive(Debug)]
+pub struct EnumSet<A>(BitStorage, PhantomData<A>); // alternative names: FiniteSet, FinSet
 
-// ability to [Clone] independent of generic argument
-impl<A> Clone for EnumSet<A> {
-    fn clone(&self) -> Self {
-        Self(self.0, self.1)
-    }
-}
-
-// ability to [Copy] independent of generic argument
+// most derivable traits are independent of type [`A`]
 impl<A> Copy for EnumSet<A> {}
 
 impl<A> PartialEq for EnumSet<A> {
@@ -55,7 +51,37 @@ impl<A> PartialEq for EnumSet<A> {
     }
 }
 
+impl<A> PartialOrd for EnumSet<A> {
+    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
+        Some(self.0.cmp(&other.0))
+    }
+}
+
+impl<A> Ord for EnumSet<A> {
+    fn cmp(&self, other: &Self) -> Ordering {
+        self.0.cmp(&other.0)
+    }
+}
+
+impl<A> Clone for EnumSet<A> {
+    fn clone(&self) -> Self {
+        Self(self.0, self.1)
+    }
+}
+
 impl<A> Eq for EnumSet<A> {}
+
+impl<A> Hash for EnumSet<A> {
+    fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
+        self.0.hash(state)
+    }
+}
+
+impl<A> Default for EnumSet<A> {
+    fn default() -> Self {
+        Self::EMPTY
+    }
+}
 
 impl<A: Display + Finite> Display for EnumSet<A> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
@@ -161,17 +187,12 @@ impl<A: Cardinality> EnumSet<A> {
     /// Returns a set containing all elements not in this set
     ///
     /// Mutable variant of [`EnumSet::not`]
-    pub fn complement(mut self) {
+    pub fn complement(&mut self) {
         self.0 = !self.0 & Self::USED_BITS
     }
 }
 
 impl<A: Finite> EnumSet<A> {
-    /// Set only containing the given element
-    pub fn singleton(element: A) -> Self {
-        Self::EMPTY.inserted(element)
-    }
-
     /// Checks if set contains a given element
     pub fn contains(self, element: A) -> bool {
         test_bit(self.0, element.enum_to_index() as BitStorage)
@@ -210,7 +231,7 @@ impl<A: Finite> EnumSet<A> {
     /// Inserts given element into the set and indicates if the set has changed
     ///
     /// Mutable variant of [`EnumSet::inserted`]
-    pub fn insert(mut self, element: A) -> bool {
+    pub fn insert(&mut self, element: A) -> bool {
         let old = self.0;
         self.0 = set_bit(self.0, element.enum_to_index() as BitStorage);
         self.0 != old
@@ -219,7 +240,7 @@ impl<A: Finite> EnumSet<A> {
     /// Removes given element from the set and indicates if the set has changed
     ///
     /// Mutable variant of [`EnumSet::removed`]
-    pub fn remove(mut self, element: A) -> bool {
+    pub fn remove(&mut self, element: A) -> bool {
         let old = self.0;
         self.0 = clear_bit(self.0, element.enum_to_index() as BitStorage);
         self.0 != old
@@ -228,7 +249,7 @@ impl<A: Finite> EnumSet<A> {
     /// Toggles given element in the set
     ///
     /// Mutable variant of [`EnumSet::toggled`]
-    pub fn toggle(mut self, element: A) {
+    pub fn toggle(&mut self, element: A) {
         self.0 = toggle_bit(self.0, element.enum_to_index() as BitStorage);
     }
 
@@ -260,22 +281,33 @@ impl<A: Finite> IntoIterator for EnumSet<A> {
     type IntoIter = Iter<A>;
 
     fn into_iter(self) -> Self::IntoIter {
-        Iter {
-            bits: self.0,
-            index: 0,
-            phantom: PhantomData,
-        }
+        self.iter()
     }
 }
 
 /// Iterator for [`EnumSet`]
 ///
+/// the successive values in the iterator are in strictly ascending order iff the EnumSet is order isomorphic
+///
 /// The Iterator implementation currently successively consumes the bits until reaching 0 and therefore cannot implement [`DoubleEndedIterator`]
+#[derive(Hash, PartialEq, Eq, Debug, Default)]
 pub struct Iter<A> {
     bits: BitStorage,
     index: BitStorage,
     phantom: PhantomData<A>,
 }
+
+impl<A> Clone for Iter<A> {
+    fn clone(&self) -> Self {
+        Self {
+            bits: self.bits,
+            index: self.index,
+            phantom: PhantomData,
+        }
+    }
+}
+
+impl<A> Copy for Iter<A> {}
 
 impl<A: Finite> Iterator for Iter<A> {
     type Item = A;
@@ -293,6 +325,29 @@ impl<A: Finite> Iterator for Iter<A> {
             Some(A::index_to_enum(self.index as u64))
         }
     }
+
+    fn size_hint(&self) -> (usize, Option<usize>) {
+        let size = self.bits.count_ones() as usize;
+        (size, Some(size))
+    }
+
+    fn count(self) -> usize {
+        self.bits.count_ones() as usize
+    }
+
+    fn last(self) -> Option<Self::Item> {
+        let bits = self.bits;
+        if bits == 0 {
+            None
+        } else {
+            Some(A::index_to_enum(
+                bits.leading_zeros() as u64 + self.index - 1,
+            ))
+        }
+    }
+
+    // [`Finite`] of `A` is an order isomorphismus ⟹ [`Iterator::min`] ≡ [`Iterator::next`] and [`Iterator::max`] ≡ [`Iterator::last`]
+    // improves asymptotic runtime behavior from linear O(n) to constant O(1)
 }
 
 impl<A: Finite> ExactSizeIterator for Iter<A> {
@@ -360,12 +415,34 @@ impl<A: Finite> BitAndAssign for EnumSet<A> {
     }
 }
 
+impl<A: Finite> Sub for EnumSet<A> {
+    type Output = Self;
+
+    fn sub(self, rhs: Self) -> Self::Output {
+        self.difference(rhs)
+    }
+}
+
+impl<A: Finite> SubAssign for EnumSet<A> {
+    fn sub_assign(&mut self, rhs: Self) {
+        self.0 -= rhs.0
+    }
+}
+
+impl<A: Finite> From<A> for EnumSet<A> {
+    /// Set only containing the given element
+    fn from(element: A) -> Self {
+        EnumSet(set_bit(0, element.enum_to_index()), PhantomData)
+    }
+}
+
 impl<A: Arbitrary + Finite> Arbitrary for EnumSet<A> {
     fn arbitrary(g: &mut quickcheck::Gen) -> Self {
         Vec::arbitrary(g).into_iter().collect()
     }
 }
 
+/// poset under inclusion
 impl<A: Cardinality> BoundedLattice for EnumSet<A> {
     fn bottom() -> Self {
         Self::EMPTY
@@ -421,6 +498,18 @@ where
     value ^ bit_at(index)
 }
 
+#[macro_export]
+macro_rules! enumset {
+    ( $( $e:expr ),* ) => {{
+        #[allow(unused_mut)]
+        let mut set = $crate::model::enumset::EnumSet::EMPTY;
+        $(
+            set.insert($e);
+        )*
+        set
+    }};
+}
+
 /// associate arbitrary type which has the same number of inhabitants as there are bits in Self: Self::BITS == Inhabitants::CARDINALITY
 trait UsedBits {
     type Inhabitants: Cardinality;
@@ -460,44 +549,95 @@ mod test {
     use crate::model::{enumset::*, tile::Square};
 
     #[quickcheck]
-    fn id(set: EnumSet<EnumSet<Option<bool>>>) -> bool {
+    fn set_to_index_and_back_is_id(set: EnumSet<EnumSet<Option<bool>>>) -> bool {
         set == EnumSet::index_to_enum(set.enum_to_index())
     }
 
     #[quickcheck]
-    fn id2(value: u8) -> bool {
+    fn index_to_set_and_back_is_id(value: u8) -> bool {
         type Set = EnumSet<EnumSet<Square>>;
         let value = value as u64 % Set::CARDINALITY;
         value == Set::index_to_enum(value).enum_to_index()
     }
 
     #[quickcheck]
-    fn bitshift_and_trailing_zeroes_is_id(index: u8) -> bool {
+    fn bitshift_is_inverse_of_trailing_zeroes(index: u8) -> bool {
         let index = (index % u64::BITS as u8) as u64;
         (1u64 << index).trailing_zeros() as u64 == index
     }
 
+    /// not necessary, but desirable
+    /// iff generic parameter is order isomorphic
     #[quickcheck]
-    fn insert_then_contains(set: EnumSet<EnumSet<bool>>, element: EnumSet<bool>) -> bool {
+    fn finite_impl_of_enumset_defines_order_isomorphism(
+        s1: EnumSet<Square>,
+        s2: EnumSet<Square>,
+    ) -> bool {
+        (s1 <= s2) == (s1.enum_to_index() <= s2.enum_to_index())
+    }
+
+    #[quickcheck]
+    fn is_empty_iff_len_is_zero(set: EnumSet<EnumSet<bool>>) -> bool {
+        set.is_empty() == (set.len() == 0)
+    }
+
+    #[quickcheck]
+    fn insert_then_contains(mut set: EnumSet<EnumSet<bool>>, element: EnumSet<bool>) -> bool {
+        set.insert(element);
+        set.contains(element)
+    }
+
+    #[quickcheck]
+    fn insert_returns_inclusion(mut set: EnumSet<EnumSet<bool>>, element: EnumSet<bool>) -> bool {
+        set.contains(element) != set.insert(element)
+    }
+
+    #[quickcheck]
+    fn remove_then_does_not_contain(
+        mut set: EnumSet<EnumSet<bool>>,
+        element: EnumSet<bool>,
+    ) -> bool {
+        set.remove(element);
+        !set.contains(element)
+    }
+
+    #[quickcheck]
+    fn remove_returns_inclusion(mut set: EnumSet<EnumSet<bool>>, element: EnumSet<bool>) -> bool {
+        set.contains(element) == set.remove(element)
+    }
+
+    #[quickcheck]
+    fn toggle_flips_contains(mut set: EnumSet<EnumSet<bool>>, element: EnumSet<bool>) -> bool {
+        let contained = set.contains(element);
+        set.toggle(element);
+        contained != set.contains(element)
+    }
+
+    #[quickcheck]
+    fn inserted_then_contains(set: EnumSet<EnumSet<bool>>, element: EnumSet<bool>) -> bool {
         set.inserted(element).contains(element)
     }
 
     #[quickcheck]
-    fn remove_then_does_not_contain(set: EnumSet<EnumSet<bool>>, element: EnumSet<bool>) -> bool {
+    fn removed_then_does_not_contain(set: EnumSet<EnumSet<bool>>, element: EnumSet<bool>) -> bool {
         !set.removed(element).contains(element)
     }
 
     #[quickcheck]
-    fn singleton_then_unwrap_if_singleton_always_succeeds(element: EnumSet<bool>) -> bool {
-        EnumSet::singleton(element).unwrap_if_singleton() == Some(element)
+    fn toggled_flips_contains(set: EnumSet<EnumSet<bool>>, element: EnumSet<bool>) -> bool {
+        set.contains(element) != set.toggled(element).contains(element)
     }
 
     #[quickcheck]
-    fn unwrap_if_singleton_check(set: EnumSet<EnumSet<bool>>) -> bool {
-        match set.unwrap_if_singleton() {
-            None => set.is_empty() || set.len() > 1,
-            Some(_) => set.len() == 1,
-        }
+    fn singleton_then_unwrap_if_singleton_always_succeeds(element: EnumSet<bool>) -> bool {
+        EnumSet::from(element).unwrap_if_singleton() == Some(element)
+    }
+
+    #[quickcheck]
+    fn unwrap_if_singleton_is_some_iff_len_is_one(set: EnumSet<EnumSet<bool>>) -> bool {
+        let len = set.len();
+        // `Option::map_or` is the canonical fold
+        set.unwrap_if_singleton().map_or(len != 1, |_| len == 1)
     }
 
     #[quickcheck]
@@ -514,12 +654,36 @@ mod test {
 
     #[quickcheck]
     fn iterator_of_singleton_set_contains_single_element(element: EnumSet<bool>) -> bool {
-        let mut iter = EnumSet::singleton(element).iter();
+        let mut iter = EnumSet::from(element).iter();
         iter.next() == Some(element) && iter.next() == None
     }
 
     #[quickcheck]
     fn iter_then_collect_is_id(set: EnumSet<EnumSet<bool>>) -> bool {
         set.iter().collect::<EnumSet<EnumSet<bool>>>() == set
+    }
+
+    #[quickcheck]
+    fn iter_last_is_last_value_of_iterator(set: EnumSet<EnumSet<bool>>) -> bool {
+        set.iter().collect::<Vec<_>>().last() == set.iter().last().as_ref()
+    }
+
+    #[quickcheck]
+    fn iter_size_hint_is_exact(set: EnumSet<EnumSet<bool>>, random: usize) -> bool {
+        let skip_distance = random.checked_rem(set.len() as usize).unwrap_or_default();
+        let len = set.iter().skip(skip_distance).collect::<Vec<_>>().len();
+        set.iter().skip(skip_distance).size_hint() == (len, Some(len))
+    }
+
+    #[quickcheck]
+    fn iter_count_is_correct(set: EnumSet<EnumSet<bool>>, random: usize) -> bool {
+        let skip_distance = random.checked_rem(set.len() as usize).unwrap_or_default();
+        set.iter().skip(skip_distance).count() == set.iter().skip(skip_distance).collect::<Vec<_>>().len() 
+    }
+
+    #[quickcheck]
+    fn iterator_values_are_in_ascending_order(set: EnumSet<EnumSet<bool>>) -> bool {
+        let iter = set.iter().map(|v| v.enum_to_index());
+        iter.clone().zip(iter.skip(1)).all(|(x, y)| x < y)
     }
 }

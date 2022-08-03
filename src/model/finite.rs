@@ -2,20 +2,31 @@ use std::{cmp::Ordering, iter::successors};
 
 use super::cardinality::{Cardinality, Void};
 
-/// Witnesses the bijection between [`Self`] and the finite subset of [natural numbers `ℕ`](https://en.wikipedia.org/wiki/Natural_number) up to [`Self::CARDINALITY`] exclusive
+/// Witnesses the bijection between [`Self`] and the finite subset of
+/// [natural numbers `ℕ`](https://en.wikipedia.org/wiki/Natural_number)
+/// up to [`Self::CARDINALITY`] exclusive
 ///
-/// With [`Cardinality`] as supertrait, implementations of [`Finite`] are restricted to types with finite number of inhabitants ≤ [`u64::MAX`]
+/// With [`Cardinality`] as supertrait, implementations of [`Finite`] are
+/// restricted to types with finite number of inhabitants ≤ [`u64::MAX`]
 ///
-/// This requirement particularly excludes implementations for types with dynamic sizes like lists, vectors and graphs
+/// This requirement particularly excludes implementations for types with
+/// dynamic sizes like lists, vectors and graphs
+///
 ///
 /// # Laws
 ///
+/// * `x is Finite ⟺ ∃n. Fin n ≅ x`
+/// * the isomorphism should additionally preserve the total order imposed by [`Ord`],
+///     i.e. should be [order isomorphic](https://en.wikipedia.org/wiki/Order_isomorphism)
+///     `∀x, y : Finite + Ord. x ≤ y ⟺ x.enum_to_index() ≤ y.enum_to_index()`
 /// * all indices are between `0` inclusive and [`Self::CARDINALITY`] exclusive
-/// * [`Finite::index_to_enum`] ∘ [`Finite::enum_to_index`] ≡ [`identity`][std::convert::identity] ≡ [`Finite::enum_to_index`] ∘ [`Finite::index_to_enum`]
+/// * [`Finite::index_to_enum`] ∘ [`Finite::enum_to_index`]
+///     ≡ [`identity`][std::convert::identity] ≡ [`Finite::enum_to_index`] ∘ [`Finite::index_to_enum`]
 pub trait Finite: Cardinality {
     /// Converts an integer index into the corresponding [Self]
     ///
-    /// The caller must ensure that this method is only called with values between 0 and [`Self::CARDINALITY`] exclusive
+    /// The caller must ensure that this method is only called with values
+    /// between 0 and [`Self::CARDINALITY`] exclusive
     ///
     /// Implementors may either
     ///
@@ -52,7 +63,8 @@ pub trait Finite: Cardinality {
     ///
     /// # Note
     ///
-    /// Implementation should return lazy iterator, but returning `impl <trait>` is disallowed in traits as of Rust 1.6.3
+    /// Implementation should return lazy iterator, but returning `impl <trait>`
+    /// is disallowed in traits as of Rust 1.6.3
     fn all_enums_ascending() -> Vec<Self> {
         (0..Self::CARDINALITY).map(Self::index_to_enum).collect()
     }

@@ -1,8 +1,8 @@
 use rand::{distributions::Standard, prelude::StdRng, Rng, SeedableRng};
 
 use super::{
-    enumset::EnumSet,
     coordinate::Coordinate,
+    enumset::EnumSet,
     finite::Finite,
     grid::Grid,
     solver::*,
@@ -23,132 +23,36 @@ use super::{
 ///! adjustment in implementation: instead of directly propagating collapsed superpositions, the whole grid is minimized at the end
 
 impl<A: Finite> EnumSet<A> {
+    /// Collapses superposition to a random single state if it is not empty
     fn collapse_random(self, random: usize) -> Self {
-        usize::checked_rem(random, self.len() as usize)
-            .and_then(|i| self.into_iter().nth(i).map(EnumSet::singleton))
+        random
+            .checked_rem(self.len() as usize)
+            .and_then(|i| self.into_iter().nth(i).map(EnumSet::from))
             .unwrap_or(self)
     }
 }
 
+/// Generates level deterministically
 pub fn generate(dimension: Coordinate<usize>, seed: u64) -> Grid<Tile<Square>> {
-    let sentinel = Grid::init(dimension, |_| EnumSet::FULL)
-        .with_sentinels(EnumSet::singleton(Tile::EMPTY));
-    let grid = SentinelGrid(
-        sentinel
-            .minimize()
-            .0
-            .with_index()
-            .zip(StdRng::seed_from_u64(seed).sample_iter(Standard))
-            .map(|((c, e), r)| {
-                if c.sum() % 2 == 0 {
-                    e.collapse_random(r)
-                } else {
-                    e
-                }
-            }),
-    );
-    grid.minimize()
+    let minimized_grid = Grid::init(dimension, |_| EnumSet::FULL)
+        .with_sentinels(Tile::NO_CONNECTIONS.into())
+        .minimize();
+    let grid = minimized_grid
+        .0 // keep sentinel layer for
+        .with_index()
+        .zip(StdRng::seed_from_u64(seed).sample_iter(Standard))
+        .map(|((c, e), r)| {
+            if c.sum() % 2 == 0 {
+                e.collapse_random(r)
+            } else {
+                e
+            }
+        });
+    SentinelGrid(grid)
+        .minimize()
         .extract_if_collapsed()
         .expect("error in algorithm")
 }
-
-/*
-fn delete_connection(grid: Grid<Tile<Square>>) ->
-
-
-fn generate2(dimension: Coordinate<usize>, seed: u64) -> Grid<Tile<Square>> {
-    let grid = Grid::init(dimension.row, dimension.column, |c| {
-        let mut set = EnumSet::all();
-        let Coordinate { row: row, column: column } = c;
-        if row == 0 {
-            set.remove(Square::Left)
-        }
-        if row == dimension.row - 1 {
-            set.remove(Square::Right)
-        }
-        if column == 0 {
-            set.remove(Square::Up)
-        }
-        if column == dimension.column - 1 {
-            set.remove(Square::Down)
-        }
-        Tile(set)
-    });
-
-    // delete random number of connections between tiles
-
-
-    todo!()
-}
-
-
-
-struct Zero;
-struct Succ<N>(N);
-
-trait Nat {}
-
-impl Nat for Zero {}
-impl<N: Nat> Nat for Succ<N> {}
-
-trait NatToUsize: Nat {
-    const TO_USIZE: usize;
-}
-
-impl NatToUsize for Zero {
-    const TO_USIZE: usize = 0;
-}
-
-impl<N: NatToUsize> NatToUsize for Succ<N> {
-    const TO_USIZE: usize = 1 + N::TO_USIZE;
-}
-
-
-trait UsizeToNat {
-
-    const v: Nat;
-
-}
-
-impl<const N: usize> UsizeToNat for usize {
-
-}
-
-const fn f<const N: usize>() -> [(); N] { todo!() }
-
-trait Size {
-
-    type Size: Nat;
-}
-
-impl Size for [(); 0] {
-    type Size = Zero;
-}
-
-impl<const N: usize> Size for [(); N] {
-    type Size = Succ<<[(); N-1] as Size>::Size>;
-}
-
-// Idris
-// data Fin : Nat -> Type where
-//    FZ : Fin (S k)
-//    FS : Fin k -> Fin (S k)
-
-trait Fin<const N: usize> {}
-
-impl Fin<1> for Zero {}
-
-impl<const N: usize, K: NatToUsize> Fin<N> for Succ<K> {}
-
-// impl<const N: usize, K: Nat> Fin<N> for Succ<K> {}
-
-enum Assert<const C: bool> {}
-
-trait IsTrue {}
-
-impl IsTrue for Assert<true> {}
-
-*/
 
 #[cfg(test)]
 mod test {

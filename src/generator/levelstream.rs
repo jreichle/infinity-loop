@@ -64,6 +64,18 @@ impl<S: Clone, A> Iterator for Unfold<S, A> {
         self.state = next_state;
         Some(value)
     }
+
+    fn size_hint(&self) -> (usize, Option<usize>) {
+        (usize::MAX, None)
+    }
+
+    fn count(self) -> usize {
+        panic!("Unfold provides an infinite stream of values")
+    }
+
+    fn last(self) -> Option<Self::Item> {
+        panic!("Unfold provides an infinite stream of values")
+    }
 }
 
 impl<S: Clone, A> FusedIterator for Unfold<S, A> {}

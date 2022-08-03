@@ -1,53 +1,57 @@
 use crate::model::tile::Square::{Down, Left, Right, Up};
 use core::fmt::Debug;
-use std::{fmt::Display, hash::Hash, ops::Not};
+use std::{
+    fmt::Display,
+    hash::Hash,
+    ops::{Neg, Not},
+};
 
 use quickcheck::Arbitrary;
 
 use super::{
-    enumset::EnumSet,
     cardinality::Cardinality,
     coordinate::Coordinate,
+    enumset::EnumSet,
     finite::Finite,
     grid::Grid,
     lattice::BoundedLattice,
     tile::{Square, Tile},
 };
 
-/// This file contains a solver algorithm
-///
-/// # Win Condition
-///
-/// A level is solved if all connections of a all tiles match the connections of their respective neighbors. In particular this means that
-///
-/// 1. a tile with a connection to the right must have a neighbor to the right with a connection to the left, e.g. `[┏][━]`
-/// 2. a tile without connection to the right
-///     * must have a neighbor to the right without connection to the left, e.g. `[┓][┣]`
-///     * is at the right edge of the level and naturally has no neighbor, e.g. `[┫]X`
-///
-/// These rules extend to all directions
-///
-/// In summary, all tile connections must be symmetric
-/// This immediately implies that any solvable level must have an even number of connections
-///
-/// # Algorithm
-///
-/// ## Overview
-///
-/// 1. Each level consists of the set of all possible tiles in superposition
-/// 2. Solving a level is achieved by extracting common features from superpositions and propagating these connection constraints to neighbors
-///
-/// ## Implementation
-///
-/// * The border rule for tiles prevents connections pointing outside the level.
-/// This is functionally equivalent to having a neighbor outside the level without connection.
-/// Using a layer of empty sentinel tiles around the level can be used to simplify the problem by eliminating the special border rule.
-/// * square tiles under rotational symmetry form 6 equivalence classes
-/// * powerset of [Tile] forms a [bounded lattice](https://en.wikipedia.org/wiki/Lattice_(order)) partially ordered by inclusion with [EnumSet::all] as maximum and [EnumSet::new] as minimum
-///
-///
+///! This file contains a solver algorithm
+///!
+///! # Win Condition
+///!
+///! A level is solved if all connections of a all tiles match the connections of their respective neighbors. In particular this means that
+///!
+///! 1. a tile with a connection to the right must have a neighbor to the right with a connection to the left, e.g. `[┏][━]`
+///! 2. a tile without connection to the right
+///!     * must have a neighbor to the right without connection to the left, e.g. `[┓][┣]`
+///!     * is at the right edge of the level and naturally has no neighbor, e.g. `[┫]X`
+///!
+///! These rules extend to all directions
+///!
+///! In summary, all tile connections must be symmetric
+///! This immediately implies that any solvable level must have an even number of connections
+///!
+///! # Algorithm
+///!
+///! ## Overview
+///!
+///! 1. Each level consists of the set of all possible tiles in superposition
+///! 2. Solving a level is achieved by extracting common features from superpositions and propagating these connection constraints to neighbors
+///!
+///! ## Implementation
+///!
+///! * The border rule for tiles prevents connections pointing outside the level.
+///! This is functionally equivalent to having a neighbor outside the level without connection.
+///! Using a layer of empty sentinel tiles around the level can be used to simplify the problem by eliminating the special border rule.
+///! * square tiles under rotational symmetry form 6 equivalence classes
+///! * powerset of [Tile] forms a [bounded lattice](https://en.wikipedia.org/wiki/Lattice_(order)) partially ordered by inclusion with [EnumSet::all] as maximum and [EnumSet::new] as minimum
+///!
+///!
 
-/// enables dot notation for function calls by associating them with their respective structs
+// enable dot notation for function calls by associating them with their respective structs for autocomplete and to avoid parantheses
 
 /// set of superimposed tiles in different states, superposition with only single state is called collapsed
 pub type Superposition<A> = EnumSet<Tile<A>>;
@@ -160,12 +164,12 @@ impl Coordinate<isize> {
     ///
     /// primitive operation linking [Coordinate<usize>] and [Square]
     /// directions are fundamentally defunctionalized representations of adding delta coordinates
-    fn get_neighbor_index(self, direction: Square) -> Coordinate<isize> {
+    pub fn get_neighbor_index(self, direction: Square) -> Coordinate<isize> {
         self + direction.to_coordinate()
     }
 
     /// Returns the position of all neighboring tiles in arbitrary order
-    fn all_neighbor_indices(self) -> Vec<Coordinate<isize>> {
+    pub fn all_neighbor_indices(self) -> Vec<Coordinate<isize>> {
         EnumSet::FULL
             .iter()
             .map(|dir| self.get_neighbor_index(dir))
@@ -322,13 +326,13 @@ impl<A: Arbitrary> Arbitrary for Connection<A> {
     }
 }
 
-impl Not for Connection<Square> {
+impl Neg for Connection<Square> {
     type Output = Self;
 
     /// Returns a connection pointing in the opposite direction
-    fn not(self) -> Self::Output {
+    fn neg(self) -> Self::Output {
         let Connection(d, s) = self;
-        Connection(d.opposite(), s)
+        Connection(-d, s)
     }
 }
 
@@ -383,43 +387,58 @@ impl Sentinel<Square> {
     }
 }
 
-/// Chooses a tile through the supplied heuristic and for each state
-/// in the superposition of that tile create a new grid with that tile in one of the states
-fn branch<A, F>(grid: &Sentinel<A>, heuristic: F) -> Vec<Sentinel<A>>
-where
-    A: Finite,
-    F: Fn(&Sentinel<A>) -> Coordinate<isize>,
-{
-    let coordinate = heuristic(grid);
+impl<A: Finite> Sentinel<A> {
+    /// Chooses a tile through the supplied heuristic and for each state
+    /// in the superposition of that tile create a new grid with that tile in one of the states
+    fn branch<F>(&self, heuristic: F) -> Vec<Sentinel<A>>
+    where
+        F: Fn(&Sentinel<A>) -> Coordinate<isize>,
+    {
+        let coordinate = heuristic(self);
+        self.0
+            .get(coordinate)
+            .copied()
+            .unwrap_or_default()
+            .iter()
+            .map(|t| SentinelGrid(self.0.try_adjust_at(coordinate, |_| t.into())))
+            .collect()
+    }
+}
+/// Splits the superposition with the most states
+fn most_superimposed_states<A: Finite>(grid: &Sentinel<A>) -> Coordinate<isize> {
     grid.0
-        .get(coordinate)
-        .copied()
-        .unwrap_or_default()
-        .iter()
-        .map(|t| SentinelGrid(grid.0.try_adjust_at(coordinate, |_| EnumSet::singleton(t))))
-        .collect()
+        .coordinates()
+        .into_iter()
+        .max_by_key(|c| grid.0[*c].len())
+        .expect("Logical error: attempted to branch, but was unable")
 }
 
+// TODO: split to isolate parts only working on Square
 /// Propagates all constraints from the chosen tile to all neighboring ones
 pub fn step(grid: Sentinel<Square>, index: Coordinate<isize>) -> Sentinel<Square> {
-    grid.0
+    // determine common connections
+    let connections = grid
+        .0
         .get(index)
         .map(Superposition::extract_common_connections)
-        .unwrap_or_default()
-        .into_iter()
-        .fold(grid, |acc, c| {
-            SentinelGrid(
-                acc.0
-                    .try_adjust_at(index.get_neighbor_index(c.0), |s| s.restrict_tile(!c)),
-            )
-        })
+        .unwrap_or_default();
+
+    // propagate connection information to neighbors
+    connections.into_iter().fold(grid, |acc, c| {
+        SentinelGrid(
+            acc.0
+                .try_adjust_at(index.get_neighbor_index(c.0), |s| s.restrict_tile(-c)),
+        )
+    })
 }
 
 impl Grid<Tile<Square>> {
     /// Returns all puzzle solutions
     // hide concrete iterator implementation
     pub fn solve(&self) -> impl Iterator<Item = Grid<Tile<Square>>> {
-        SolutionIterator(vec![self.with_sentinels(Tile::EMPTY).superimpose()])
+        SolutionIterator(vec![self
+            .with_sentinels(Tile::NO_CONNECTIONS)
+            .superimpose()])
     }
 }
 
@@ -441,41 +460,34 @@ impl Iterator for SolutionIterator<Sentinel<Square>> {
     ///
     /// it is yet to be determined if a contradiction after branching can actually occur
     fn next(&mut self) -> Option<Self::Item> {
-        while let Some(candidate) = self.0.pop() {
-            let minimized = candidate.minimize();
-            match minimized.extract_if_collapsed() {
-                Some(g) => return Some(g),
-                None => {
-                    // distinguish between no and several solutions
-                    minimized
-                        .check_no_empty_superposition()
-                        .into_iter()
-                        .for_each(|g| {
-                            // current heuristic: pick superpositions with most states
-                            let branch_candidates = branch(&g, |grid| {
-                                grid.0
-                                    .coordinates()
-                                    .into_iter()
-                                    .max_by_key(|c| grid.0[*c].len())
-                                    .expect("Logical error: attempted to branch, but was unable")
-                            });
-                            self.0.extend(branch_candidates);
-                        });
-                }
+        loop {
+            let minimized_grid = self.0.pop()?.minimize();
+
+            // yield, if unique solution
+            if let Some(grid) = minimized_grid.extract_if_collapsed() {
+                return Some(grid);
+            }
+
+            // distinguish between no and several solutions
+            if let Some(grid) = minimized_grid.check_no_empty_superposition() {
+                self.0.extend(grid.branch(most_superimposed_states))
             }
         }
-        None
     }
 }
 
-/// witness for the ablility of [BitSet] to store at least Tile<Square>::CARDINALITY = 16 elements
+/// witness for the ablility of [`EnumSet`] to store at least [`Tile<Square>::CARDINALITY`] = 16 elements
 const _: Superposition<Square> = EnumSet::FULL;
 
 #[cfg(test)]
 mod test {
 
     use super::*;
-    use crate::model::tile::{Square, Tile};
+    use crate::{
+        enumset,
+        model::tile::{Square, Tile},
+        tile,
+    };
 
     #[quickcheck]
     fn tile_configurations_have_same_number_of_connections(tile: Tile<Square>) -> bool {
@@ -487,10 +499,10 @@ mod test {
 
     #[quickcheck]
     fn restrict_tile_sanity_check() -> bool {
-        let superposition = EnumSet::from_iter(Tile(Up | Right).superimpose());
+        let superposition = EnumSet::from_iter(tile!(Up, Right).superimpose());
         let connection = Connection(Right, Status::Present);
         superposition.restrict_tile(connection)
-            == EnumSet::from_iter([Tile(Up | Right), Tile(Right | Down)])
+            == EnumSet::from_iter([tile!(Up, Right), tile!(Right, Down)])
     }
 
     #[quickcheck]
@@ -498,7 +510,7 @@ mod test {
         // restrict coordinates to a range resembling actual values used in grid and avoid integer over- / underflows
         let index = index.map(|x| x as isize);
         let neighbor_index = index.get_neighbor_index(direction);
-        index == neighbor_index.get_neighbor_index(direction.opposite())
+        index == neighbor_index.get_neighbor_index(-direction)
     }
 
     /// successively visiting neighbors in each

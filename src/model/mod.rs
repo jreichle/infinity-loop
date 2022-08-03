@@ -1,8 +1,8 @@
 pub mod accesserror;
-pub mod enummap;
-pub mod enumset;
 pub mod cardinality;
 pub mod coordinate;
+pub mod enummap;
+pub mod enumset;
 pub mod fastgen;
 pub mod finite;
 pub mod gameboard;

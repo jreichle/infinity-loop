@@ -1,12 +1,12 @@
 use std::{
     fmt::Display,
-    ops::{BitOr, Not},
+    ops::{BitAnd, Neg, Not},
 };
 
 use quickcheck::{Arbitrary, Gen};
 use Square::{Down, Left, Right, Up};
 
-use super::{enumset::EnumSet, cardinality::Cardinality, finite::Finite};
+use super::{cardinality::Cardinality, enumset::EnumSet, finite::Finite};
 
 /// Represents a direction for a tile connection
 #[derive(Debug, Hash, Copy, Clone, PartialEq, Eq, PartialOrd, Ord)]
@@ -21,9 +21,11 @@ pub enum Square {
     Left,
 }
 
-impl Square {
-    /// Returns the opposite direction
-    pub fn opposite(self) -> Self {
+/// with directions as aliases for delta coordinates the opposite operation is closer to numerical negation than logical complement
+impl Neg for Square {
+    type Output = Square;
+
+    fn neg(self) -> Self::Output {
         match self {
             Up => Down,
             Right => Left,
@@ -33,34 +35,43 @@ impl Square {
     }
 }
 
-impl BitOr for Square {
+/*
+// builder DSL
+// constructs the singleton EnumSet
+// e.g. allows the expression `!Up: EnumSet<Square>`
+impl Not for Square {
     type Output = EnumSet<Square>;
 
-    fn bitor(self, rhs: Self) -> Self::Output {
-        EnumSet::singleton(self).inserted(rhs)
+    fn not(self) -> Self::Output {
+        self.into()
     }
 }
 
-impl<A: Finite> BitOr<A> for EnumSet<A> {
+// builder DSL
+// e.g. allows the expression `!Up & Down & Left: EnumSet<Square>`
+//
+// the operator `&` was chosen for the semantics of conjoining several values (conjunction)
+// instead of `|` originating from the implementation as disjoint bitmasks in `C` / `C++` (disjunction)
+//
+// read `Up & Down` as `Up` and `Down`
+impl<A: Finite> BitAnd<A> for EnumSet<A> {
     type Output = EnumSet<A>;
 
-    fn bitor(self, rhs: A) -> Self::Output {
+    fn bitand(self, rhs: A) -> Self::Output {
         self.inserted(rhs)
     }
 }
 
-impl Not for Square {
-    type Output = Square;
+// builder DSL
+// e.g. allows the expression `Up & Down & Left: EnumSet<Square>`
+impl BitAnd for Square {
+    type Output = EnumSet<Square>;
 
-    fn not(self) -> Self::Output {
-        match self {
-            Up => Down,
-            Right => Left,
-            Down => Up,
-            Left => Right,
-        }
+    fn bitand(self, rhs: Self) -> Self::Output {
+        !self & rhs
     }
 }
+*/
 
 impl Display for Square {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
@@ -98,6 +109,7 @@ impl Finite for Square {
     }
 
     fn enum_to_index(&self) -> u64 {
+        // *self as u64; may be faster, but dependent on declaration order
         match self {
             Self::Up => 0,
             Self::Right => 1,
@@ -127,16 +139,16 @@ impl<A> Copy for Tile<A> {}
 
 impl<A> Default for Tile<A> {
     fn default() -> Self {
-        Self::EMPTY
+        Self::NO_CONNECTIONS
     }
 }
 
 impl<A> Tile<A> {
-    pub const EMPTY: Tile<A> = Self(EnumSet::EMPTY);
+    pub const NO_CONNECTIONS: Tile<A> = Self(EnumSet::EMPTY);
 }
 
 impl<A: Cardinality> Tile<A> {
-    pub const FULL: Tile<A> = Self(EnumSet::FULL);
+    pub const ALL_CONNECTIONS: Tile<A> = Self(EnumSet::FULL);
 }
 
 impl<A: Finite> Tile<A> {
@@ -209,12 +221,31 @@ impl Tile<Square> {
     }
 }
 
+#[macro_export]
+macro_rules! tile {
+    ( $( $e:expr ), * ) => {{
+        Tile(enumset!( $( $e ),* ))
+    }};
+}
+
 #[cfg(test)]
 mod tests {
 
-    use crate::model::cardinality::Cardinality;
+    use crate::model::{cardinality::Cardinality, finite::Finite};
 
     use super::{Square, Tile};
+
+    /// not necessary, but desirable
+    #[quickcheck]
+    fn square_finite_respects_ord(s1: Square, s2: Square) -> bool {
+        (s1 <= s2) == (s1.enum_to_index() <= s2.enum_to_index())
+    }
+
+    /// not necessary, but desirable
+    #[quickcheck]
+    fn tile_finite_respects_ord(t1: Tile<Square>, t2: Tile<Square>) -> bool {
+        (t1 <= t2) == (t1.enum_to_index() <= t2.enum_to_index())
+    }
 
     #[quickcheck]
     fn rotate_clockwise_cardinality_times_is_identity(tile: Tile<Square>) -> bool {
