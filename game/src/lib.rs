@@ -7,28 +7,24 @@ extern crate quickcheck;
 #[macro_use(quickcheck)]
 extern crate quickcheck_macros;
 
-mod generator;
-mod model;
-mod view;
+pub mod generator;
+pub mod model;
 
 use model::{
     grid::Grid,
     tile::{Square, Tile},
 };
 use std::{env, time::Instant};
-use view::window::*;
 
 use crate::generator::levelstream::{level_stream, LevelProperty};
 
 #[allow(unused_variables)] // for testing purposes
-fn main() {
+fn lib() {
     const SHOW_ERROR_CALLSTACK: bool = true;
 
     if SHOW_ERROR_CALLSTACK {
         env::set_var("RUST_BACKTRACE", "1");
     }
-
-    // initiate_window();
 
     let property = LevelProperty {
         dimension: 5.into(),
@@ -49,4 +45,13 @@ fn print_level_and_solutions(level: &Grid<Tile<Square>>, level_identifier: &str)
         let duration = start.elapsed().as_millis();
         println!("{duration}ms")
     })
+}
+
+#[cfg(test)]
+mod tests {
+    #[test]
+    fn it_works() {
+        let result = 2 + 2;
+        assert_eq!(result, 4);
+    }
 }
