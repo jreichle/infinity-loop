@@ -10,22 +10,29 @@ use components::map::{
     get_index
 };
 
-#[function_component(App)]
-fn app() -> Html {
-    let level_data = "LLLTL\nTTT+T\nLL LT\nLTLIT\nLTILT\n-TTL-";
+pub fn parse_level(level_data: &str) -> MapComponentProps {
     let level_lines = level_data.lines().collect::<Vec<_>>();
-    let props = MapComponentProps { 
+    MapComponentProps { 
             id: 1,
-            children: level_lines.iter().map( | line | {
+            children: level_lines.iter().enumerate().map( | (row, line) | {
             RowComponentProps {
-                children: line.clone().chars().map(| char | {
-                    CellComponentProps { value: get_index(char) }
+                row_count: row,
+                children: line.clone().chars().enumerate().map(| (column, char) | {
+                    CellComponentProps { 
+                        coordinate: (row, column),
+                        value: get_index(char) 
+                    }
                 }).collect()
             }
         } ).collect()
-    };
+    }
+}
 
+#[function_component(App)]
+fn app() -> Html {
 
+    let level_data = "LLLTL\nTTT+T\nLL LT\nLTLIT\nLTILT\n-TTL-";
+    let props = parse_level(level_data);
 
     html! {
         <>
