@@ -451,7 +451,7 @@ pub fn generate_grid(
 
         passes += 1;
 
-        println!("PASS #{}\n", passes);
+        println!("PASS #{}", passes);
         print_incomplete_map(&cell_map, wrapper_width);
         print!("{esc}[2J{esc}[1;1H", esc = 27 as char);
 

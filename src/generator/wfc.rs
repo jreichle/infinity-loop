@@ -24,7 +24,7 @@ impl<A: Finite + Eq + Hash + Clone + Copy + Display> BitSet<A> {
         let mut total_weight: f64 = 0.0;
 
         let mut rng = rand::thread_rng();
-
+        
         for cell_option in self.iter() {
             weight = weights.get(&cell_option).unwrap().clone() as f64;
             total_weight += weight;
@@ -32,6 +32,7 @@ impl<A: Finite + Eq + Hash + Clone + Copy + Display> BitSet<A> {
         }
 
         let mut rng_weights = total_weight * rng.gen_range(2..10) as f64 * 0.1;
+        
         for (option, weight) in option_weights.iter() {
             rng_weights -= weight;
             if rng_weights < 0.0 {
@@ -217,7 +218,7 @@ impl WfcGenerator {
         }
     }
 
-    pub fn generate(self) -> Sentinel<Square> {
+    pub fn generate(&self) -> Sentinel<Square> {
         let dimension = Coordinate {
             row: self.height,
             column: self.width,
@@ -241,7 +242,9 @@ impl WfcGenerator {
             WfcGenerator::collapse_cell(&mut board, &weights, current_coordinate);
 
             // WfcGenerator::propagate(&board,current_coordinate, self.prop_limit);
-            board = board.0.coordinates().into_iter().fold(board.clone(), step);
+            board = board.0
+                    .coordinates().into_iter()
+                    .fold(board.clone(), step);
 
             // println!("before update {:?}", weights);
             WfcGenerator::update_weights(&board, &mut weights);
@@ -262,9 +265,23 @@ impl WfcGenerator {
     }
 }
 
+fn is_empty(board: &Sentinel<Square>) -> bool {
+    for cell in board.0.elements().iter() {
+        if cell.len() == 1 && cell.unwrap_if_singleton().unwrap() != Tile(EnumSet::empty()){
+            return false
+        }
+    }
+    true
+}
+
 pub fn test() {
     let wfc_generator = WfcGenerator::new(10, 10, 40000, 1000);
-    let board = wfc_generator.generate();
+    let mut board = wfc_generator.generate();
+
+    while is_empty(&board) {
+        board = wfc_generator.generate();
+    }
+
     println!("Final board: \n");
     WfcGenerator::print_map(&board);
 }
