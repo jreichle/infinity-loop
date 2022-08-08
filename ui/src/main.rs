@@ -3,10 +3,10 @@ use yew::html;
 
 mod components;
 use components::map::{
-    MapComponemt,
-    MapComponemtProps,
-    RowComponemtProps,
-    CellComponemtProps,
+    MapComponent,
+    MapComponentProps,
+    RowComponentProps,
+    CellComponentProps,
     get_index
 };
 
@@ -14,12 +14,12 @@ use components::map::{
 fn app() -> Html {
     let level_data = "LLLTL\nTTT+T\nLL LT\nLTLIT\nLTILT\n-TTL-";
     let level_lines = level_data.lines().collect::<Vec<_>>();
-    let props = MapComponemtProps { 
+    let props = MapComponentProps { 
             id: 1,
             children: level_lines.iter().map( | line | {
-            RowComponemtProps {
+            RowComponentProps {
                 children: line.clone().chars().map(| char | {
-                    CellComponemtProps { value: get_index(char) }
+                    CellComponentProps { value: get_index(char) }
                 }).collect()
             }
         } ).collect()
@@ -31,7 +31,7 @@ fn app() -> Html {
         <>
             <div id="title">{"Rusty infinity loop!"}</div>
             <div id="container">  
-                <MapComponemt ..props />
+                <MapComponent ..props />
             </div>
         </>
     }

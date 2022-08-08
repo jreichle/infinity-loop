@@ -2,12 +2,12 @@ use yew::prelude::*;
 use yew::{html, Html, Properties};
 
 #[derive(Properties, PartialEq, Clone)]
-pub struct CellComponemtProps {
+pub struct CellComponentProps {
     pub value: usize,
 }
 
-#[function_component(CellComponemt)]
-pub fn cellComponemt(props: &CellComponemtProps) -> Html {
+#[function_component(CellComponent)]
+pub fn cellComponent(props: &CellComponentProps) -> Html {
     let img_path = vec![
         "data/tiles/0.png",
         "data/tiles/1.png",
@@ -29,17 +29,17 @@ pub fn cellComponemt(props: &CellComponemtProps) -> Html {
 }
 
 #[derive(Properties, PartialEq, Clone)]
-pub struct RowComponemtProps {
-    pub children: Vec<CellComponemtProps>,
+pub struct RowComponentProps {
+    pub children: Vec<CellComponentProps>,
 }
 
-#[function_component(RowComponemt)]
-pub fn rowComponemt(props: &RowComponemtProps) -> Html {
+#[function_component(RowComponent)]
+pub fn rowComponent(props: &RowComponentProps) -> Html {
     html! {
         <div class="cell-row">
         {
             props.children.iter().enumerate().map(| (i, child) | {
-                html! { <CellComponemt key={i} ..child.clone() /> }
+                html! { <CellComponent key={i} ..child.clone() /> }
             }).collect::<Html>()
         }
         </div>
@@ -47,19 +47,19 @@ pub fn rowComponemt(props: &RowComponemtProps) -> Html {
 }
 
 #[derive(Properties, PartialEq, Clone)]
-pub struct MapComponemtProps {
+pub struct MapComponentProps {
     pub id: usize,
-    pub children: Vec<RowComponemtProps>,
+    pub children: Vec<RowComponentProps>,
 }
 
-#[function_component(MapComponemt)]
-pub fn mapComponemt(props: &MapComponemtProps) -> Html {
+#[function_component(MapComponent)]
+pub fn mapComponent(props: &MapComponentProps) -> Html {
     html! {
         <>
             <div class="game-board">
             {
                 props.children.iter().enumerate().map(| (i, child) | {
-                    html!{ <RowComponemt key={i} ..child.clone() /> }
+                    html!{ <RowComponent key={i} ..child.clone() /> }
                 }).collect::<Html>()
             }
             </div>
