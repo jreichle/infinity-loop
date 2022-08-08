@@ -159,6 +159,13 @@ impl<A> Grid<A> {
             .ok()
     }
 
+    pub fn get_mut(&mut self, index: Coordinate<isize>) -> Option<&mut A> {
+        let vec_index = self.get_vec_index(index);
+        self.ensure_index_in_bounds(index)
+            .map(|_| &mut self.elements[vec_index])
+            .ok()
+    }
+
     /// applies transformation to element at supplied index, if possible
     pub fn try_adjust_at<F: Fn(A) -> A>(&self, index: Coordinate<isize>, transformation: F) -> Self
     where
