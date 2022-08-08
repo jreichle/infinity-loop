@@ -9,7 +9,6 @@ yew-router = "0.16.0"
 wasm-logger = "0.2.0"
 log = "0.4.14"
 web-sys = "0.3.56"
-pulldown-cmark = "0.9.1"
 reqwasm = "0.4.0"
 serde = { version = "1.0.133", features = ["derive"] }
 
