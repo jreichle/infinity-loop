@@ -1,24 +1,21 @@
-// use game::generator::levelstream;
 use yew::prelude::*;
 use yew::{html, Html, Properties, Callback, use_state};
 
-// use crate::parse_level;
-
 #[derive(Properties, PartialEq, Clone)]
 pub struct CellComponentProps {
-    pub coordinate: (usize, usize),
-    pub value: usize,
+    coordinate: (usize, usize),
+    value: usize,
 }
 
 #[function_component(CellComponent)]
 pub fn cellComponent(props: &CellComponentProps) -> Html {
     let img_path = vec![
-        "data/tiles/0.png",
-        "data/tiles/1.png",
-        "data/tiles/2.png",
-        "data/tiles/3.png",
-        "data/tiles/4.png",
-        "data/tiles/5.png",
+        "data/tiles/0.svg",
+        "data/tiles/1.svg",
+        "data/tiles/2.svg",
+        "data/tiles/3.svg",
+        "data/tiles/4.svg",
+        "data/tiles/5.svg",
     ];
 
     let angle = use_state(|| 0_usize);
@@ -31,8 +28,8 @@ pub fn cellComponent(props: &CellComponentProps) -> Html {
     html! {
         <div class="cell">
             <img src={ img_path[props.value] }
-            onclick={onclick}
-            style={format!("{}{}{}","transform:rotate(", *angle, "deg);")}
+                onclick={onclick}
+                style={format!("{}{}{}","transform:rotate(", *angle, "deg);")}
             />
         </div>
     }
@@ -41,8 +38,8 @@ pub fn cellComponent(props: &CellComponentProps) -> Html {
 
 #[derive(Properties, PartialEq, Clone)]
 pub struct RowComponentProps {
-    pub row_count: usize,
-    pub children: Vec<CellComponentProps>,
+    row_count: usize,
+    children: Vec<CellComponentProps>,
 }
 
 #[function_component(RowComponent)]
@@ -60,17 +57,13 @@ pub fn rowComponent(props: &RowComponentProps) -> Html {
 
 #[derive(Properties, PartialEq, Clone)]
 pub struct MapComponentProps {
-    pub id: usize,
-    pub children: Vec<RowComponentProps>,
+    // id: usize,
+    pub level_data: String,
 }
 
 #[function_component(MapComponent)]
 pub fn mapComponent(props: &MapComponentProps) -> Html {
-
-    let level: UseStateHandle<Vec<RowComponentProps>> = use_state( || props.children.clone());
-
-    // let level_data = "LLLLL\n+++++\n-----\n-----\nTTTTT\nLLLLL";
-    // let props_new = parse_level(level_data);
+    let level = parse_level(props.level_data.clone());
 
     let check_onclick: Callback<MouseEvent> = {
         Callback::from(move |_| {
@@ -96,7 +89,7 @@ pub fn mapComponent(props: &MapComponentProps) -> Html {
         <>
             <div class="game-board">
             {
-                (*level).iter().enumerate().map(| (i, child) | {
+                level.iter().enumerate().map(| (i, child) | {
                     html!{ <RowComponent key={i} ..child.clone() /> }
                 }).collect::<Html>()
             }
@@ -116,14 +109,37 @@ pub fn mapComponent(props: &MapComponentProps) -> Html {
     }
 }
 
+
+pub fn parse_level(level_data: String) -> Vec<RowComponentProps> {
+    let level_lines = level_data.lines().collect::<Vec<_>>();
+    level_lines.iter().enumerate().map( | (row, line) | {
+        RowComponentProps {
+            row_count: row,
+            children: line.clone().chars().enumerate().map(| (column, char) | {
+                CellComponentProps { 
+                    coordinate: (row, column),
+                    value: get_index(char) 
+                }
+            }).collect()
+        }
+    } ).collect()
+}
+
 pub fn get_index(cell_symbol: char) -> usize {
     match cell_symbol {
         ' ' => 0,
-        '-' => 1,
-        'I' => 2,
-        'L' => 3,
-        'T' => 4,
-        '+' => 5,
+        '╹' | '╺' | '╻' | '╸' => 1,
+        '┃' | '━' => 2,
+        '┗' | '┏' | '┛' | '┓' => 3,
+        '┣' | '┻' | '┫' | '┳' => 4,
+        '╋' => 5,
         _ => 0,
+        // ' ' => 0,
+        // '-' => 1,
+        // 'I' => 2,
+        // 'L' => 3,
+        // 'T' => 4,
+        // '+' => 5,
+        // _ => 0,
     }
 }

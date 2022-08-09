@@ -2,44 +2,23 @@ use yew::prelude::*;
 use yew::html;
 
 mod components;
-use components::map::{
-    MapComponent,
-    MapComponentProps,
-    RowComponentProps,
-    CellComponentProps,
-    get_index
-};
+use components::map::MapComponent;
 
-pub fn parse_level(level_data: &str) -> MapComponentProps {
-    let level_lines = level_data.lines().collect::<Vec<_>>();
-    MapComponentProps { 
-            id: 1,
-            children: level_lines.iter().enumerate().map( | (row, line) | {
-            RowComponentProps {
-                row_count: row,
-                children: line.clone().chars().enumerate().map(| (column, char) | {
-                    CellComponentProps { 
-                        coordinate: (row, column),
-                        value: get_index(char) 
-                    }
-                }).collect()
-            }
-        } ).collect()
-    }
-}
+use game::model::coordinate::Coordinate;
+use game::model::fastgen::generate;
 
 #[function_component(App)]
 fn app() -> Html {
-
-    let level_data = "LLLTL\nTTT+T\nLL LT\nLTLIT\nLTILT\n-TTL-";
-    let props = parse_level(level_data);
-
+    let level = generate(Coordinate { row: 5, column: 5 }, 5);
+    let level_data = level.to_string();
+    
     html! {
         <>
             <div id="title">{"Rusty infinity loop!"}</div>
             <div id="container">  
-                <MapComponent ..props />
+                <MapComponent level_data={level_data} />
             </div>
+            <div id="footer"><a href={"https://uni2work.ifi.lmu.de/course/S22/IfI/Rust"}>{"High level languages: Rust"}</a>{" - Group IV"}</div>
         </>
     }
 }
