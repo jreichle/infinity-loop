@@ -21,6 +21,8 @@ To extend the basic functionality of this simple game, there are various compont
 **The games components:**
 * Basic game implementation
 * A Web-UI
+* A Level Stream Generator
+* A Normalized Generator (for automated level generation)
 * A Wave-Fuction-Collapse Generator (for automated level generation)
 * A Custom Solver (for automated level solving)
 * A SAT-Solver (for automated level solving)
@@ -40,12 +42,19 @@ One gameboard is then represented by an object of the *Grid*-class, which contai
 
 *TestLevel* contains some predefined levels for tutorial or test cases. It provides a bunch of gameboards, represented as hardcoded strings, and a deserialization method to create a corresponding Grid.
 
+The *LevelStream* provides functionylity, to generate a infinity series of level gameboards lazily. It returns a new level whenever the caller asks for it. Which level generation algorithm is used (normalized od wave function collable) is a programming detail here.
+
 ## The UI
 Developer: Johannes Reichle
 
 
-## The Wave Function Collapse Generator
+## Level Generator
+### Normalized Generator
+Developer: Simon Redl
+
+### The Wave Function Collapse Generator
 Developer: Alexander Jensen
+
 
 ## Level Solver
 ### Custom Solver
