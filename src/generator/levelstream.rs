@@ -6,7 +6,7 @@ use crate::model::{
     coordinate::Coordinate,
     fastgen::generate,
     grid::Grid,
-    testlevel::{char_to_tile, parse_level, TEST_LEVELS},
+    testlevel::{ascii_to_tile, parse_level, TEST_LEVELS},
     tile::{Square, Tile},
 };
 
@@ -108,7 +108,7 @@ fn constant<A: Clone + 'static, B>(value: A) -> Box<dyn Fn(B) -> A> {
 fn hardcoded_levels() -> impl Iterator<Item = Box<dyn Fn(u64) -> Grid<Tile<Square>>>> {
     TEST_LEVELS
         .into_iter()
-        .map(|l| parse_level(l, char_to_tile).unwrap())
+        .map(|l| parse_level(l, ascii_to_tile).unwrap())
         .map(constant)
 }
 

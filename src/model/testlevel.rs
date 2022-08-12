@@ -21,7 +21,7 @@ use super::{
 /// | 2           | 'L'       | `[┗]`/`[┏]`/`[┛]`/`[┓]` |
 /// | 3           | 'T'       | `[┣]`/`[┻]`/`[┫]`/`[┳]` |
 /// | 4           | '+'       | `[╋]`                   |
-pub fn char_to_tile(tile_character: char) -> Result<Tile<Square>, String> {
+pub fn ascii_to_tile(tile_character: char) -> Result<Tile<Square>, String> {
     Ok(match tile_character {
         ' ' => Tile::NO_CONNECTIONS,
         '-' => tile!(Up),
@@ -29,7 +29,7 @@ pub fn char_to_tile(tile_character: char) -> Result<Tile<Square>, String> {
         'L' => tile!(Up, Right),
         'T' => tile!(Up, Right, Down),
         '+' => Tile::ALL_CONNECTIONS,
-        c => Err(format!("parsing error: unknown character {c}"))?,
+        c => Err(format!("parsing error: unknown character '{c}'"))?,
     })
 }
 
@@ -51,7 +51,7 @@ pub fn unicode_to_tile(tile_character: char) -> Result<Tile<Square>, String> {
         '┫' => tile!(Up, Down, Left),
         '┳' => tile!(Right, Down, Left),
         '╋' => Tile::ALL_CONNECTIONS,
-        c => Err(format!("parsing error: unknown character {c}"))?,
+        c => Err(format!("parsing error: unknown character '{c}'"))?,
     })
 }
 
@@ -65,12 +65,13 @@ where
 {
     let lines = leveldata.lines().collect::<Vec<_>>();
 
+    // count unicode graphemes, not bytes
     let rows = lines.len();
-    let columns = lines.get(0).map(|s| s.len()).unwrap_or(0);
+    let columns = lines.get(0).map(|s| s.chars().count()).unwrap_or(0);
 
     // all rows must have same length
-    if lines.iter().any(|s| s.len() != columns) {
-        return Err(format!("All rows must have same length: {leveldata}"));
+    if lines.iter().any(|s| s.chars().count() != columns) {
+        return Err(format!("All rows must have same length: {leveldata}"))
     }
 
     lines
@@ -81,7 +82,7 @@ where
         .map(|v| Grid::new(Coordinate::new(rows, columns), v))
 }
 
-/// relies on internal vector layout in grid
+/// current implementation relies on internal vector layout in grid
 pub fn serialize_level<A: Clone, F: Fn(A) -> char>(grid: Grid<A>, converter: F) -> String {
     grid.elements()
         .into_iter()
@@ -95,7 +96,8 @@ pub fn serialize_level<A: Clone, F: Fn(A) -> char>(grid: Grid<A>, converter: F) 
 
 pub const LEVEL_MALFORMED: &str = " ";
 
-/// first 20 levels of android game infinity loop
+/// first levels of android game infinity loop
+#[rustfmt::skip]
 pub const TEST_LEVELS: [&str; 30] = [
     /* 01 */ "LTL\nLTL",
     /* 02 */ "LLLL\nLLLL",
@@ -109,8 +111,8 @@ pub const TEST_LEVELS: [&str; 30] = [
     /* 10 */ " LLLL \nLLLLLL\nLLLLLL\n LLLL ",
     /* 11 */ " LL \n-TT-\nLTTL\nLTTL\nLIIL",
     /* 12 */ "- --\nTTLI\nL+IL\n-TL-\nIL+T\nLITL",
-    /* 13 */
-    "-T-\n-T-\n-I-\n-I-\n-T-\n-T-", // requires branching "-I-\n-I-\nLIL\nLIL\n-I-\n-I-"
+    /* 13 */ "-T-\n-T-\n-I-\n-I-\n-T-\n-T-",
+    // lvl 13 requires branching "-I-\n-I-\nLIL\nLIL\n-I-\n-I-"
     /* 14 */ "-TL\n-TL\nLL \nIT-\n-LL\n  -",
     /* 15 */ "-TL\nLTI\nILT\nI-L\nLI-",
     /* 16 */ "-LL-\nL+L-\n-T- \nLL -\nTL -\n-   ",
@@ -127,8 +129,7 @@ pub const TEST_LEVELS: [&str; 30] = [
     /* 27 */ "LL L-\nLTLT-\nL-TTL\nI-LL-\nIILTL\n--TTL\n -TL ",
     /* 28 */ "LLLTL\nTTT+T\nLL LT\nLTLIT\nLTILT\n-TTL-",
     /* 29 */ "LLLIL\nII-LT\n-I-LT\nLLI-I\nLTTTT\n-T- -",
-    /* 30 */
-    "  LL\n -TL\nLLLL\nT- I\nLL I\nLL--\n- L-",
+    /* 30 */ "  LL\n -TL\nLLLL\nT- I\nLL I\nLL--\n- L-",
     /* 31 */
     /* 32 */
     /* 33 */
@@ -171,18 +172,33 @@ pub const HARD_LEVEL: &str = "----------\n----------\n----------\n----------\n--
 #[cfg(test)]
 mod tests {
 
+    use quickcheck::TestResult;
+
     use crate::model::{
-        testlevel::unicode_to_tile,
+        grid::Grid,
+        testlevel::{parse_level, unicode_to_tile},
         tile::{Square, Tile},
     };
 
     #[quickcheck]
-    fn display_then_unicode_to_tile_is_identity(tile: Tile<Square>) -> bool {
+    fn tile_display_then_unicode_to_tile_is_identity(tile: Tile<Square>) -> bool {
         let tile_char = tile
             .to_string()
             .chars()
             .next()
             .expect("expected single element string");
         tile == unicode_to_tile(tile_char).unwrap()
+    }
+
+    #[quickcheck]
+    fn grid_display_then_parse_level_is_identity(grid: Grid<Tile<Square>>) -> TestResult {
+        if grid.rows() == 0 || grid.columns() == 0 {
+            // an empty grid does not have a unique representation,
+            // it is sufficient for either row or column to be 0
+            // e.g. `Grid::new(Coordinate::new(0, 5), vec![]) == Grid::new(Coordinate::new(0, 0), vec![])`
+            TestResult::discard()
+        } else {
+            TestResult::from_bool(parse_level(&grid.to_string(), unicode_to_tile) == Ok(grid))
+        }
     }
 }

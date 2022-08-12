@@ -9,7 +9,7 @@ use std::{
 
 use quickcheck::Arbitrary;
 
-use super::{cardinality::Cardinality, finite::Finite, lattice::BoundedLattice};
+use super::{cardinality::Cardinality, finite::Finite, lattice::BoundedLattice, num::Num};
 
 // prefered representation, supports sets with arbitrary capacity
 // struct EnumSet<A: Cardinality>([BitStorage; (A::CARDINALITY + CAPACITY - 1) / CAPACITY], PhantomData<A>);
@@ -32,24 +32,34 @@ const CAPACITY: u64 = BitStorage::BITS as u64;
 ///
 /// Using types that exceed the maximum storing capacity leads to a compile-time error: [`BitStorage::BITS`] ≥ [`A::CARDINALITY`]
 ///
+/// This struct deliberately does not implement the [`Default`] trait, instead use [`EnumSet::EMPTY`] or [`EnumSet::FULL`]
+///
 /// # Invariants
 ///
 /// 1. bits exceeding [`A::Cardinality`] are always set to 0
+/// 2. [`Finite`] of EnumSet<A> is order isomprphic ⟺ [`Finite`] of A is order isomorphic:
+///     ∀x, y : A, s1, s2 : EnumSet<A>. (s1 ≤ s2 ⟺ s1.enum_to_index() ≤ s2.enum_to_index()) ⟺ (x ≤ y ⟺ x.enum_to_index() ≤ y.enum_to_index())
 ///
 /// Invariant #1 ensures canonical representation for equality checks
-/// [`Finite`] of EnumSet<A> is order isomprphic ⟺ [`Finite`] of A is order isomorphic
-/// ∀x, y : A, s1, s2 : EnumSet<A>. (s1 ≤ s2 ⟺ s1.enum_to_index() ≤ s2.enum_to_index()) ⟺ (x ≤ y ⟺ x.enum_to_index() ≤ y.enum_to_index())
 #[derive(Debug)]
 pub struct EnumSet<A>(BitStorage, PhantomData<A>); // alternative names: FiniteSet, FinSet
 
 // most derivable traits are independent of type [`A`]
 impl<A> Copy for EnumSet<A> {}
 
+impl<A> Clone for EnumSet<A> {
+    fn clone(&self) -> Self {
+        Self(self.0, self.1)
+    }
+}
+
 impl<A> PartialEq for EnumSet<A> {
     fn eq(&self, other: &Self) -> bool {
         self.0 == other.0
     }
 }
+
+impl<A> Eq for EnumSet<A> {}
 
 impl<A> PartialOrd for EnumSet<A> {
     fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
@@ -63,23 +73,9 @@ impl<A> Ord for EnumSet<A> {
     }
 }
 
-impl<A> Clone for EnumSet<A> {
-    fn clone(&self) -> Self {
-        Self(self.0, self.1)
-    }
-}
-
-impl<A> Eq for EnumSet<A> {}
-
 impl<A> Hash for EnumSet<A> {
     fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
         self.0.hash(state)
-    }
-}
-
-impl<A> Default for EnumSet<A> {
-    fn default() -> Self {
-        Self::EMPTY
     }
 }
 
@@ -101,7 +97,7 @@ impl<A: Cardinality> Cardinality for EnumSet<A> {
 }
 
 impl<A: Finite> Finite for EnumSet<A> {
-    fn index_to_enum(value: u64) -> Self {
+    fn unchecked_index_to_enum(value: u64) -> Self {
         Self(value as BitStorage & Self::USED_BITS, PhantomData) // truncating
     }
 
@@ -112,6 +108,8 @@ impl<A: Finite> Finite for EnumSet<A> {
 
 impl<A> EnumSet<A> {
     /// Set containing 0 elements
+    ///
+    /// neutral element of the [`EnumSet::union`] monoid
     pub const EMPTY: Self = Self(BitStorage::MIN, PhantomData);
 
     /// Indicates if the set contains 0 elements
@@ -146,7 +144,7 @@ impl<A> EnumSet<A> {
 
     /// Indicates if the other set contains at least all elements of this one
     pub const fn is_subset(self, other: Self) -> bool {
-        self.0 | other.0 == self.0
+        self.0 | other.0 == other.0
     }
 
     /// Indicates if this set contains at least all elements of the other one
@@ -182,6 +180,8 @@ impl<A: Cardinality> EnumSet<A> {
     };
 
     /// Set containing all possible elements
+    ///
+    /// neutral element of the [`EnumSet::intersection`] monoid
     pub const FULL: Self = Self(Self::USED_BITS, PhantomData);
 
     /// Returns a set containing all elements not in this set
@@ -259,7 +259,7 @@ impl<A: Finite> EnumSet<A> {
     /// * returns `None` if set contains several elements or is empty
     pub fn unwrap_if_singleton(self) -> Option<A> {
         if self.len() == 1 {
-            Some(A::index_to_enum(self.0.trailing_zeros() as u64))
+            Some(A::unchecked_index_to_enum(self.0.trailing_zeros() as u64))
         } else {
             None
         }
@@ -322,7 +322,7 @@ impl<A: Finite> Iterator for Iter<A> {
             self.bits &= !1; // consume element at current index
             self.index += trailing;
 
-            Some(A::index_to_enum(self.index as u64))
+            Some(A::unchecked_index_to_enum(self.index as u64))
         }
     }
 
@@ -340,7 +340,7 @@ impl<A: Finite> Iterator for Iter<A> {
         if bits == 0 {
             None
         } else {
-            Some(A::index_to_enum(
+            Some(A::unchecked_index_to_enum(
                 bits.leading_zeros() as u64 + self.index - 1,
             ))
         }
@@ -466,10 +466,14 @@ fn bit_at<A: Shl + From<u8>>(index: A) -> <A as Shl>::Output {
     A::from(1) << index
 }
 
+fn bit_at2<A: Num>(index: A) -> A {
+    A::ONE << index
+}
+
 #[inline(always)]
 fn test_bit<A>(value: A, index: A) -> bool
 where
-    A: Shl + Shl<Output = A> + BitAnd + BitAnd<Output = A> + PartialEq + From<u8>,
+    A: Shl<Output = A> + BitAnd + BitAnd<Output = A> + PartialEq + From<u8>,
 {
     value & bit_at(index) != A::from(0)
 }
@@ -477,7 +481,7 @@ where
 #[inline(always)]
 fn set_bit<A>(value: A, index: A) -> <A as BitOr>::Output
 where
-    A: Shl + Shl<Output = A> + BitOr + From<u8>,
+    A: Shl<Output = A> + BitOr + From<u8>,
 {
     value | bit_at(index)
 }
@@ -485,7 +489,7 @@ where
 #[inline(always)]
 fn clear_bit<A>(value: A, index: A) -> <A as BitAnd>::Output
 where
-    A: Shl + Shl<Output = A> + BitAnd + Not<Output = A> + From<u8>,
+    A: Shl<Output = A> + BitAnd + Not<Output = A> + From<u8>,
 {
     value & !bit_at(index)
 }
@@ -493,7 +497,7 @@ where
 #[inline(always)]
 fn toggle_bit<A>(value: A, index: A) -> <A as BitXor>::Output
 where
-    A: Shl + Shl<Output = A> + BitXor + From<u8>,
+    A: Shl<Output = A> + BitXor + From<u8>,
 {
     value ^ bit_at(index)
 }
@@ -546,18 +550,22 @@ const _: () = {
 #[cfg(test)]
 mod test {
 
+    use std::collections::HashSet;
+
+    use quickcheck::Gen;
+
     use crate::model::{enumset::*, tile::Square};
 
     #[quickcheck]
     fn set_to_index_and_back_is_id(set: EnumSet<EnumSet<Option<bool>>>) -> bool {
-        set == EnumSet::index_to_enum(set.enum_to_index())
+        set == EnumSet::unchecked_index_to_enum(set.enum_to_index())
     }
 
     #[quickcheck]
     fn index_to_set_and_back_is_id(value: u8) -> bool {
         type Set = EnumSet<EnumSet<Square>>;
         let value = value as u64 % Set::CARDINALITY;
-        value == Set::index_to_enum(value).enum_to_index()
+        value == Set::unchecked_index_to_enum(value).enum_to_index()
     }
 
     #[quickcheck]
@@ -678,12 +686,194 @@ mod test {
     #[quickcheck]
     fn iter_count_is_correct(set: EnumSet<EnumSet<bool>>, random: usize) -> bool {
         let skip_distance = random.checked_rem(set.len() as usize).unwrap_or_default();
-        set.iter().skip(skip_distance).count() == set.iter().skip(skip_distance).collect::<Vec<_>>().len() 
+        set.iter().skip(skip_distance).count()
+            == set.iter().skip(skip_distance).collect::<Vec<_>>().len()
     }
 
     #[quickcheck]
     fn iterator_values_are_in_ascending_order(set: EnumSet<EnumSet<bool>>) -> bool {
         let iter = set.iter().map(|v| v.enum_to_index());
         iter.clone().zip(iter.skip(1)).all(|(x, y)| x < y)
+    }
+
+    // test the invariant for all methods
+
+    /// test all possible cases instead of randomly
+    fn invariant<A: Finite>(operation: fn(EnumSet<A>, A) -> EnumSet<A>) {
+        EnumSet::<A>::all_enums_ascending()
+            .into_iter()
+            .flat_map(|s| {
+                A::all_enums_ascending()
+                    .into_iter()
+                    .map(move |e| operation(s, e))
+            })
+            .for_each(|s| assert_eq!(s.0 & EnumSet::<A>::USED_BITS, s.0));
+    }
+
+    #[test]
+    fn ensure_invariant_inserted() {
+        invariant::<EnumSet<bool>>(EnumSet::inserted);
+    }
+    #[test]
+    fn ensure_invariant_removed() {
+        invariant::<EnumSet<bool>>(EnumSet::removed);
+    }
+
+    #[test]
+    fn ensure_invariant_toggled() {
+        invariant::<EnumSet<bool>>(EnumSet::toggled);
+    }
+
+    #[quickcheck]
+    fn inserted_is_idempotent(set: EnumSet<EnumSet<bool>>, element: EnumSet<bool>) -> bool {
+        set.inserted(element) == set.inserted(element).inserted(element)
+    }
+
+    #[quickcheck]
+    fn removed_is_idempotent(set: EnumSet<EnumSet<bool>>, element: EnumSet<bool>) -> bool {
+        set.removed(element) == set.removed(element).removed(element)
+    }
+    #[quickcheck]
+    fn toggled_is_inverse_of_itself(set: EnumSet<EnumSet<bool>>, element: EnumSet<bool>) -> bool {
+        set == set.toggled(element).toggled(element)
+    }
+
+    /// two components are interchangeable if all possible execution histories are identical (Liskov Substitution Principle)
+    /// idea: generate random execution histories and compare all events (= outputs of functions) with reference implementation
+    /// implementation is quite hacky and serves rather as proof of concept
+
+    type ExecutionHistory = Vec<Command>;
+
+    /// commands are defunctionalizations of EnumSet methods (initial encoding)
+    #[derive(Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Debug)]
+    enum Command {
+        Insert,
+        Remove,
+        // Toggled,
+        Contains,
+        Length,
+        IsEmpty,
+
+        Intersection,
+        Union,
+        Difference,
+        SymmetricDifference,
+
+        IsSubset,
+        IsSuperSet,
+        IsDisjoint,
+    }
+
+    impl Arbitrary for Command {
+        fn arbitrary(g: &mut Gen) -> Self {
+            *g.choose(&[
+                Command::Insert,
+                Command::Remove,
+                Command::Contains,
+                Command::Length,
+                Command::IsEmpty,
+                Command::Intersection,
+                Command::Union,
+                Command::Difference,
+                Command::SymmetricDifference,
+                Command::IsSubset,
+                Command::IsSuperSet,
+                Command::IsDisjoint,
+            ])
+            .unwrap()
+        }
+    }
+
+    #[quickcheck]
+    fn execution_history(history: ExecutionHistory) -> bool {
+        let mut enum_set = EnumSet::<EnumSet<bool>>::EMPTY;
+        let mut hash_set = HashSet::<EnumSet<bool>>::new();
+        let mut g = Gen::new(100);
+        history
+            .into_iter()
+            .for_each(move |c| relation(&mut enum_set, &mut hash_set, &mut g, c));
+        true
+    }
+
+    fn relation<A: Finite + Copy + Eq + Hash + Arbitrary>(
+        enum_set: &mut EnumSet<A>,
+        hash_set: &mut HashSet<A>,
+        g: &mut Gen,
+        command: Command,
+    ) {
+        match command {
+            Command::Insert => {
+                let element = A::arbitrary(g);
+                assert_eq!(enum_set.insert(element), hash_set.insert(element))
+            }
+            Command::Remove => {
+                let element = A::arbitrary(g);
+                assert_eq!(enum_set.remove(element), hash_set.remove(&element))
+            }
+            // Command::Toggled => {
+            //     let element = A::arbitrary(g);
+            //     hash_set.(element);
+            //     (enum_set.toggled(element), hash_set)
+            // },
+            Command::Contains => {
+                let element = A::arbitrary(g);
+                assert_eq!(enum_set.contains(element), hash_set.contains(&element))
+            }
+            Command::Length => assert_eq!(enum_set.len() as usize, hash_set.len()),
+            Command::IsEmpty => assert_eq!(enum_set.is_empty(), hash_set.is_empty()),
+            Command::Intersection => {
+                let set = EnumSet::<A>::arbitrary(g);
+                *enum_set = enum_set.intersection(set);
+                *hash_set = hash_set
+                    .intersection(&set.into_iter().collect())
+                    .cloned()
+                    .collect::<HashSet<A>>()
+            }
+            Command::Union => {
+                let set = EnumSet::<A>::arbitrary(g);
+                *enum_set = enum_set.union(set);
+                *hash_set = hash_set
+                    .union(&set.into_iter().collect())
+                    .cloned()
+                    .collect::<HashSet<A>>()
+            }
+            Command::Difference => {
+                let set = EnumSet::<A>::arbitrary(g);
+                *enum_set = enum_set.difference(set);
+                *hash_set = hash_set
+                    .difference(&set.into_iter().collect())
+                    .cloned()
+                    .collect::<HashSet<A>>()
+            }
+            Command::SymmetricDifference => {
+                let set = EnumSet::<A>::arbitrary(g);
+                *enum_set = enum_set.symmetric_difference(set);
+                *hash_set = hash_set
+                    .symmetric_difference(&set.into_iter().collect())
+                    .cloned()
+                    .collect::<HashSet<A>>()
+            }
+            Command::IsSubset => {
+                let set = EnumSet::<A>::arbitrary(g);
+                assert_eq!(
+                    enum_set.is_subset(set),
+                    hash_set.is_subset(&set.into_iter().collect())
+                )
+            }
+            Command::IsSuperSet => {
+                let set = EnumSet::<A>::arbitrary(g);
+                assert_eq!(
+                    enum_set.is_superset(set),
+                    hash_set.is_superset(&set.into_iter().collect())
+                )
+            }
+            Command::IsDisjoint => {
+                let set = EnumSet::<A>::arbitrary(g);
+                assert_eq!(
+                    enum_set.is_disjoint(set),
+                    hash_set.is_disjoint(&set.into_iter().collect())
+                )
+            }
+        }
     }
 }

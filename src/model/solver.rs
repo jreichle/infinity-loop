@@ -184,7 +184,7 @@ impl<A: Finite> Tile<A> {
     /// * `[┗]` -> `{ [┗], [┏], [┓], [┛] }`
     /// * `[╻]` -> `{ [╹], [╺], [╻], [╸] }`
     /// * `[╋]` -> `{ [╋] }`
-    fn superimpose(self) -> Superposition<A> {
+    pub fn superimpose(self) -> Superposition<A> {
         // insert successively rotated tiles until encountering repeated initial tile
         iter_fix(
             (EnumSet::<Tile<A>>::EMPTY, self),
@@ -277,7 +277,7 @@ impl Cardinality for Status {
 }
 
 impl Finite for Status {
-    fn index_to_enum(value: u64) -> Self {
+    fn unchecked_index_to_enum(value: u64) -> Self {
         match value % Self::CARDINALITY {
             0 => Self::Absent,
             _ => Self::Present,
@@ -307,11 +307,11 @@ impl<A: Cardinality> Cardinality for Connection<A> {
 }
 
 impl<A: Finite> Finite for Connection<A> {
-    fn index_to_enum(value: u64) -> Self {
+    fn unchecked_index_to_enum(value: u64) -> Self {
         let value = value % Self::CARDINALITY;
         Self(
-            A::index_to_enum(value % A::CARDINALITY),
-            Status::index_to_enum(value / A::CARDINALITY),
+            A::unchecked_index_to_enum(value % A::CARDINALITY),
+            Status::unchecked_index_to_enum(value / A::CARDINALITY),
         )
     }
 
@@ -398,7 +398,7 @@ impl<A: Finite> Sentinel<A> {
         self.0
             .get(coordinate)
             .copied()
-            .unwrap_or_default()
+            .unwrap_or(EnumSet::EMPTY)
             .iter()
             .map(|t| SentinelGrid(self.0.try_adjust_at(coordinate, |_| t.into())))
             .collect()
@@ -480,7 +480,7 @@ impl Iterator for SolutionIterator<Sentinel<Square>> {
 const _: Superposition<Square> = EnumSet::FULL;
 
 #[cfg(test)]
-mod test {
+mod tests {
 
     use super::*;
     use crate::{

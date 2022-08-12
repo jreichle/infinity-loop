@@ -33,7 +33,7 @@ pub fn initiate_window() {
     }
 
     let levels = TEST_LEVELS
-        .map(|l| parse_level(l, char_to_tile).unwrap())
+        .map(|l| parse_level(l, ascii_to_tile).unwrap())
         .to_vec();
 
     event_loop.run(move |event, _, control_flow| {

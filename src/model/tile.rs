@@ -1,6 +1,6 @@
 use std::{
     fmt::Display,
-    ops::{BitAnd, Neg, Not},
+    ops::{Neg, Not},
 };
 
 use quickcheck::{Arbitrary, Gen};
@@ -11,13 +11,13 @@ use super::{cardinality::Cardinality, enumset::EnumSet, finite::Finite};
 /// Represents a direction for a tile connection
 #[derive(Debug, Hash, Copy, Clone, PartialEq, Eq, PartialOrd, Ord)]
 pub enum Square {
-    /// Coordinate(-1, 0)
+    /// upwards direction or [`Coordinate::new(-1, 0)`][model::Coordinate::new]
     Up,
-    /// Coordinate(0, 1)
+    /// rightwards direction or [`Coordinate::new(0, 1)`](model::Coordinate::new)
     Right,
-    /// Coordinate(1, 0)
+    /// downwards direction or [`Coordinate::new(1, 0)`](model::Coordinate::new)
     Down,
-    /// Coordinate(0, -1)
+    /// leftwards direction or [`Coordinate::new(0, -1)`](model::Coordinate::new)
     Left,
 }
 
@@ -34,44 +34,6 @@ impl Neg for Square {
         }
     }
 }
-
-/*
-// builder DSL
-// constructs the singleton EnumSet
-// e.g. allows the expression `!Up: EnumSet<Square>`
-impl Not for Square {
-    type Output = EnumSet<Square>;
-
-    fn not(self) -> Self::Output {
-        self.into()
-    }
-}
-
-// builder DSL
-// e.g. allows the expression `!Up & Down & Left: EnumSet<Square>`
-//
-// the operator `&` was chosen for the semantics of conjoining several values (conjunction)
-// instead of `|` originating from the implementation as disjoint bitmasks in `C` / `C++` (disjunction)
-//
-// read `Up & Down` as `Up` and `Down`
-impl<A: Finite> BitAnd<A> for EnumSet<A> {
-    type Output = EnumSet<A>;
-
-    fn bitand(self, rhs: A) -> Self::Output {
-        self.inserted(rhs)
-    }
-}
-
-// builder DSL
-// e.g. allows the expression `Up & Down & Left: EnumSet<Square>`
-impl BitAnd for Square {
-    type Output = EnumSet<Square>;
-
-    fn bitand(self, rhs: Self) -> Self::Output {
-        !self & rhs
-    }
-}
-*/
 
 impl Display for Square {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
@@ -99,7 +61,7 @@ impl Cardinality for Square {
 }
 
 impl Finite for Square {
-    fn index_to_enum(value: u64) -> Self {
+    fn unchecked_index_to_enum(value: u64) -> Self {
         match value % 4 {
             0 => Self::Up,
             1 => Self::Right,
@@ -160,7 +122,7 @@ impl<A: Finite> Tile<A> {
         let repetitions = repetitions % A::CARDINALITY;
         let rotated_bit_rep =
             (bit_rep << repetitions) | (bit_rep >> (A::CARDINALITY - repetitions));
-        Self(EnumSet::index_to_enum(rotated_bit_rep))
+        Self(EnumSet::unchecked_index_to_enum(rotated_bit_rep))
     }
 
     /// Rotates the tile counterclockwise by 360° / [`A::CARDINALITY`]
@@ -184,8 +146,8 @@ impl<A: Cardinality> Cardinality for Tile<A> {
 }
 
 impl<A: Finite> Finite for Tile<A> {
-    fn index_to_enum(value: u64) -> Self {
-        Self(EnumSet::index_to_enum(value))
+    fn unchecked_index_to_enum(value: u64) -> Self {
+        Self(EnumSet::unchecked_index_to_enum(value))
     }
 
     fn enum_to_index(&self) -> u64 {
@@ -195,7 +157,7 @@ impl<A: Finite> Finite for Tile<A> {
 
 impl<A: 'static + Clone + Finite> Arbitrary for Tile<A> {
     fn arbitrary(g: &mut Gen) -> Self {
-        Self(EnumSet::index_to_enum(u64::arbitrary(g)))
+        Self(EnumSet::unchecked_index_to_enum(u64::arbitrary(g)))
     }
 }
 
@@ -237,13 +199,13 @@ mod tests {
 
     /// not necessary, but desirable
     #[quickcheck]
-    fn square_finite_respects_ord(s1: Square, s2: Square) -> bool {
+    fn square_finite_defines_order_isomorphism(s1: Square, s2: Square) -> bool {
         (s1 <= s2) == (s1.enum_to_index() <= s2.enum_to_index())
     }
 
     /// not necessary, but desirable
     #[quickcheck]
-    fn tile_finite_respects_ord(t1: Tile<Square>, t2: Tile<Square>) -> bool {
+    fn tile_finite_defines_order_isomorphism(t1: Tile<Square>, t2: Tile<Square>) -> bool {
         (t1 <= t2) == (t1.enum_to_index() <= t2.enum_to_index())
     }
 

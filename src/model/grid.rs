@@ -49,17 +49,16 @@ impl<A> Grid<A> {
 
     /// Constructs a new grid
     ///
-    /// Requirement: `rows * columns == elements.len()`
+    /// Requirement: `dimensions.product() == elements.len()`
     pub fn new(dimensions: Coordinate<usize>, elements: Vec<A>) -> Self {
         // ensure invariant #2
-        let Coordinate {
-            row: rows,
-            column: columns,
-        } = dimensions;
+        let rows = dimensions.row;
+        let columns = dimensions.column;
+        let len = elements.len();
+
         assert!(
-            rows * columns == elements.len(),
-            "Grid::new: rows = {rows} * columns = {columns} must match length of elements = {}",
-            elements.len()
+            rows * columns == len,
+            "Grid::new: rows = {rows} * columns = {columns} must match elements.len = {len}",
         );
         Self {
             rows,
@@ -243,6 +242,20 @@ impl<A: Clone> Grid<Option<A>> {
     }
 }
 
+impl<A: Clone, E: Clone> Grid<Result<A, E>> {
+    pub fn sequence(&self) -> Result<Grid<A>, E> {
+        Ok(Grid::<A> {
+            rows: self.rows,
+            columns: self.columns,
+            elements: self
+                .elements
+                .clone()
+                .into_iter()
+                .collect::<Result<_, _>>()?,
+        })
+    }
+}
+
 impl GameBoard for Grid<Tile<Square>> {
     type Index = Coordinate<isize>;
 
@@ -387,8 +400,8 @@ impl<A: Display> Display for Grid<A> {
 
 impl<A: Arbitrary> Arbitrary for Grid<A> {
     fn arbitrary(g: &mut Gen) -> Self {
-        let rows = u8::arbitrary(g) as usize;
-        let columns = u8::arbitrary(g) as usize;
+        let rows = u8::arbitrary(g) as usize % 10;
+        let columns = u8::arbitrary(g) as usize % 10;
         let elements = (0..rows * columns).map(|_| A::arbitrary(g)).collect();
         Self {
             rows,
@@ -429,4 +442,6 @@ mod gameboard_tests {
     fn single_tile_gameboard_is_solved(tile: Tile<Square>) -> bool {
         Grid::new(1.into(), vec![tile]).is_solved() == tile.0.is_empty()
     }
+
+    // all non-mutating methods preserve the invariants by virtue of calling the invariant-preserving constructors for initialization
 }

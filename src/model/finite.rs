@@ -1,4 +1,4 @@
-use std::{cmp::Ordering, iter::successors};
+use std::{cmp::Ordering, iter::successors, marker::PhantomData};
 
 use super::cardinality::{Cardinality, Void};
 
@@ -21,7 +21,7 @@ use super::cardinality::{Cardinality, Void};
 ///     `∀x, y : Finite + Ord. x ≤ y ⟺ x.enum_to_index() ≤ y.enum_to_index()`
 /// * all indices are between `0` inclusive and [`Self::CARDINALITY`] exclusive
 /// * [`Finite::index_to_enum`] ∘ [`Finite::enum_to_index`]
-///     ≡ [`identity`][std::convert::identity] ≡ [`Finite::enum_to_index`] ∘ [`Finite::index_to_enum`]
+///     ≡ [`identity`](std::convert::identity) ≡ [`Finite::enum_to_index`] ∘ [`Finite::index_to_enum`]
 pub trait Finite: Cardinality {
     /// Converts an integer index into the corresponding [Self]
     ///
@@ -32,16 +32,20 @@ pub trait Finite: Cardinality {
     ///
     /// 1. use the value modulo [`Self::CARDINALITY`]
     /// 2. panic, if value ≥ [`Self::CARDINALITY`]
-    fn index_to_enum(value: u64) -> Self;
+    fn unchecked_index_to_enum(value: u64) -> Self;
 
     /// Converts a [Self] into the corresponding natural number index
     fn enum_to_index(&self) -> u64;
+
+    fn index_to_enum(value: u64) -> Option<Self> {
+        (value < Self::CARDINALITY).then_some(Self::unchecked_index_to_enum(value))
+    }
 
     /// Returns the next element in the enumeration
     fn successor(&self) -> Option<Self> {
         let next_index = self.enum_to_index().checked_add(1)?;
         if next_index < Self::CARDINALITY {
-            Some(Self::index_to_enum(next_index))
+            Some(Self::unchecked_index_to_enum(next_index))
         } else {
             None
         }
@@ -49,13 +53,28 @@ pub trait Finite: Cardinality {
 
     /// Returns the previous element in the enumeration
     fn predecessor(&self) -> Option<Self> {
-        self.enum_to_index().checked_sub(1).map(Self::index_to_enum)
+        self.enum_to_index().checked_sub(1).map(Self::unchecked_index_to_enum)
+    }
+
+    /// Returns the first element in the enumeration
+    /// ```rust
+    /// assert_eq!(self.first(), self.all_enums_ascending().first())
+    /// ```
+    fn first() -> Option<Self> {
+        (Self::CARDINALITY > 0).then_some(Self::unchecked_index_to_enum(0))
+    }
+
+    /// Returns the last element in the enumeration
+    ///
+    /// `self.last() ≡ self.all_enums_ascending().last()`
+    fn last() -> Option<Self> {
+        (Self::CARDINALITY > 0).then_some(Self::unchecked_index_to_enum(Self::CARDINALITY - 1))
     }
 
     /// Returns all values between two elements of the enumeration
     fn range(start: Self, end_exclusive: Self) -> Vec<Self> {
         (start.enum_to_index()..end_exclusive.enum_to_index())
-            .map(Self::index_to_enum)
+            .map(Self::unchecked_index_to_enum)
             .collect()
     }
 
@@ -66,12 +85,12 @@ pub trait Finite: Cardinality {
     /// Implementation should return lazy iterator, but returning `impl <trait>`
     /// is disallowed in traits as of Rust 1.6.3
     fn all_enums_ascending() -> Vec<Self> {
-        (0..Self::CARDINALITY).map(Self::index_to_enum).collect()
+        (0..Self::CARDINALITY).map(Self::unchecked_index_to_enum).collect()
     }
 }
 
 impl Finite for Void {
-    fn index_to_enum(_: u64) -> Self {
+    fn unchecked_index_to_enum(_: u64) -> Self {
         panic!()
     }
 
@@ -81,7 +100,17 @@ impl Finite for Void {
 }
 
 impl Finite for () {
-    fn index_to_enum(_: u64) {}
+    fn unchecked_index_to_enum(_: u64) {}
+
+    fn enum_to_index(&self) -> u64 {
+        0
+    }
+}
+
+impl<A> Finite for PhantomData<A> {
+    fn unchecked_index_to_enum(_: u64) -> Self {
+        PhantomData
+    }
 
     fn enum_to_index(&self) -> u64 {
         0
@@ -89,7 +118,7 @@ impl Finite for () {
 }
 
 impl Finite for bool {
-    fn index_to_enum(value: u64) -> Self {
+    fn unchecked_index_to_enum(value: u64) -> Self {
         value != 0
     }
 
@@ -103,7 +132,7 @@ impl Finite for bool {
 }
 
 impl Finite for Ordering {
-    fn index_to_enum(value: u64) -> Self {
+    fn unchecked_index_to_enum(value: u64) -> Self {
         match value % 3 {
             0 => Ordering::Less,
             1 => Ordering::Equal,
@@ -121,10 +150,10 @@ impl Finite for Ordering {
 }
 
 impl<A: Finite> Finite for Option<A> {
-    fn index_to_enum(value: u64) -> Self {
+    fn unchecked_index_to_enum(value: u64) -> Self {
         match value {
             0 => None,
-            n => Some(A::index_to_enum(n - 1)),
+            n => Some(A::unchecked_index_to_enum(n - 1)),
         }
     }
 
@@ -138,11 +167,11 @@ impl<A: Finite> Finite for Option<A> {
 
 impl<A: Finite, const N: usize> Finite for [A; N] {
     /// start with `[<0>, <0>, ..., <0>]` then count up starting from the first element
-    fn index_to_enum(value: u64) -> Self {
+    fn unchecked_index_to_enum(value: u64) -> Self {
         // std::array::from_fn(|i| A::index_to_enum((value / A::CARDINALITY.pow(i as u32)) % A::CARDINALITY))
         successors(Some(value), |x| Some(x / A::CARDINALITY))
             .take(N)
-            .map(|x| A::index_to_enum(x % A::CARDINALITY))
+            .map(|x| A::unchecked_index_to_enum(x % A::CARDINALITY))
             .collect::<Vec<_>>()
             .try_into()
             .unwrap_or_else(|_| panic!("error: faulty implementation")) // statically known to be impossible

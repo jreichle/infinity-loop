@@ -1,6 +1,7 @@
 use std::cmp::Ordering;
 use std::collections::{HashMap, HashSet};
 use std::hash::Hash;
+use std::marker::PhantomData;
 
 /// Defines the number of inhabitants of a type `|t|`
 ///
@@ -35,6 +36,10 @@ impl Cardinality for Void {
 }
 
 impl Cardinality for () {
+    const CARDINALITY: u64 = 1;
+}
+
+impl<A> Cardinality for PhantomData<A> {
     const CARDINALITY: u64 = 1;
 }
 
