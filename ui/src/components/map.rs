@@ -26,9 +26,8 @@ pub fn cell_component(props: &CellComponentProps) -> Html {
 
     let map_state = props.map_state.clone();
     let cell_tile = map_state.level_grid.get(index.clone()).unwrap();
-    let cell_img = get_index(cell_tile.get_value().clone());
-
-    let angle = use_state(|| 0_usize);
+    let cell_symbol = cell_tile.get_value();
+    let cell_img = get_index(cell_symbol.clone());
 
     let img_path = vec![
         "data/tiles/0.svg",
@@ -40,20 +39,17 @@ pub fn cell_component(props: &CellComponentProps) -> Html {
     ];
 
     // let angle = use_state(|| 0_usize);
-    let onclick = {
-        let angle = angle.clone();
-        Callback::from(move |_| {
+    let onclick = Callback::from(move |_| {
             log::info!("Tile with coordinate ({}, {}) has been clicked.", row, column);
-            angle.set((*angle + 90) % 360);
             map_state.dispatch(MapAction::TurnCell(index));
-        })
-    };
+    });
+
 
     html! {
         <div class="cell">
             <img src={ img_path[cell_img] }
                 onclick={onclick}
-                style={format!("{}{}{}","transform:rotate(", *angle, "deg);")}
+                style={format!("{}{}{}","transform:rotate(", get_angle(cell_symbol), "deg);")}
             />
         </div>
     }
@@ -172,6 +168,17 @@ pub fn map_component() -> Html {
 //     } ).collect()
 // }
 
+pub fn get_angle(cell_symbol: char) -> usize {
+    match cell_symbol {
+        ' ' | '╋' | '╹' | '┗' | '┣' => 0,
+        '╺' | '━' | '┏' | '┳' => 90,
+        '╻' | '┓' | '┫' => 180,
+        '╸' | '┛' | '┻' => 270,
+        _ => 0,
+    }
+}
+
+
 pub fn get_index(cell_symbol: char) -> usize {
     match cell_symbol {
         ' ' => 0,
@@ -181,12 +188,5 @@ pub fn get_index(cell_symbol: char) -> usize {
         '┣' | '┻' | '┫' | '┳' => 4,
         '╋' => 5,
         _ => 0,
-        // ' ' => 0,
-        // '-' => 1,
-        // 'I' => 2,
-        // 'L' => 3,
-        // 'T' => 4,
-        // '+' => 5,
-        // _ => 0,
     }
 }
