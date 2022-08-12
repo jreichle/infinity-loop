@@ -1,3 +1,4 @@
+use components::map::MapLayout;
 use yew::prelude::*;
 use yew::html;
 
@@ -9,14 +10,16 @@ use game::model::fastgen::generate;
 
 #[function_component(App)]
 fn app() -> Html {
-    let level = generate(Coordinate { row: 5, column: 5 }, 5);
-    let level_data = level.to_string();
+    let map_grid = generate(Coordinate { row: 5, column: 5 }, 99);
+    // let level_data = level.to_string();
+
+    let map_layout = MapLayout { level_number: 1, map_grid };
     
     html! {
         <>
             <div id="title">{"Rusty infinity loop!"}</div>
             <div id="container">  
-                <MapComponent level_data={level_data} />
+                <MapComponent map_layout={map_layout} />
             </div>
             <div id="footer"><a href={"https://uni2work.ifi.lmu.de/course/S22/IfI/Rust"}>{"High level languages: Rust"}</a>{" - Group IV"}</div>
         </>
