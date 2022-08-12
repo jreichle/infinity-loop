@@ -3,7 +3,7 @@ use yew::prelude::*;
 use yew::html;
 
 mod components;
-use components::map::MapComponent;
+use components::map::map::MapComponent;
 
 // use game::model::coordinate::Coordinate;
 // use game::model::fastgen::generate;
