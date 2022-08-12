@@ -2,6 +2,8 @@ use game::model::coordinate::Coordinate;
 use game::model::grid::Grid;
 use game::model::tile::{Tile, Square};
 
+use crate::components::map_reducer::{MapAction, MapState};
+
 use yew::prelude::*;
 use yew::{html, Html, Properties, Callback, use_state};
 
@@ -9,16 +11,21 @@ use yew::{html, Html, Properties, Callback, use_state};
 pub struct CellComponentProps {
     // coordinate: (usize, usize),
     // value: usize,
+    map_state: UseReducerHandle<MapState>,
     row_number: isize,
     column_number: isize,
 }
 
 #[function_component(CellComponent)]
 pub fn cell_component(props: &CellComponentProps) -> Html {
-    let mut map_context = use_context::<MapLayout>().expect("no ctx found");
+    // let map_context = use_context::<MapLayout>().expect("no ctx found");
+
+
     let (row, column) = (props.row_number.clone(), props.column_number.clone());
     let index = Coordinate { row, column };
-    let cell_tile = map_context.map_grid.get(index.clone()).unwrap();
+
+    let map_state = props.map_state.clone();
+    let cell_tile = map_state.level_grid.get(index.clone()).unwrap();
     let cell_img = get_index(cell_tile.get_value().clone());
 
     let angle = use_state(|| 0_usize);
@@ -33,11 +40,13 @@ pub fn cell_component(props: &CellComponentProps) -> Html {
     ];
 
     // let angle = use_state(|| 0_usize);
-    let onclick: Callback<MouseEvent> = {
-        // map_context.map_grid.get_mut(index).unwrap().rotated_clockwise(1);
-        log::info!("Tile with coordinate ({}, {}) has been clicked.", row, column);
+    let onclick = {
         let angle = angle.clone();
-        Callback::from(move |_| angle.set((*angle + 90) % 360))
+        Callback::from(move |_| {
+            log::info!("Tile with coordinate ({}, {}) has been clicked.", row, column);
+            angle.set((*angle + 90) % 360);
+            map_state.dispatch(MapAction::TurnCell(index));
+        })
     };
 
     html! {
@@ -53,20 +62,23 @@ pub fn cell_component(props: &CellComponentProps) -> Html {
 
 #[derive(Properties, PartialEq, Clone)]
 pub struct RowComponentProps {
+    map_state: UseReducerHandle<MapState>,
     row_number: isize,
 }
 
 #[function_component(RowComponent)]
 pub fn row_component(props: &RowComponentProps) -> Html {
-    let map_context = use_context::<MapLayout>().expect("no ctx found");
-    let (_, width) = map_context.map_grid.dimensions().to_tuple();
+    // let map_context = use_context::<MapLayout>().expect("no ctx found");
+    // let (_, width) = map_context.map_grid.dimensions().to_tuple();
+
+    let (_, width) = props.map_state.level_size.to_tuple();
 
     html! {
         <div class="cell-row">
             {
                 (0..width).into_iter().map(| column_number | {
                     html!{ 
-                        <CellComponent key={column_number} row_number={props.row_number.clone()} column_number={column_number as isize} /> 
+                        <CellComponent key={column_number} row_number={props.row_number.clone()} column_number={column_number as isize} map_state={props.map_state.clone()} /> 
                     }
                 }).collect::<Html>()
             }
@@ -74,24 +86,28 @@ pub fn row_component(props: &RowComponentProps) -> Html {
     }
 }
 
-#[derive(Clone, PartialEq)]
-pub struct MapLayout {
-    pub level_number: usize,
-    pub map_grid: Grid<Tile<Square>>,
-}
+// #[derive(Clone, PartialEq)]
+// pub struct MapLayout {
+//     pub level_number: usize,
+//     pub map_grid: Grid<Tile<Square>>,
+// }
 
-#[derive(Properties, PartialEq, Clone)]
-pub struct MapComponentProps {
-    pub map_layout: MapLayout,
-}
+// #[derive(Properties, PartialEq, Clone)]
+// pub struct MapComponentProps {
+//     pub map_layout: MapLayout,
+// }
 
 #[function_component(MapComponent)]
-pub fn map_component(props: &MapComponentProps) -> Html {
+pub fn map_component() -> Html {    
+// pub fn map_component(props: &MapComponentProps) -> Html {
     // let level = parse_level(props.level_data.clone());
+
+    let map = use_reducer_eq(MapState::default);
     
-    let map_context = use_state(|| props.map_layout.clone());
-    let map_grid = props.map_layout.map_grid.clone();
-    let (height, _) = map_grid.dimensions().to_tuple();
+    // let map_context = use_state(|| props.map_layout.clone());
+
+    let map_grid = map.level_grid.clone();
+    let (height, _) = map.level_size.to_tuple();
 
     let check_onclick: Callback<MouseEvent> = {
         Callback::from(move |_| {
@@ -115,15 +131,15 @@ pub fn map_component(props: &MapComponentProps) -> Html {
     html! {
         <>
             <div class="game-board">
-            <ContextProvider<MapLayout> context={(*map_context).clone()}>
+            // <ContextProvider<MapLayout> context={(*map_context).clone()}>
             {
                 (0..height).into_iter().map(| row_number | {
                     html!{ 
-                        <RowComponent key={row_number} row_number={row_number as isize} /> 
+                        <RowComponent key={row_number} row_number={row_number as isize} map_state={map.clone()} /> 
                     }
                 }).collect::<Html>()
             }
-            </ContextProvider<MapLayout>>
+            // </ContextProvider<MapLayout>>
             </div>
             <div id="controller">
                 <button 
