@@ -157,17 +157,12 @@ impl WfcGenerator {
             let source_connections = source_tile.0.clone();
             let target_connections = target_tile.0.clone();
 
-            if source_connections.contains(dir.clone()) && target_connections.contains(dir.clone().neg()) {
-                // println!("(O) source: {}, dir: {} (neg: {}), target: {}", source_tile, dir, dir.neg(), target_tile);
-                return true;
-            }
+            (source_connections.contains(dir.clone()) 
+            && target_connections.contains(dir.clone().neg())) 
+            ||
+            (!source_connections.contains(dir.clone()) 
+            && !target_connections.contains(dir.clone().neg()))
 
-            if !source_connections.contains(dir.clone()) && !target_connections.contains(dir.clone().neg()) {
-                // println!("(O) source: {}, dir: {} (neg: {}), target: {}", source_tile, dir, dir.neg(), target_tile);
-                return true;
-            }
-
-            false
         }
 
         let mut stack: Vec<Coordinate<isize>> = vec![cell_coordinate];
@@ -175,16 +170,6 @@ impl WfcGenerator {
 
         let mut passes = 0_usize;
         while let Some(index) = stack.pop() {
-            // if board.0.get(index).unwrap().is_collapsed() {
-            //     continue;
-            // }
-            // let neighbors = index.all_neighbor_indices();
-
-            // let neighbors: Vec<(Square, Coordinate<isize>)> = vec![Up, Down, Left, Right].iter().map(| dir | {
-            //     (dir.clone(), index.get_neighbor_index(dir.clone()))
-            // }).collect::<Vec<(Square, Coordinate<isize>)>>();
-
-            
             for dir in vec![Up, Down, Left, Right].iter() {
                 let neighbor_index = index.get_neighbor_index(dir.clone());
                 let neighbor_cell = &board.0.get(neighbor_index.clone()).unwrap();
@@ -276,11 +261,7 @@ impl WfcGenerator {
         loop {
             current_coordinate = WfcGenerator::find_entropy_cell(&board, &weights);
             WfcGenerator::collapse_cell(&mut board, &weights, current_coordinate);
-
-            // propogate
-            // board = board.0.coordinates().into_iter().fold(board.clone(), step);
             WfcGenerator::propagate(&mut board, current_coordinate, self.prop_limit);
-
             WfcGenerator::update_weights(&board, &mut weights);
 
             passes += 1;
