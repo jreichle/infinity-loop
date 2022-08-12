@@ -454,9 +454,9 @@ impl Iterator for SolutionIterator<Sentinel<Square>> {
     ///
     /// pops solutions candidate from stack if available and attempts to solve it
     ///
-    ///     1. contradiction: pop next element from stack and repeat procedure
-    ///     2. unique solution: return in solved state
-    ///     3. branching: select 1 candidate and repeat procedure, push rest on stack
+    /// * __contradiction__: pop next element from stack and repeat procedure
+    /// * __unique solution__: return in solved state
+    /// * __branching__: select 1 candidate and repeat procedure, push rest on stack
     ///
     /// it is yet to be determined if a contradiction after branching can actually occur
     fn next(&mut self) -> Option<Self::Item> {

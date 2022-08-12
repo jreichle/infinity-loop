@@ -7,7 +7,10 @@ use crate::model::{
     finite::Finite,
     grid::Grid,
     solver::{step, Sentinel, Superposition},
-    tile::{Square::{self, Up, Down, Left, Right}, Tile},
+    tile::{
+        Square::{self, Down, Left, Right, Up},
+        Tile,
+    },
 };
 
 const PRINT_INTERMEDIATE_RESULTS: bool = false;
@@ -35,10 +38,9 @@ impl<A: Finite + Eq + Hash + Clone + Copy + Display> EnumSet<A> {
         for (option, weight) in option_weights.iter() {
             rng_weights -= weight;
             if rng_weights < 0.0 {
-                let full_set: EnumSet<A> = EnumSet::FULL;
-                for tile in full_set.iter() {
-                    if &tile != option && self.contains(tile) {
-                        self.remove(tile.clone());
+                for tile in A::all_enums_ascending() {
+                    if &tile != option {
+                        self.remove(tile);
                     }
                 }
                 break;
@@ -121,11 +123,13 @@ impl WfcGenerator {
 
         let mut rng = rand::thread_rng();
 
-        for (cell_coordinate, cell) in board.0.with_index().elements().iter() {
-            if cell.is_collapsed() {
-                continue;
-            }
-
+        for (cell_coordinate, cell) in board
+            .0
+            .with_index()
+            .elements()
+            .iter()
+            .filter(|(_, c)| !c.is_collapsed())
+        {
             entropy = WfcGenerator::shannon_entropy(cell, weights);
             // add random effect -> so same value has slight different probs
             entropy_rng = entropy + rng.gen_range(1..10) as f64 * 0.000001;
@@ -143,8 +147,7 @@ impl WfcGenerator {
         weights: &HashMap<Tile<Square>, usize>,
         cell_coordinate: Coordinate<isize>,
     ) {
-        let cell = board.0.get_mut(cell_coordinate).unwrap();
-        cell.collapse(weights);
+        board.0.get_mut(cell_coordinate).unwrap().collapse(weights)
     }
 
     fn propagate(
@@ -152,28 +155,22 @@ impl WfcGenerator {
         cell_coordinate: Coordinate<isize>,
         prop_limit: usize,
     ) {
-
-        fn is_compatible(source_tile: &Tile<Square>, dir: &Square, target_tile: &Tile<Square>) -> bool {
-            let source_connections = source_tile.0.clone();
-            let target_connections = target_tile.0.clone();
-
-            (source_connections.contains(dir.clone()) 
-            && target_connections.contains(dir.clone().neg())) 
-            ||
-            (!source_connections.contains(dir.clone()) 
-            && !target_connections.contains(dir.clone().neg()))
-
+        fn is_compatible(
+            source_tile: Tile<Square>,
+            dir: Square,
+            target_tile: Tile<Square>,
+        ) -> bool {
+            source_tile.0.contains(dir) == target_tile.0.contains(-dir)
         }
 
         let mut stack: Vec<Coordinate<isize>> = vec![cell_coordinate];
 
-
         let mut passes = 0_usize;
         while let Some(index) = stack.pop() {
-            for dir in vec![Up, Down, Left, Right].iter() {
-                let neighbor_index = index.get_neighbor_index(dir.clone());
-                let neighbor_cell = &board.0.get(neighbor_index.clone()).unwrap();
-                
+            for dir in Square::all_enums_ascending() {
+                let neighbor_index = index.get_neighbor_index(dir);
+                let neighbor_cell = &board.0.get(neighbor_index).unwrap();
+
                 if neighbor_cell.is_collapsed() {
                     continue;
                 }
@@ -182,21 +179,21 @@ impl WfcGenerator {
                 for neighbor_tile in neighbor_cell.iter() {
                     let mut compatible_counter: usize = 0;
                     for tile in board.0.get(index).unwrap().iter() {
-                        if is_compatible(&tile, &dir, &neighbor_tile) {
+                        if is_compatible(tile, dir, neighbor_tile) {
                             compatible_counter += 1;
                             break;
                         }
                     }
 
                     if compatible_counter == 0 {
-                        let neighbor_cell = board.0.get_mut(neighbor_index.clone()).unwrap();
+                        let neighbor_cell = board.0.get_mut(neighbor_index).unwrap();
                         neighbor_cell.remove(neighbor_tile);
                         modified = true;
                     }
                 }
 
                 if modified {
-                    stack.push(neighbor_index.clone());
+                    stack.push(neighbor_index);
                 }
             }
 
@@ -205,16 +202,10 @@ impl WfcGenerator {
                 break;
             }
         }
-
     }
 
     fn is_all_collapsed(board: &Sentinel<Square>) -> bool {
-        for cell in board.0.elements() {
-            if !cell.is_collapsed() {
-                return false;
-            }
-        }
-        true
+        board.0.as_slice().into_iter().all(|c| c.is_collapsed())
     }
 
     fn print_map(board: &Sentinel<Square>) {
@@ -238,19 +229,16 @@ impl WfcGenerator {
     }
 
     pub fn generate(&self) -> Result<Grid<Tile<Square>>, String> {
-        let dimension = Coordinate {
-            row: self.height,
-            column: self.width,
-        };
+        let dimension = Coordinate::new(self.height, self.width);
 
         // initialize board with all possiblities, then update edge tiles
-        let board: Sentinel<Square> = Grid::init(dimension, |_| self.available_tiles.clone())
+        let board: Sentinel<Square> = Grid::init(dimension, |_| self.available_tiles)
             .with_sentinels(Tile::NO_CONNECTIONS.into())
             .minimize();
 
         // initialize superpositions
         let mut board = board.0.coordinates().into_iter().fold(board.clone(), step);
-        
+
         let mut weights: HashMap<Tile<Square>, usize> = HashMap::new();
         // update weights
         WfcGenerator::update_weights(&board, &mut weights);
@@ -276,11 +264,7 @@ impl WfcGenerator {
                 break;
             }
         }
-
-        match board.extract_if_collapsed() {
-            Some(grid_board) => Ok(grid_board),
-            None => Err("ERROR".to_string()),
-        }
+        board.extract_if_collapsed().ok_or("ERROR".into())
     }
 }
 
@@ -291,23 +275,28 @@ mod tests {
     use crate::model::testlevel::unicode_to_tile;
     use crate::model::{
         enumset::EnumSet,
-        tile::{Square, Tile},
+        tile::{
+            Square::{self, Down, Left, Right, Up},
+            Tile,
+        },
     };
+    use crate::{enumset, tile};
 
     #[quickcheck]
     fn wfc_test_full_set() -> bool {
-        let available_tiles: EnumSet<Tile<Square>> = EnumSet::FULL;
+        let available_tiles = EnumSet::<Tile<Square>>::FULL;
         wfc_test(16, 10, available_tiles, 40000, 1000)
     }
 
     #[quickcheck]
     fn wfc_test_part_set() -> bool {
-        let mut available_tiles: EnumSet<Tile<Square>> = EnumSet::EMPTY;
-        available_tiles.insert(unicode_to_tile(' ').unwrap());
-        available_tiles.insert(unicode_to_tile('┏').unwrap());
-        available_tiles.insert(unicode_to_tile('┗').unwrap());
-        available_tiles.insert(unicode_to_tile('┓').unwrap());
-        available_tiles.insert(unicode_to_tile('┛').unwrap());
+        let available_tiles = enumset!(
+            Tile::NO_CONNECTIONS,
+            tile!(Right, Down),
+            tile!(Up, Right),
+            tile!(Down, Left),
+            tile!(Up, Left)
+        );
         wfc_test(6, 6, available_tiles, 40000, 1000)
     }
 

@@ -53,22 +53,24 @@ pub trait Finite: Cardinality {
 
     /// Returns the previous element in the enumeration
     fn predecessor(&self) -> Option<Self> {
-        self.enum_to_index().checked_sub(1).map(Self::unchecked_index_to_enum)
+        self.enum_to_index()
+            .checked_sub(1)
+            .map(Self::unchecked_index_to_enum)
     }
 
     /// Returns the first element in the enumeration
-    /// ```rust
-    /// assert_eq!(self.first(), self.all_enums_ascending().first())
-    /// ```
+    ///
+    /// `Finite::first()` ≡ `Finite::all_enums_ascending().first()`
     fn first() -> Option<Self> {
-        (Self::CARDINALITY > 0).then_some(Self::unchecked_index_to_enum(0))
+        (Self::CARDINALITY > u64::MIN).then_some(Self::unchecked_index_to_enum(u64::MIN))
     }
 
     /// Returns the last element in the enumeration
     ///
-    /// `self.last() ≡ self.all_enums_ascending().last()`
+    /// `Finite::last()` ≡ `Finite::all_enums_ascending().last()`
     fn last() -> Option<Self> {
-        (Self::CARDINALITY > 0).then_some(Self::unchecked_index_to_enum(Self::CARDINALITY - 1))
+        (Self::CARDINALITY > u64::MIN)
+            .then_some(Self::unchecked_index_to_enum(Self::CARDINALITY - 1))
     }
 
     /// Returns all values between two elements of the enumeration
@@ -85,7 +87,9 @@ pub trait Finite: Cardinality {
     /// Implementation should return lazy iterator, but returning `impl <trait>`
     /// is disallowed in traits as of Rust 1.6.3
     fn all_enums_ascending() -> Vec<Self> {
-        (0..Self::CARDINALITY).map(Self::unchecked_index_to_enum).collect()
+        (0..Self::CARDINALITY)
+            .map(Self::unchecked_index_to_enum)
+            .collect()
     }
 }
 

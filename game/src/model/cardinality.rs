@@ -9,14 +9,16 @@ use std::marker::PhantomData;
 ///
 /// # Examples
 ///
-/// ```
+/// ```rust
+/// # use std::cmp::Ordering;
+/// # use game::model::cardinality::Cardinality;
 /// // bool = { false, true }
-/// assert!(bool::CARDINALITY == 2);
+/// assert_eq!(bool::CARDINALITY, 2);
 ///
-/// // Maybe<bool> = { None, Some(false), Some(true) }
-/// assert!(Maybe<bool>::CARDINALITY == 3);
+/// // Option<bool> = { None, Some(false), Some(true) }
+/// assert_eq!(Option::<bool>::CARDINALITY, 3);
 ///
-/// assert!(Result<[bool; 5], Ordering>)::CARDINALITY == 35);
+/// assert_eq!(Result::<[bool; 5], Ordering>::CARDINALITY, 35);
 /// ```
 pub trait Cardinality: Sized {
     /// number of inhabitants in the type

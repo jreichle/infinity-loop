@@ -71,7 +71,7 @@ where
 
     // all rows must have same length
     if lines.iter().any(|s| s.chars().count() != columns) {
-        return Err(format!("All rows must have same length: {leveldata}"))
+        return Err(format!("All rows must have same length: {leveldata}"));
     }
 
     lines
