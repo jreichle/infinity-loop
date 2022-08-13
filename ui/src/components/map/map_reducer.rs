@@ -11,7 +11,7 @@ use game::model::fastgen::generate;
 // reducer's action
 pub enum MapAction {
     TurnCell(Coordinate<isize>),
-    NextLevel(usize),
+    NextLevel,
     SolveLevel,
 }
 
@@ -28,7 +28,7 @@ impl Default for MapState {
         Self { 
             level_number: 1,
             level_size: Coordinate { row: 5, column: 5 },
-            level_grid: generate(Coordinate { row: 5, column: 5 }, 99),
+            level_grid: generate(Coordinate { row: 5, column: 5 }, 1),
          }
     }
 }
@@ -39,18 +39,23 @@ impl Reducible for MapState {
     fn reduce(self: Rc<Self>, action: Self::Action) -> Rc<Self> {
 
         let mut new_level_grid: Grid<Tile<Square>> = self.level_grid.clone();
+        let mut new_level_size: Coordinate<usize> = self.level_size;
+        let mut new_level_number: usize = self.level_number.clone();
 
         match action {
             MapAction::TurnCell(index) => { 
                 new_level_grid = new_level_grid.rotate_clockwise(index).unwrap(); 
             },
-            MapAction::NextLevel(_level_number) => {},
+            MapAction::NextLevel => {
+                new_level_number += 1;
+                new_level_grid = generate(Coordinate { row: 5, column: 5 }, new_level_number as u64)
+            },
             MapAction::SolveLevel => {},
         };
 
         Self {
-            level_number: self.level_number,
-            level_size: self.level_size,
+            level_number: new_level_number,
+            level_size: new_level_size,
             level_grid: new_level_grid.clone(),
         }.into()
     }

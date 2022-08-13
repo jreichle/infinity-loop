@@ -8,6 +8,8 @@ use game::model::{
     tile::Tile,
 };
 
+use crate::components::map::map_reducer::MapAction;
+
 use super::map_reducer::MapState;
 use super::row::RowComponent;
 
@@ -32,13 +34,15 @@ pub fn map_component(props: &RowComponentProps) -> Html {
 
     let solve_onclick: Callback<MouseEvent> = {
         Callback::from(move |_| {
-            log::info!("[Button click] Solve.")
+            log::info!("[Button click] Solve.");
         })
     };
 
     let next_onclick: Callback<MouseEvent> = {
+        let map = map.clone();
         Callback::from(move |_| {
-            log::info!("[Button click] Next.")
+            map.dispatch(MapAction::NextLevel);
+            log::info!("[Button click] Next.");
         })
     };
 
