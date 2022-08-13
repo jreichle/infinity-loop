@@ -18,8 +18,13 @@ pub fn row_component(props: &RowComponentProps) -> Html {
         <div class="cell-row">
             {
                 (0..width).into_iter().map(| column_number | {
-                    html!{ 
-                        <CellComponent key={column_number} row_number={props.row_number.clone()} column_number={column_number as isize} map_state={props.map_state.clone()} /> 
+                    html!{
+                        <CellComponent
+                            key={column_number}
+                            row_number={props.row_number.clone()}
+                            column_number={column_number as isize}
+                            map_state={props.map_state.clone()}
+                        />
                     }
                 }).collect::<Html>()
             }

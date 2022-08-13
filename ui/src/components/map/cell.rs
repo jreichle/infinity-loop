@@ -1,5 +1,5 @@
 use yew::prelude::*;
-use yew::{html, Properties, Callback};
+use yew::{html, Callback, Properties};
 
 use game::model::coordinate::Coordinate;
 
@@ -31,12 +31,15 @@ pub fn cell_component(props: &CellComponentProps) -> Html {
         "data/tiles/5.svg",
     ];
 
-    // let angle = use_state(|| 0_usize);
     let onclick = Callback::from(move |_| {
-            log::info!("Tile with coordinate ({}, {}) has been clicked.", row, column);
-            map_state.dispatch(MapAction::TurnCell(index));
+        log::info!(
+            "Tile {} with coordinate ({}, {}) has been clicked.",
+            cell_symbol,
+            row,
+            column
+        );
+        map_state.dispatch(MapAction::TurnCell(index));
     });
-
 
     html! {
         <div class="cell">
@@ -46,7 +49,6 @@ pub fn cell_component(props: &CellComponentProps) -> Html {
             />
         </div>
     }
-
 }
 
 fn get_angle(cell_symbol: char) -> usize {
@@ -58,7 +60,6 @@ fn get_angle(cell_symbol: char) -> usize {
         _ => 0,
     }
 }
-
 
 fn get_index(cell_symbol: char) -> usize {
     match cell_symbol {
