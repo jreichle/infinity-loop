@@ -48,7 +48,8 @@ impl Reducible for MapState {
             },
             MapAction::NextLevel => {
                 new_level_number += 1;
-                new_level_grid = generate(Coordinate { row: 5, column: 5 }, new_level_number as u64)
+                new_level_size = Coordinate { row: new_level_size.row + 1, column: new_level_size.column + 1 };
+                new_level_grid = generate(new_level_size, new_level_number as u64)
             },
             MapAction::SolveLevel => {},
         };
