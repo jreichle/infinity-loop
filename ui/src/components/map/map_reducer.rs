@@ -34,10 +34,7 @@ impl Default for MapState {
 }
 
 impl Reducible for MapState {
-    /// Reducer Action Type
     type Action = MapAction;
-
-    /// Reducer Function
 
     fn reduce(self: Rc<Self>, action: Self::Action) -> Rc<Self> {
 
@@ -47,7 +44,7 @@ impl Reducible for MapState {
             MapAction::TurnCell(index) => { 
                 new_level_grid = new_level_grid.rotate_clockwise(index).unwrap(); 
             },
-            MapAction::NextLevel(level_number) => {},
+            MapAction::NextLevel(_level_number) => {},
             MapAction::SolveLevel => {},
         };
 
@@ -56,5 +53,11 @@ impl Reducible for MapState {
             level_size: self.level_size,
             level_grid: new_level_grid.clone(),
         }.into()
+    }
+}
+
+impl MapState {
+    pub fn set(grid: Grid<Tile<Square>>) -> impl Fn() -> MapState {
+        move | | MapState { level_number: 1, level_size: grid.dimensions(), level_grid: grid.clone() }
     }
 }

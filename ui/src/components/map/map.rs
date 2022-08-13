@@ -1,17 +1,24 @@
+use game::model::coordinate::Coordinate;
+use game::model::tile::Square;
 use yew::prelude::*;
 use yew::{html, Html, Callback};
+
+use game::model::{
+    grid::Grid,
+    tile::Tile,
+};
 
 use super::map_reducer::MapState;
 use super::row::RowComponent;
 
-#[function_component(MapComponent)]
-pub fn map_component() -> Html {    
-// pub fn map_component(props: &MapComponentProps) -> Html {
-    // let level = parse_level(props.level_data.clone());
+#[derive(Properties, PartialEq, Clone)]
+pub struct RowComponentProps {
+    pub grid_map: Grid<Tile<Square>>,
+}
 
-    let map = use_reducer_eq(MapState::default);
-    
-    // let map_context = use_state(|| props.map_layout.clone());
+#[function_component(MapComponent)]
+pub fn map_component(props: &RowComponentProps) -> Html {    
+    let map = use_reducer_eq(MapState::set(props.grid_map.clone()));
 
     let map_grid = map.level_grid.clone();
     let (height, _) = map.level_size.to_tuple();
@@ -34,6 +41,21 @@ pub fn map_component() -> Html {
             log::info!("[Button click] Next.")
         })
     };
+
+    // -- FROM grid -> is_solved
+    // let row_slice = |r| {
+    //     (0..width)
+    //         .map(|c| Coordinate { row: r, column: c })
+    //         .collect::<Vec<_>>()
+    // };
+
+    // let column_slice = |c| {
+    //     (0..height)
+    //         .map(|r| Coordinate { row: r, column: c })
+    //         .collect::<Vec<_>>()
+    // };
+
+    // TODO: only pass row state & cell state instead of the whole game state
 
     html! {
         <>
