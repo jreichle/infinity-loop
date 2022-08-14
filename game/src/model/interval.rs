@@ -4,6 +4,16 @@ use quickcheck::Arbitrary;
 /// 
 /// Only constructable through the [`Arbitrary`] trait
 /// 
+/// # Example
+/// 
+/// ```rust
+/// #[quickcheck]
+/// fn a_property_test(number: Interval<2, 10>) -> bool {
+///     /* omitted */
+///     # true
+/// }
+/// ```
+/// 
 /// # Invariant
 /// 
 /// `∀min, max : usize. min <= max`
@@ -48,7 +58,7 @@ impl<const MIN: usize, const MAX: usize> Interval<MIN, { MAX }> {
         self.0 as u64
     }
 
-    /// Converts to [`usize`] unchecked
+    /// Converts to [`usize`]
     pub fn to_usize(self) -> usize {
         self.0
     }
