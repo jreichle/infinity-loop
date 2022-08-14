@@ -57,11 +57,13 @@ pub fn generate(dimension: Coordinate<usize>, seed: u64) -> Grid<Tile<Square>> {
 #[cfg(test)]
 mod test {
 
+    use crate::model::interval::Max;
+
     use super::*;
 
     #[quickcheck]
-    fn generated_levels_are_solvable(dimension: Coordinate<usize>, seed: u64) -> bool {
-        generate(dimension.map(|v| v % 20), seed)
+    fn generated_levels_are_solvable(dimension: Coordinate<Max<20>>, seed: u64) -> bool {
+        generate(dimension.map(Max::to_usize), seed)
             .solve()
             .next()
             .is_some()

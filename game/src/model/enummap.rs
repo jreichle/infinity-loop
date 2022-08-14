@@ -45,13 +45,13 @@ impl<K: Cardinality, V: Clone> EnumMap<K, V> {
 
 impl<K: Finite, V: Clone> EnumMap<K, V> {
     fn inserted(self, key: K, value: V) -> Self {
-        let mut set = self.clone();
+        let mut set = self;
         set.0[key.enum_to_index() as usize] = Some(value);
         set
     }
 
     fn removed(self, key: K) -> Self {
-        let mut set = self.clone();
+        let mut set = self;
         set.0[key.enum_to_index() as usize] = None;
         set
     }
