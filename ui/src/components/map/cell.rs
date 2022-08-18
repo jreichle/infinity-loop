@@ -42,13 +42,13 @@ pub fn cell_component(props: &CellComponentProps) -> Html {
             map_state.dispatch(MapAction::ChangeTileShape(index));
         }
         else {
-            map_state.dispatch(MapAction::TurnCell(index));
+        map_state.dispatch(MapAction::TurnCell(index));
         }
     });
 
     html! {
-        <div class="cell">
-            <img src={ img_path[cell_img] }
+        <div id={format!("cell-r-{}-c-{}", row, column)} class={format!("cell row-{} col-{}", row, column)}>
+            <img src={img_path[cell_img]}
                 onclick={onclick}
                 style={format!("{}{}{}","transform:rotate(", get_angle(cell_symbol), "deg);")}
             />

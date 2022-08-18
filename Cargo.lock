@@ -1660,6 +1660,7 @@ dependencies = [
  "rand",
  "reqwasm",
  "serde",
+ "wasm-bindgen",
  "wasm-logger",
  "web-sys",
  "yew",
