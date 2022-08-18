@@ -1,4 +1,3 @@
-// use components::map::MapLayout;
 use yew::prelude::*;
 use yew::html;
 

@@ -1,5 +1,5 @@
 use yew::prelude::*;
-use yew::{html, Properties, Callback};
+use yew::{html, Callback, Properties};
 
 use game::model::coordinate::Coordinate;
 
@@ -33,20 +33,22 @@ pub fn cell_component(props: &CellComponentProps) -> Html {
 
     // let angle = use_state(|| 0_usize);
     let onclick = Callback::from(move |_| {
-            log::info!("Tile with coordinate ({}, {}) has been clicked.", row, column);
-            map_state.dispatch(MapAction::TurnCell(index));
+        log::info!(
+            "Tile with coordinate ({}, {}) has been clicked.",
+            row,
+            column
+        );
+        map_state.dispatch(MapAction::TurnCell(index));
     });
 
-
     html! {
-        <div class="cell">
-            <img src={ img_path[cell_img] }
+        <div id={format!("cell-r-{}-c-{}", row, column)} class={format!("cell row-{} col-{}", row, column)}>
+            <img src={img_path[cell_img]}
                 onclick={onclick}
                 style={format!("{}{}{}","transform:rotate(", get_angle(cell_symbol), "deg);")}
             />
         </div>
     }
-
 }
 
 fn get_angle(cell_symbol: char) -> usize {
@@ -58,7 +60,6 @@ fn get_angle(cell_symbol: char) -> usize {
         _ => 0,
     }
 }
-
 
 fn get_index(cell_symbol: char) -> usize {
     match cell_symbol {

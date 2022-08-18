@@ -31,6 +31,14 @@ pub fn map_component(props: &RowComponentProps) -> Html {
         })
     };
 
+    let hint_onclick: Callback<MouseEvent> = {
+        let map = map.clone();
+        Callback::from(move |_| {
+            map.dispatch(MapAction::GetHint);
+            log::info!("[Button click] Hint.");
+        })
+    };
+
     let solve_onclick: Callback<MouseEvent> = {
         Callback::from(move |_| {
             log::info!("[Button click] Solve.");
@@ -75,6 +83,9 @@ pub fn map_component(props: &RowComponentProps) -> Html {
                 <button 
                     onclick={check_onclick} 
                     >{"check"}</button>
+                <button
+                    onclick={hint_onclick}
+                    >{"hint"}</button>
                 <button
                     onclick={solve_onclick}
                     >{"solve"}</button>
