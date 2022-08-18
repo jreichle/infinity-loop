@@ -7,12 +7,12 @@ use std::{
 
 use quickcheck::{Arbitrary, Gen};
 
+use super::coordinate::Coordinate;
 use super::gameboard::GameBoard;
 use super::{
     accesserror::AccessError,
     tile::{Square, Tile},
 };
-use super::{coordinate::Coordinate, interval::Max};
 
 /// Defines a fully filled 2D-grid with coordinate-based access
 ///
@@ -407,9 +407,10 @@ impl<A: Display> Display for Grid<A> {
 
 impl<A: Arbitrary> Arbitrary for Grid<A> {
     fn arbitrary(g: &mut Gen) -> Self {
-        const SIZE: usize = 10;
-        let rows = Max::<SIZE>::arbitrary(g).to_usize();
-        let columns = Max::<SIZE>::arbitrary(g).to_usize();
+        // respect Gen::size() when choosing grid dimension
+        let range: Vec<usize> = (0..=(g.size() as f64).sqrt().floor() as usize).collect();
+        let rows = *g.choose(range.as_slice()).unwrap();
+        let columns = *g.choose(range.as_slice()).unwrap();
         let elements = (0..rows * columns).map(|_| A::arbitrary(g)).collect();
         Self {
             rows,

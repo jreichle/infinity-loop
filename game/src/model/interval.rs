@@ -1,27 +1,29 @@
 use quickcheck::Arbitrary;
 
 /// Number in the range between `MIN` and `MAX` inclusive
-/// 
+///
 /// Only constructable through the [`Arbitrary`] trait
-/// 
+///
 /// # Example
-/// 
+///
 /// ```rust
+/// # use quickcheck_macros::quickcheck;
+/// # use game::model::interval::Interval;
+/// 
 /// #[quickcheck]
 /// fn a_property_test(number: Interval<2, 10>) -> bool {
 ///     /* omitted */
 ///     # true
 /// }
 /// ```
-/// 
+///
 /// # Invariant
-/// 
+///
 /// `∀min, max : usize. min <= max`
 #[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Debug, Default, Hash)]
 pub struct Interval<const MIN: usize, const MAX: usize>(usize);
 
 impl<const MIN: usize, const MAX: usize> Interval<MIN, { MAX }> {
-
     /// Check for invariant at compile time
     const INVARIANT: () = if MIN > MAX {
         panic!("Interval invariant: 'MIN' must be smaller than 'MAX'")

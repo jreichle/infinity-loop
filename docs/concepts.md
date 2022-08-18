@@ -8,13 +8,17 @@ Infinity loop is a puzzle game built out of a grid of tiles, each with a particu
 
 **Example of a puzzle:**
 
+![unsolved][unsolvedexample]
+
 TODO: add screenshot of an arbitrary puzzle
 
 **And its solution:**
 
+![solved][solvedexample]
+
 TODO: add screenshot of its solutions
 
-Note: A given puzzle may have multiple valid solutions.
+> **_NOTE:_**  A given puzzle may have multiple valid solutions.
 
 Besides to the basic game functionality, this Infinity-Loop implementation includes several additional features.
 TODO: or
@@ -22,29 +26,53 @@ This Infinity-Loop implementation includes several additional features to extend
 
 **Component Overview:**
 
-* Basic game as [WASM](https://webassembly.org/) Web-UI
+* Basic game as [WASM][wasm] Web-UI
 * Generating levels with either a
   * unweighted generator, which generates all possible levels with even distribution
-  * generator based on [Wave Fuction Collapse](https://github.com/mxgmn/WaveFunctionCollapse)
+  * generator based on [Wave Fuction Collapse][wfc]
 * Solving arbitrary puzzle levels with either a
-  * solver based on [Constraint Propagation](https://en.wikipedia.org/wiki/Constraint_satisfaction)
+  * solver based on [Constraint Propagation][constraintpropagation]
   * SAT solver
 * Manual level editor
 * Help during solving by requesting hints
 
-The following section further elaborates on each component. For an overview of the employed architecture and file structure, refer to the [architecture](architecture.md) file.
+The following section further elaborates on each component. For an overview of the employed architecture and file structure, refer to the [architecture][architecture] file.
 
 ## Basic game representation / implementation
 
-`EnumSet` is an both space and performance optimized representation of a set data structure by relating / associating values with a specific bit in a bit array. The to possible values of a bit `0` and `1` indicate inclusion in the set. For a type to be eligible to being used in a `EnumSet` requires a bijection between values of the type and the natural numbers. (see the Finite trait)
+[`EnumSet`][enumset] is both a space and performance efficient implementation of a set data structure by relating / associating values with a specific bit in a bit array, usually an unsigned integer. The to possible values of a bit `0` and `1` indicate inclusion in the set. For a type to be eligible to being used in a `EnumSet` requires a bijection between values of the type and the natural numbers. (see the Finite trait)
+
+```rust
+struct EnumSet<A>(u64, PhantomData<A>);
+```
 
 The fundamental component of interaction in **Infinity Loop** is the `Tile`, which is rotated by the user to solve the puzzle. Conceptually a single tile holds the connection information to its neighbors as a set of directions.
 
-`Tile` is a newtype wrapper over an `EnumSet` of directions: `struct Tile<A>(EnumSet<A>)`. Directions correlate to the shape of the tile: `enum Square { Up, Right, Down, Left }`
+[`Tile`][tile] is a newtype wrapper over an `EnumSet` of directions. Directions correlate to the shape of the tile.
 
-The rectangular gameboard is modeled by `Grid`, which lines up tiles in a grid structure.
+```rust
+struct Tile<A>(EnumSet<A>);
 
-*TestLevel* contains some predefined levels for tutorial or test cases. It provides a bunch of gameboards, represented as hardcoded strings, and a deserialization method to create a corresponding Grid.
+enum Square {
+    Up,
+    Right,
+    Down,
+    Left
+}
+```
+
+The rectangular gameboard is modeled by an immutable [`Grid`][grid], which arranges a collection of tiles in a grid structure.
+
+Manipulating elements in the `Grid` is managed by a 2D [`Coordinate`][coordinate] index.
+
+```rust
+struct Coordinate<A> {
+    row: A,
+    column: A
+}
+```
+
+TestLevel contains some predefined levels for tutorial or test cases. It provides a bunch of gameboards, represented as hardcoded strings, and a deserialization method to create a corresponding Grid.
 
 The progressive change in generated levels is provided by a lazy iterator defined through a [stream unfold](https://en.wikipedia.org/wiki/Anamorphism) in **levelstream**.
 
@@ -90,3 +118,17 @@ This part shall provide a editor page, where the user can create his/her own lev
 Optional: The gameboard can be serialized, to replay it in another session.
 
 TODO: können wir auch den schwierigkeitsgrad bestimmen?
+
+[unsolvedexample]: <./unsolved.jpg>
+[solvedexample]: <./solved.jpg>
+
+[wasm]: <https://webassembly.org/>
+[wfc]: <https://github.com/mxgmn/WaveFunctionCollapse>
+[constraintpropagation]: <https://en.wikipedia.org/wiki/Constraint_satisfaction>
+
+[architecture]: <./architecture.md>
+
+[enumset]: <../game/src/model/enumset.rs>
+[coordinate]: <../game/src/model/coordinate.rs>
+[tile]: <../game/src/model/tile.rs>
+[square]: <../game/src/model/tile.rs>

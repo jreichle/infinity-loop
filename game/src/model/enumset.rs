@@ -17,12 +17,12 @@ use super::{cardinality::Cardinality, finite::Finite, lattice::BoundedLattice, n
 /// Defines the runtime representation and storage [`CAPACITY`] of a [`EnumSet`]
 ///
 /// May be set to any unsigned integer type
-type BitStorage = u64;
+type BitArray = u64;
 
 /// Indicates the maximum number of elements that can be stored in a [`EnumSet`]
 ///
 /// This is based on the number of bits in the underlying [`BitStorage`] type
-const CAPACITY: u64 = BitStorage::BITS as u64;
+const CAPACITY: u64 = BitArray::BITS as u64;
 
 /// Set for storing elements of statically enumerable types with known cardinality, as witnessed by the traits [Cardinality] and [Finite]
 ///
@@ -42,7 +42,7 @@ const CAPACITY: u64 = BitStorage::BITS as u64;
 ///
 /// Invariant #1 ensures canonical representation for equality checks
 #[derive(Debug)]
-pub struct EnumSet<A>(BitStorage, PhantomData<A>); // alternative names: FiniteSet, FinSet
+pub struct EnumSet<A>(BitArray, PhantomData<A>); // alternative names: FiniteSet, FinSet
 
 // most derivable traits are independent of type [`A`]
 impl<A> Copy for EnumSet<A> {}
@@ -98,7 +98,7 @@ impl<A: Cardinality> Cardinality for EnumSet<A> {
 
 impl<A: Finite> Finite for EnumSet<A> {
     fn unchecked_index_to_enum(value: u64) -> Self {
-        Self(value as BitStorage & Self::USED_BITS, PhantomData) // truncating
+        Self(value as BitArray & Self::USED_BITS, PhantomData) // truncating
     }
 
     fn enum_to_index(&self) -> u64 {
@@ -110,11 +110,11 @@ impl<A> EnumSet<A> {
     /// Set containing 0 elements
     ///
     /// neutral element of the [`EnumSet::union`] monoid
-    pub const EMPTY: Self = Self(BitStorage::MIN, PhantomData);
+    pub const EMPTY: Self = Self(BitArray::MIN, PhantomData);
 
     /// Indicates if the set contains 0 elements
     pub const fn is_empty(self) -> bool {
-        self.0 == BitStorage::MIN
+        self.0 == BitArray::MIN
     }
 
     /// Returns number of elements in the set
@@ -154,7 +154,7 @@ impl<A> EnumSet<A> {
 
     /// Indicates if both sets share no common elements
     pub const fn is_disjoint(self, other: Self) -> bool {
-        self.0 & other.0 == BitStorage::MIN
+        self.0 & other.0 == BitArray::MIN
     }
 }
 
@@ -172,9 +172,9 @@ impl<A: Cardinality> EnumSet<A> {
     /// or equivalently
     ///
     /// `∀s : EnumSet. s.intersection(EnumSet::FULL) == s`
-    const USED_BITS: BitStorage = if CAPACITY >= A::CARDINALITY {
+    const USED_BITS: BitArray = if CAPACITY >= A::CARDINALITY {
         // == `Self::CARDINALITY - 1` without risk of overflow
-        BitStorage::MAX >> (CAPACITY - A::CARDINALITY) as BitStorage
+        BitArray::MAX >> (CAPACITY - A::CARDINALITY) as BitArray
     } else {
         panic!("EnumSet only supports up to 64 elements")
     };
@@ -195,7 +195,7 @@ impl<A: Cardinality> EnumSet<A> {
 impl<A: Finite> EnumSet<A> {
     /// Checks if set contains a given element
     pub fn contains(self, element: A) -> bool {
-        test_bit(self.0, element.enum_to_index() as BitStorage)
+        test_bit(self.0, element.enum_to_index() as BitArray)
     }
 
     /// Inserts given element into the set
@@ -203,7 +203,7 @@ impl<A: Finite> EnumSet<A> {
     /// Immutable variant of [`EnumSet::insert`]
     pub fn inserted(self, element: A) -> Self {
         Self(
-            set_bit(self.0, element.enum_to_index() as BitStorage),
+            set_bit(self.0, element.enum_to_index() as BitArray),
             PhantomData,
         )
     }
@@ -213,7 +213,7 @@ impl<A: Finite> EnumSet<A> {
     /// Immutable variant of [`EnumSet::remove`]
     pub fn removed(self, element: A) -> Self {
         Self(
-            clear_bit(self.0, element.enum_to_index() as BitStorage),
+            clear_bit(self.0, element.enum_to_index() as BitArray),
             PhantomData,
         )
     }
@@ -223,7 +223,7 @@ impl<A: Finite> EnumSet<A> {
     /// Immutable variant of [`EnumSet::toggle`]
     pub fn toggled(self, element: A) -> Self {
         Self(
-            toggle_bit(self.0, element.enum_to_index() as BitStorage),
+            toggle_bit(self.0, element.enum_to_index() as BitArray),
             PhantomData,
         )
     }
@@ -233,7 +233,7 @@ impl<A: Finite> EnumSet<A> {
     /// Mutable variant of [`EnumSet::inserted`]
     pub fn insert(&mut self, element: A) -> bool {
         let old = self.0;
-        self.0 = set_bit(self.0, element.enum_to_index() as BitStorage);
+        self.0 = set_bit(self.0, element.enum_to_index() as BitArray);
         self.0 != old
     }
 
@@ -242,7 +242,7 @@ impl<A: Finite> EnumSet<A> {
     /// Mutable variant of [`EnumSet::removed`]
     pub fn remove(&mut self, element: A) -> bool {
         let old = self.0;
-        self.0 = clear_bit(self.0, element.enum_to_index() as BitStorage);
+        self.0 = clear_bit(self.0, element.enum_to_index() as BitArray);
         self.0 != old
     }
 
@@ -250,7 +250,7 @@ impl<A: Finite> EnumSet<A> {
     ///
     /// Mutable variant of [`EnumSet::toggled`]
     pub fn toggle(&mut self, element: A) {
-        self.0 = toggle_bit(self.0, element.enum_to_index() as BitStorage);
+        self.0 = toggle_bit(self.0, element.enum_to_index() as BitArray);
     }
 
     /// Unwraps the only element of the set
@@ -292,8 +292,8 @@ impl<A: Finite> IntoIterator for EnumSet<A> {
 /// The Iterator implementation currently successively consumes the bits until reaching 0 and therefore cannot implement [`DoubleEndedIterator`]
 #[derive(Hash, PartialEq, Eq, Debug, Default)]
 pub struct Iter<A> {
-    bits: BitStorage,
-    index: BitStorage,
+    bits: BitArray,
+    index: BitArray,
     phantom: PhantomData<A>,
 }
 
@@ -316,7 +316,7 @@ impl<A: Finite> Iterator for Iter<A> {
         if self.bits == 0 {
             None
         } else {
-            let trailing = self.bits.trailing_zeros() as BitStorage;
+            let trailing = self.bits.trailing_zeros() as BitArray;
 
             self.bits >>= trailing;
             self.bits &= !1; // consume element at current index
@@ -542,9 +542,9 @@ impl UsedBits for u128 {
 /// compile-time proof that [`EnumSet`] can store [`EnumSetSize::BITS`] elements
 #[allow(clippy::assertions_on_constants)]
 const _: () = {
-    type EnumSetSizeInhabitants = <BitStorage as UsedBits>::Inhabitants;
+    type EnumSetSizeInhabitants = <BitArray as UsedBits>::Inhabitants;
     assert!(EnumSetSizeInhabitants::CARDINALITY == CAPACITY);
-    assert!(EnumSet::<EnumSetSizeInhabitants>::USED_BITS == BitStorage::MAX)
+    assert!(EnumSet::<EnumSetSizeInhabitants>::USED_BITS == BitArray::MAX)
 };
 
 #[cfg(test)]

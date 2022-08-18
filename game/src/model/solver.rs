@@ -448,6 +448,7 @@ pub fn propagate_restrictions_to_all_neighbors(
 impl Grid<Tile<Square>> {
     /// Returns all puzzle solutions
     // hide concrete iterator implementation
+    // solves puzzles up to 20x20 reasonably fast
     pub fn solve(&self) -> impl Iterator<Item = Grid<Tile<Square>>> {
         SolutionIterator(vec![self
             .with_sentinels(Tile::NO_CONNECTIONS)

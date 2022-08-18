@@ -1,4 +1,6 @@
-use super::{finite::Finite, tile::Tile};
+use std::ops::{BitAnd, BitOr, Not};
+
+use super::{finite::Finite, tile::Tile, enumset::EnumSet};
 
 /// [Bounded Lattice](https://en.wikipedia.org/wiki/Lattice_(order)) consisting of 2 commutative monoids "meet" and "join" over a poset
 pub trait BoundedLattice: Sized {
@@ -142,3 +144,97 @@ mod tests {
         x.join(Tile::bottom()) == x && x.meet(Tile::top()) == x
     }
 }
+
+// meet       = and
+// join       = or
+// complement = not
+
+trait MeetSemilattice: Sized + BitAnd<Output = Self> {}
+trait JoinSemilattice: Sized + BitOr<Output = Self> {}
+trait Lattice: JoinSemilattice + MeetSemilattice {}
+
+impl<A: MeetSemilattice + JoinSemilattice> Lattice for A {}
+
+trait BoundedLattice2: Lattice {
+
+    /// least
+    const BOTTOM: Self;
+
+    /// greatest
+    const TOP: Self;
+}
+
+trait DistributiveLattice: Not<Output = Self> {}
+
+trait BooleanAlgebra: DistributiveLattice {}
+
+impl<A: BoundedLattice2 + DistributiveLattice> BooleanAlgebra for A {}
+
+
+// () does not implement bit operators
+// impl JoinSemilattice for () {}
+
+// impl MeetSemilattice for () {}
+
+// impl BoundedLattice2 for () {
+    
+//     const BOTTOM: Self = ();
+
+//     const TOP: Self = ();
+// }
+
+// impl DistributiveLattice for () {}
+
+
+
+// bool ≅ EnumSet<()>
+impl JoinSemilattice for bool {}
+
+impl MeetSemilattice for bool {}
+
+impl BoundedLattice2 for bool {
+    
+    const BOTTOM: Self = false;
+
+    const TOP: Self = true;
+}
+
+impl DistributiveLattice for bool {}
+
+
+impl<A: Finite> JoinSemilattice for EnumSet<A> {}
+
+impl<A: Finite> MeetSemilattice for EnumSet<A> {}
+
+impl<A: Finite> BoundedLattice2 for EnumSet<A> {
+    
+    const BOTTOM: Self = Self::EMPTY;
+
+    const TOP: Self = Self::FULL;
+}
+
+impl<A: Finite> DistributiveLattice for EnumSet<A> {}
+
+
+impl<A: Finite> JoinSemilattice for Tile<A> {}
+
+impl<A: Finite> MeetSemilattice for Tile<A> {}
+
+impl<A: Finite> BoundedLattice2 for Tile<A> {
+    
+    const BOTTOM: Self = Self::NO_CONNECTIONS;
+
+    const TOP: Self = Self::ALL_CONNECTIONS;
+}
+
+impl<A: Finite> DistributiveLattice for Tile<A> {}
+
+
+/*
+hint function
+inline BitArray in EnumSet
+make solver to propagator by accepting evidence as possible tiles
+put general purpose features into core folder
+maybe seperate levelstream and unfold iterator
+
+*/

@@ -1,6 +1,6 @@
 use std::{
     fmt::Display,
-    ops::{Neg, Not},
+    ops::{Neg, Not, BitOr, BitAnd},
 };
 
 use quickcheck::{Arbitrary, Gen};
@@ -105,6 +105,30 @@ impl<A> Default for Tile<A> {
     }
 }
 
+impl<A: Finite> Not for Tile<A> {
+    type Output = Self;
+
+    fn not(self) -> Self::Output {
+        Self(!self.0)
+    }
+}
+
+impl<A: Finite> BitOr for Tile<A> {
+    type Output = Self;
+
+    fn bitor(self, rhs: Self) -> Self::Output {
+        Self(self.0 | rhs.0)
+    }
+}
+
+impl<A: Finite> BitAnd for Tile<A> {
+    type Output = Self;
+
+    fn bitand(self, rhs: Self) -> Self::Output {
+        Self(self.0 & rhs.0)
+    }
+}
+
 impl<A> Tile<A> {
     pub const NO_CONNECTIONS: Tile<A> = Self(EnumSet::EMPTY);
 }
@@ -130,14 +154,6 @@ impl<A: Finite> Tile<A> {
     /// Performing [`A::CARDINALITY`] rotations returns the original tile
     pub fn rotated_counterclockwise(&self, repetitions: u64) -> Self {
         self.rotated_clockwise(A::CARDINALITY - repetitions % A::CARDINALITY)
-    }
-}
-
-impl<A: Cardinality> Not for Tile<A> {
-    type Output = Self;
-
-    fn not(self) -> Self::Output {
-        Self(!self.0)
     }
 }
 
@@ -184,7 +200,7 @@ macro_rules! tile {
 #[cfg(test)]
 mod tests {
 
-    use crate::model::{cardinality::Cardinality, finite::Finite};
+    use crate::model::{cardinality::Cardinality, finite::Finite, interval::Max};
 
     use super::{Square, Tile};
 
@@ -243,5 +259,17 @@ mod tests {
         rotations: u64,
     ) -> bool {
         tile.0.len() == tile.rotated_counterclockwise(rotations).0.len()
+    }
+
+    #[quickcheck]
+    fn clockwise_and_then_counterclockwise_is_identity(tile: Tile<Square>, rotations: Max<20>) -> bool {
+        let rotations = rotations.to_u64();
+        tile.rotated_clockwise(rotations).rotated_counterclockwise(rotations) == tile
+    }
+
+    #[quickcheck]
+    fn counterclockwise_and_then_clockwise_is_identity(tile: Tile<Square>, rotations: Max<20>) -> bool {
+        let rotations = rotations.to_u64();
+        tile.rotated_counterclockwise(rotations).rotated_clockwise(rotations) == tile
     }
 }
