@@ -8,24 +8,20 @@ Infinity loop is a puzzle game built out of a grid of tiles, each with a particu
 
 **Example of a puzzle:**
 
-TODO: add screenshot of an arbitrary puzzle
+![](images/example-level.png)
 
 **And its solution:**
 
-TODO: add screenshot of its solutions
+![](images/example-level-solution.png)
 
 Note: A given puzzle may have multiple valid solutions.
-
-Besides to the basic game functionality, this Infinity-Loop implementation includes several additional features.
-TODO: or
-This Infinity-Loop implementation includes several additional features to extend the basic game functionality
 
 **Component Overview:**
 
 * Basic game as [WASM](https://webassembly.org/) Web-UI
 * Generating levels with either a
   * unweighted generator, which generates all possible levels with even distribution
-  * generator based on [Wave Fuction Collapse](https://github.com/mxgmn/WaveFunctionCollapse)
+  * generator based on [Wave Function Collapse](https://github.com/mxgmn/WaveFunctionCollapse)
 * Solving arbitrary puzzle levels with either a
   * solver based on [Constraint Propagation](https://en.wikipedia.org/wiki/Constraint_satisfaction)
   * SAT solver
@@ -58,9 +54,13 @@ Developer: Johannes Reichle
 
 Developer: Simon Redl
 
-### The Wave Function Collapse Generator
+### The Wave Function Collapse (WFC) Generator
 
 Developer: Alexander Jensen
+
+Wave function collapse is the process by which a system changes from a superposition of states to a discrete state with a clearly defined value of a given measurable quantity by interacting with its environment.
+
+Wave function collapse occurs when a wave function—initially in a superposition of several eigenstates—reduces to a single eigenstate due to interaction with the external world. - [Wiki](https://en.wikipedia.org/wiki/Wave_function_collapse)
 
 ## Level Solver
 
