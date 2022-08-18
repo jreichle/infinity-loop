@@ -1,4 +1,3 @@
-use game::model::coordinate::Coordinate;
 use game::model::tile::Square;
 use yew::prelude::*;
 use yew::{html, Html, Callback};

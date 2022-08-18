@@ -13,6 +13,11 @@ use crate::model::{
     },
 };
 
+///! This file contains a implementation of the wave function collapse (WFC) algorithm for our game.
+///! Wave function collapse is a constraint-based method of generating a map/level with the given rules
+
+/// Setting this to true will allow you to see each step of the generation process
+/// This will enable displaying the current uncompleted map after each iteration
 const PRINT_INTERMEDIATE_RESULTS: bool = false;
 
 impl<A: Finite + Eq + Hash + Clone + Copy + Display> EnumSet<A> {
@@ -20,6 +25,7 @@ impl<A: Finite + Eq + Hash + Clone + Copy + Display> EnumSet<A> {
         self.len() <= 1
     }
 
+    /// reduce the current cell in the map to a single eigenstate
     fn collapse(&mut self, weights: &HashMap<A, usize>) {
         let mut weight: f64;
         let mut option_weights: HashMap<A, f64> = HashMap::new();
@@ -49,6 +55,7 @@ impl<A: Finite + Eq + Hash + Clone + Copy + Display> EnumSet<A> {
     }
 }
 
+/// A generator with fixed settings, which can be reused for multiple level generations.
 #[derive(Clone, PartialEq, Eq)]
 pub struct WfcGenerator {
     width: usize,
@@ -75,6 +82,7 @@ impl WfcGenerator {
         }
     }
 
+    /// Update the weights by counting the possiblies of the non-collapsed cells 
     fn update_weights(board: &Sentinel<Square>, weights: &mut HashMap<Tile<Square>, usize>) {
         weights.clear();
 
@@ -111,6 +119,7 @@ impl WfcGenerator {
         total_weight.ln() - (total_log_weight / total_weight)
     }
 
+
     fn find_entropy_cell(
         board: &Sentinel<Square>,
         weights: &HashMap<Tile<Square>, usize>,
@@ -142,6 +151,7 @@ impl WfcGenerator {
         min_coordinate
     }
 
+    /// Collapse the cell with given coordinates
     fn collapse_cell(
         board: &mut Sentinel<Square>,
         weights: &HashMap<Tile<Square>, usize>,
@@ -150,6 +160,7 @@ impl WfcGenerator {
         board.0.get_mut(cell_coordinate).unwrap().collapse(weights)
     }
 
+    /// Propagate through all neigbouring cells that are affected by the last collapse
     fn propagate(
         board: &mut Sentinel<Square>,
         cell_coordinate: Coordinate<isize>,
@@ -204,10 +215,12 @@ impl WfcGenerator {
         }
     }
 
+    /// Check if all cells on the board have only a single eigenstate
     fn is_all_collapsed(board: &Sentinel<Square>) -> bool {
         board.0.as_slice().iter().all(|c| c.is_collapsed())
     }
 
+    /// Print the incompleted map in the current state
     fn print_map(board: &Sentinel<Square>) {
         let map = board.0.elements();
         let width = board.0.columns();
@@ -228,6 +241,7 @@ impl WfcGenerator {
         }
     }
 
+    /// Generates a level with the predefined settings
     pub fn generate(&self) -> Result<Grid<Tile<Square>>, String> {
         let dimension = Coordinate::new(self.height, self.width);
 
@@ -244,7 +258,6 @@ impl WfcGenerator {
             .fold(board, propagate_restrictions_to_all_neighbors);
 
         let mut weights: HashMap<Tile<Square>, usize> = HashMap::new();
-        // update weights
         WfcGenerator::update_weights(&board, &mut weights);
 
         let mut passes: usize = 0;

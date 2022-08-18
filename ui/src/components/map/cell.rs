@@ -19,7 +19,7 @@ pub fn cell_component(props: &CellComponentProps) -> Html {
 
     let map_state = props.map_state.clone();
     let cell_tile = map_state.level_grid.get(index.clone()).unwrap();
-    let cell_symbol = cell_tile.get_value();
+    let cell_symbol = cell_tile.to_string().chars().next().unwrap();
     let cell_img = get_index(cell_symbol.clone());
 
     let img_path = vec![

@@ -39,6 +39,7 @@ body {
   align-items: center;
   justify-content: center;
   line-height: 0;
+  margin: 10vh 0 0 0;
 }
 
 #controller {
