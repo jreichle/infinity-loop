@@ -13,20 +13,45 @@ use game::model::fastgen::generate;
 
 #[function_component(App)]
 fn app() -> Html {
-    let grid_map = generate(Coordinate { row: 5, column: 5 }, 99);
-
     let screen = use_state(|| Screen::Title);
+    let to_overview: Callback<MouseEvent> = {
+        let screen = screen.clone();
+        Callback::from(move |_| {
+            screen.clone().set(Screen::Overview);
+        })
+    };
+    let to_level: Callback<MouseEvent> = {
+        let screen = screen.clone();
+        Callback::from(move |_| {
+            screen.set(Screen::Level);
+        })
+    };
+
+    let grid_map = generate(Coordinate { row: 5, column: 5 }, 99);
 
     html! {
         <>
             <div id="title">{"Rusty infinity loop!"}</div>
-            if screen == Screen::Title {
-                <button>{"Start"}</button>
+            if *screen == Screen::Title {
+                <div id="container">
+                    <button onclick={to_overview}>{"Start"}</button>
+                </div>
             }
-            <div id="container">
-                <MapComponent grid_map={grid_map} />
+            if *screen == Screen::Overview {
+                <div id="container">
+                    <button onclick={to_level}>{"level"}</button>
+                </div>
+            }
+            if *screen == Screen::Level {
+                <div id="container">
+                    <MapComponent grid_map={grid_map} />
+                </div>
+            }
+            <div id="footer">
+                <a href={"https://uni2work.ifi.lmu.de/course/S22/IfI/Rust"}>
+                    {"High level languages: Rust"}
+                </a>{" - Group IV"}
             </div>
-            <div id="footer"><a href={"https://uni2work.ifi.lmu.de/course/S22/IfI/Rust"}>{"High level languages: Rust"}</a>{" - Group IV"}</div>
         </>
     }
 }
