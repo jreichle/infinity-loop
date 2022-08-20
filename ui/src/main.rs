@@ -2,17 +2,19 @@ use yew::html;
 use yew::prelude::*;
 
 mod components;
-use components::map::map::MapComponent;
+// use components::map::map::MapComponent;
 use components::editor::editor::EditorComponent;
+use components::map_preview::level_preview::LevelPreviewComponent;
 
 mod helper;
 use helper::screen::Screen;
 
-use game::model::coordinate::Coordinate;
-use game::model::fastgen::generate;
+// use game::model::coordinate::Coordinate;
+// use game::model::fastgen::generate;
 
 #[function_component(App)]
 fn app() -> Html {
+    let grid_map = generate(Coordinate { row: 5, column: 5 }, 99);
     let screen = use_state(|| Screen::Title);
     let to_overview: Callback<MouseEvent> = {
         let screen = screen.clone();
@@ -43,8 +45,8 @@ fn app() -> Html {
                     Screen::Title => {
                         html! {
                             <div id="container">
-                                <button onclick={to_overview}>{"Start"}</button>
-                                <button onclick={to_editor}>{"Level Editor"}</button>
+                                // <MapComponent grid_map={grid_map} />
+                                <LevelPreviewComponent level_count=30 />
                             </div>
                         }
                     },
