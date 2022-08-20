@@ -14,6 +14,7 @@ use game::model::{
 pub struct LevelComponentProps {
     pub level_index: usize,
     pub level_grid: Grid<Tile<Square>>,
+    pub is_completed: bool,
 }
 
 #[function_component(LevelComponent)]
@@ -33,7 +34,7 @@ pub fn level_preview_component(props: &LevelComponentProps) -> Html {
 
     html! {
         <div class="level-container">
-            <div class="level">
+            <div class={classes!("level", if !props.is_completed { "incompleted-level" } else {""})}>
                 {
                     (0..height).into_iter().map(| row | {
                         html!{
@@ -56,7 +57,15 @@ pub fn level_preview_component(props: &LevelComponentProps) -> Html {
                         }
                     }).collect::<Html>()
                 }
+
             </div>
+            {
+                if !props.is_completed {
+                    html!{
+                        <div class="level-overlay">{"?"}</div>
+                    }
+                } else { html!{} }
+            }
             <div class="level-title">{format!("#{}", props.level_index)}</div>
         </div>
     }

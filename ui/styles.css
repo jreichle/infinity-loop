@@ -63,7 +63,7 @@ button {
   background-color: rgba(255, 255, 255, 0.05);
 }
 
-#preview-container{
+#preview-container {
   display: inline-flex;
   width: 90vmin;
   flex-direction: row;
@@ -77,13 +77,18 @@ button {
   flex-direction: column;
   align-content: center;
   align-items: center; */
+  position: relative;
   margin: 10px 0 0 10px;
   width: 100px;
   height: 120px;
 }
 
-.level:hover {
+.level-container:hover {
   background-color: #e0e0ff;
+}
+
+.level-container:hover .level-title {
+  color: rgb(85, 90, 141);
 }
 
 .level {
@@ -91,10 +96,30 @@ button {
   height: 100px;
 }
 
+.incompleted-level {
+  filter: blur(8px);
+}
+
+.level-overlay {
+  font-size: 50px;
+  font-family: Arial, Helvetica, sans-serif;
+  color: rgba(255, 255, 255, 0.7);
+  position: absolute;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center; /** Y-axis align **/
+  justify-content: center; /** X-axis align **/
+}
+
+.level-container:hover .level-overlay {
+  color: rgba(0, 0, 0, 0.6);
+}
+
 .level-title {
   margin: 10px 0 0 5px;
   color: #a9afdd;
-  
 }
 
 .cell-row {
