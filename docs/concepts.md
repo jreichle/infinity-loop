@@ -74,7 +74,7 @@ struct Coordinate<A> {
 
 TestLevel contains some predefined levels for tutorial or test cases. It provides a bunch of gameboards, represented as hardcoded strings, and a deserialization method to create a corresponding Grid.
 
-The progressive change in generated levels is provided by a lazy iterator defined through a [stream unfold](https://en.wikipedia.org/wiki/Anamorphism) in **levelstream**.
+The progressive change in generated levels is provided by a lazy iterator defined through a [stream unfold][anamorphism] in **levelstream**.
 
 ## The UI
 
@@ -96,7 +96,7 @@ Developer: Alexander Jensen
 
 Developer: Simon Redl
 
-for general idea behind the solver see [Propagators](https://qfpl.io/share/talks/propagators/slides.pdf)
+for general idea behind the solver see [Propagators][propagator]
 
 lazily generates all possible solutions for arbitrary levels
 strategy: superimpose all possible tiles at each position and successively eliminate them by propagating constraints to neighbors until solved
@@ -122,9 +122,12 @@ TODO: können wir auch den schwierigkeitsgrad bestimmen?
 [unsolvedexample]: <./unsolved.jpg>
 [solvedexample]: <./solved.jpg>
 
+[propagator]: <https://qfpl.io/share/talks/propagators/slides.pdf>
+
 [wasm]: <https://webassembly.org/>
 [wfc]: <https://github.com/mxgmn/WaveFunctionCollapse>
 [constraintpropagation]: <https://en.wikipedia.org/wiki/Constraint_satisfaction>
+[anamorphism]: <https://en.wikipedia.org/wiki/Anamorphism>
 
 [architecture]: <./architecture.md>
 

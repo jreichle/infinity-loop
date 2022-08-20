@@ -1,5 +1,7 @@
 use quickcheck::Arbitrary;
 
+use super::{cardinality::Cardinality, finite::Finite};
+
 /// Number in the range between `MIN` and `MAX` inclusive
 ///
 /// Only constructable through the [`Arbitrary`] trait
@@ -9,7 +11,7 @@ use quickcheck::Arbitrary;
 /// ```rust
 /// # use quickcheck_macros::quickcheck;
 /// # use game::model::interval::Interval;
-/// 
+///
 /// #[quickcheck]
 /// fn a_property_test(number: Interval<2, 10>) -> bool {
 ///     /* omitted */
@@ -69,6 +71,20 @@ impl<const MIN: usize, const MAX: usize> Interval<MIN, { MAX }> {
 impl<const MIN: usize, const MAX: usize> Arbitrary for Interval<MIN, { MAX }> {
     fn arbitrary(g: &mut quickcheck::Gen) -> Self {
         Interval(usize::arbitrary(g) % (MAX - MIN + 1) + MIN)
+    }
+}
+
+impl<const MIN: usize, const MAX: usize> Cardinality for Interval<MIN, { MAX }> {
+    const CARDINALITY: u64 = (Self::MAX - Self::MIN) as u64 + 1;
+}
+
+impl<const MIN: usize, const MAX: usize> Finite for Interval<MIN, { MAX }> {
+    fn unchecked_index_to_enum(value: u64) -> Self {
+        Self(value as usize + Self::MIN)
+    }
+
+    fn enum_to_index(&self) -> u64 {
+        (self.0 - Self::MIN) as u64
     }
 }
 

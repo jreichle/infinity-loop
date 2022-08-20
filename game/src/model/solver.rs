@@ -247,6 +247,10 @@ impl<A: Finite + Copy> Connection<A> {
             })
             .collect()
     }
+
+    fn to_filter_memoized(self) -> EnumSet<Tile<A>> {
+        memoize(Self::to_filter)(self)
+    }
 }
 
 /// memoizing combinator for unary functions

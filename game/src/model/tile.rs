@@ -1,6 +1,6 @@
 use std::{
     fmt::Display,
-    ops::{Neg, Not, BitOr, BitAnd},
+    ops::{BitAnd, BitOr, Neg, Not},
 };
 
 use quickcheck::{Arbitrary, Gen};
@@ -262,14 +262,24 @@ mod tests {
     }
 
     #[quickcheck]
-    fn clockwise_and_then_counterclockwise_is_identity(tile: Tile<Square>, rotations: Max<20>) -> bool {
+    fn clockwise_and_then_counterclockwise_is_identity(
+        tile: Tile<Square>,
+        rotations: Max<20>,
+    ) -> bool {
         let rotations = rotations.to_u64();
-        tile.rotated_clockwise(rotations).rotated_counterclockwise(rotations) == tile
+        tile.rotated_clockwise(rotations)
+            .rotated_counterclockwise(rotations)
+            == tile
     }
 
     #[quickcheck]
-    fn counterclockwise_and_then_clockwise_is_identity(tile: Tile<Square>, rotations: Max<20>) -> bool {
+    fn counterclockwise_and_then_clockwise_is_identity(
+        tile: Tile<Square>,
+        rotations: Max<20>,
+    ) -> bool {
         let rotations = rotations.to_u64();
-        tile.rotated_counterclockwise(rotations).rotated_clockwise(rotations) == tile
+        tile.rotated_counterclockwise(rotations)
+            .rotated_clockwise(rotations)
+            == tile
     }
 }
