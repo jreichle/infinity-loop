@@ -26,6 +26,12 @@ fn app() -> Html {
             screen.set(Screen::Level);
         })
     };
+    let to_editor: Callback<MouseEvent> = {
+        let screen = screen.clone();
+        Callback::from(move |_| {
+            screen.set(Screen::Editor);
+        })
+    };
 
     let grid_map = generate(Coordinate { row: 5, column: 5 }, 99);
 
@@ -35,11 +41,17 @@ fn app() -> Html {
             if *screen == Screen::Title {
                 <div id="container">
                     <button onclick={to_overview}>{"Start"}</button>
+                    <button onclick={to_editor}>{"Level Editor"}</button>
                 </div>
             }
             if *screen == Screen::Overview {
                 <div id="container">
                     <button onclick={to_level}>{"level"}</button>
+                </div>
+            }
+            if *screen == Screen::Editor {
+                <div id="container">
+                    <button>{"Edit"}</button>
                 </div>
             }
             if *screen == Screen::Level {
