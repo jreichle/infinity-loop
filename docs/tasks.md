@@ -29,6 +29,22 @@
 - [X] implement puzzle generator
 - [X] implement puzzle solver
 
+### Level Editor
+- [ ] Get tiles shown
+- [ ] Turn cells
+- [ ] Check with CPS
+- [ ] Check with SAT
+- [ ] Check if level is already solved
+- [ ] Generate with FastGen
+- [ ] Generate with WFC
+- [ ] Change size
+- [ ] Play custom grid
+- [ ] Create user-, not console-messages
+- [ ] Scramble current grid
+
+- [ ] Save Grid (optional)
+- [ ] Load Grid (optional)
+
 ## Further Extensions
 
 * level generator (different strategies possible)
