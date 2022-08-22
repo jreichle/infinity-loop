@@ -18,7 +18,7 @@ pub struct RowComponentProps {
 
 #[function_component(MapComponent)]
 pub fn map_component(props: &RowComponentProps) -> Html {
-    let map = use_reducer_eq(MapState::set(props.grid_map.clone()));
+    let map = use_reducer_eq(MapState::set(props.grid_map.clone(), false));
 
     let map_grid = map.level_grid.clone();
     let (height, _) = map.level_size.to_tuple();

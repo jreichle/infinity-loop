@@ -23,22 +23,27 @@ pub fn cell_component(props: &CellComponentProps) -> Html {
     let cell_img = get_index(cell_symbol.clone());
 
     let img_path = vec![
-        "data/tiles/0.svg",
-        "data/tiles/1.svg",
-        "data/tiles/2.svg",
-        "data/tiles/3.svg",
-        "data/tiles/4.svg",
-        "data/tiles/5.svg",
+        "ui/dist/data/tiles/0.svg",
+        "ui/dist/data/tiles/1.svg",
+        "ui/dist/data/tiles/2.svg",
+        "ui/dist/data/tiles/3.svg",
+        "ui/dist/data/tiles/4.svg",
+        "ui/dist/data/tiles/5.svg",
     ];
 
-    let onclick = Callback::from(move |_| {
+    let onclick = Callback::from(move |e:MouseEvent| {
         log::info!(
             "Tile {} with coordinate ({}, {}) has been clicked.",
             cell_symbol,
             row,
             column
         );
-        map_state.dispatch(MapAction::TurnCell(index));
+        if e.button() == 2 {
+            map_state.dispatch(MapAction::ChangeTileShape(index));
+        }
+        else {
+            map_state.dispatch(MapAction::TurnCell(index));
+        }
     });
 
     html! {
