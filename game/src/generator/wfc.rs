@@ -1,14 +1,14 @@
 use rand::Rng;
-use std::{collections::HashMap, fmt::Display, hash::Hash, ops::Neg};
+use std::{collections::HashMap, fmt::Display, hash::Hash};
 
 use crate::model::{
     coordinate::Coordinate,
     enumset::EnumSet,
     finite::Finite,
     grid::Grid,
-    solver::{step, Sentinel, Superposition},
+    solver::{propagate_restrictions_to_all_neighbors, Sentinel, Superposition},
     tile::{
-        Square::{self, Down, Left, Right, Up},
+        Square::{self},
         Tile,
     },
 };
@@ -28,7 +28,7 @@ impl<A: Finite + Eq + Hash + Clone + Copy + Display> EnumSet<A> {
         let mut rng = rand::thread_rng();
 
         for cell_option in self.iter() {
-            weight = weights.get(&cell_option).unwrap().clone() as f64;
+            weight = *weights.get(&cell_option).unwrap() as f64;
             total_weight += weight;
             option_weights.insert(cell_option, weight);
         }
@@ -103,7 +103,7 @@ impl WfcGenerator {
         total_log_weight = 0.0;
 
         for tile in cell.iter() {
-            weight = weights.get(&tile).unwrap().clone() as f64;
+            weight = *weights.get(&tile).unwrap() as f64;
             total_weight += weight;
             total_log_weight += weight * weight.ln();
         }
@@ -136,7 +136,7 @@ impl WfcGenerator {
 
             if entropy_rng < min {
                 min = entropy_rng;
-                min_coordinate = cell_coordinate.clone();
+                min_coordinate = *cell_coordinate;
             }
         }
         min_coordinate
@@ -205,7 +205,7 @@ impl WfcGenerator {
     }
 
     fn is_all_collapsed(board: &Sentinel<Square>) -> bool {
-        board.0.as_slice().into_iter().all(|c| c.is_collapsed())
+        board.0.as_slice().iter().all(|c| c.is_collapsed())
     }
 
     fn print_map(board: &Sentinel<Square>) {
@@ -223,7 +223,7 @@ impl WfcGenerator {
             }
 
             if index % width == width - 1 {
-                print!("\n");
+                println!();
             }
         }
     }
@@ -237,7 +237,11 @@ impl WfcGenerator {
             .minimize();
 
         // initialize superpositions
-        let mut board = board.0.coordinates().into_iter().fold(board.clone(), step);
+        let mut board = board
+            .0
+            .coordinates()
+            .into_iter()
+            .fold(board, propagate_restrictions_to_all_neighbors);
 
         let mut weights: HashMap<Tile<Square>, usize> = HashMap::new();
         // update weights
@@ -264,7 +268,7 @@ impl WfcGenerator {
                 break;
             }
         }
-        board.extract_if_collapsed().ok_or("ERROR".into())
+        board.extract_if_collapsed().ok_or_else(|| "ERROR".into())
     }
 }
 
@@ -272,7 +276,6 @@ impl WfcGenerator {
 mod tests {
 
     use crate::generator::wfc::WfcGenerator;
-    use crate::model::testlevel::unicode_to_tile;
     use crate::model::{
         enumset::EnumSet,
         tile::{

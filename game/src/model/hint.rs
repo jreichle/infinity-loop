@@ -29,7 +29,7 @@ fn generate_hint(grid: Grid<(Tile<Square>, Status)>) -> Result<Coordinate<isize>
         .next()
         .ok_or("puzzle has no solution")?;
     // how to handle multiple solutions? try to match any?
-    let x = grid.zip(solution.with_index()).map(|((t, s), (i, c))| {
+    let _x = grid.zip(solution.with_index()).map(|((t, s), (i, c))| {
         if s == Status::Changed {
             if t == c {
                 Ok(EnumSet::from(t))

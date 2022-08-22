@@ -238,7 +238,7 @@ impl<A: Finite + Copy> Superposition<A> {
 }
 
 impl<A: Finite + Copy> Connection<A> {
-    fn to_filter(&self) -> EnumSet<Tile<A>> {
+    fn to_filter(self) -> EnumSet<Tile<A>> {
         EnumSet::FULL
             .into_iter()
             .filter(|t: &Tile<A>| match self.1 {
@@ -340,16 +340,15 @@ impl<A: Finite> Superposition<A> {
     /// Extracts the common connections over all states from the superposition
     ///
     /// eg. if there is a common [Up] connection between all states, then the result includes [Connection::Present(Up)]
-    pub fn extract_common_connections(&self) -> Vec<Connection<A>> {
-        let superposition = self.clone();
+    pub fn extract_common_connections(self) -> Vec<Connection<A>> {
         // an empty superposition leads to all overlaps simultaneously but since
         // an empty superposition cannot be further reduced and already signifies
         // no solution, the result does not matter
-        let present_connections = Tile::meet_all(superposition)
+        let present_connections = Tile::meet_all(self)
             .0
             .into_iter()
             .map(|d| Connection(d, Status::Present));
-        let absent_connections = Tile::join_all(superposition)
+        let absent_connections = Tile::join_all(self)
             .0
             .not()
             .into_iter()
@@ -378,10 +377,20 @@ where
 
 impl Sentinel<Square> {
     /// Minimizes the superpositions of the grid as far as possible through applying the logical deductions
+    ///
+    /// notably, how the function achieves this is an implementation detail
+    ///
+    /// # Postcondition
+    ///
+    /// `s.minimize()` ≡ `s.minimize().minimize()`
     pub fn minimize(self) -> Sentinel<Square> {
         iter_fix(
             self,
-            |g| g.0.coordinates().into_iter().fold(g.clone(), step),
+            |g| {
+                g.0.coordinates()
+                    .into_iter()
+                    .fold(g.clone(), propagate_restrictions_to_all_neighbors)
+            },
             SentinelGrid::eq,
         )
     }
@@ -413,13 +422,17 @@ fn most_superimposed_states<A: Finite>(grid: &Sentinel<A>) -> Coordinate<isize> 
         .expect("Logical error: attempted to branch, but was unable")
 }
 
-// TODO: split to isolate parts only working on Square
+// TODO: split to isolate parts only working on Square,
 /// Propagates all constraints from the chosen tile to all neighboring ones
-pub fn step(grid: Sentinel<Square>, index: Coordinate<isize>) -> Sentinel<Square> {
+pub fn propagate_restrictions_to_all_neighbors(
+    grid: Sentinel<Square>,
+    index: Coordinate<isize>,
+) -> Sentinel<Square> {
     // determine common connections
     let connections = grid
         .0
         .get(index)
+        .copied()
         .map(Superposition::extract_common_connections)
         .unwrap_or_default();
 
@@ -485,7 +498,10 @@ mod tests {
     use super::*;
     use crate::{
         enumset,
-        model::tile::{Square, Tile},
+        model::{
+            interval::Max,
+            tile::{Square, Tile},
+        },
         tile,
     };
 
@@ -506,18 +522,18 @@ mod tests {
     }
 
     #[quickcheck]
-    fn neighborhood_is_symmetric(index: Coordinate<i8>, direction: Square) -> bool {
+    fn neighborhood_is_symmetric(index: Coordinate<Max<100>>, direction: Square) -> bool {
         // restrict coordinates to a range resembling actual values used in grid and avoid integer over- / underflows
-        let index = index.map(|x| x as isize);
+        let index = index.map(Max::to_isize);
         let neighbor_index = index.get_neighbor_index(direction);
         index == neighbor_index.get_neighbor_index(-direction)
     }
 
-    /// successively visiting neighbors in each
+    /// successively visiting neighbors in each direction
     #[quickcheck]
-    fn neighborhood_is_euclidian(index: Coordinate<i8>) -> bool {
+    fn neighborhood_is_euclidian(index: Coordinate<Max<100>>) -> bool {
         // restrict coordinates to a range resembling actual values used in grid and avoid integer over- / underflows
-        let index = index.map(|x| x as isize);
+        let index = index.map(Max::to_isize);
         EnumSet::FULL
             .into_iter()
             .fold(index, Coordinate::get_neighbor_index)

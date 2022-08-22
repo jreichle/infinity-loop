@@ -62,7 +62,7 @@ impl Cardinality for Square {
 
 impl Finite for Square {
     fn unchecked_index_to_enum(value: u64) -> Self {
-        match value % 4 {
+        match value % Self::CARDINALITY {
             0 => Self::Up,
             1 => Self::Right,
             2 => Self::Down,
@@ -163,8 +163,7 @@ impl<A: 'static + Clone + Finite> Arbitrary for Tile<A> {
 
 impl Display for Tile<Square> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        let index: usize = self.0.iter().map(|s| 1 << s.enum_to_index()).sum();
-        write!(f, "{}", Self::UNICODE_TILES[index])
+        write!(f, "{}", Self::UNICODE_TILES[self.enum_to_index() as usize])
     }
 }
 
@@ -173,14 +172,6 @@ impl Tile<Square> {
     const UNICODE_TILES: [char; 16] = [
         ' ', '╹', '╺', '┗', '╻', '┃', '┏', '┣', '╸', '┛', '━', '┻', '┓', '┫', '┳', '╋',
     ];
-
-    #[deprecated(
-        note = "please use Tile::to_string to display the tile instead or use a Tile object"
-    )]
-    pub fn get_value(&self) -> char {
-        let index: usize = self.0.iter().map(|s| 1 << s.enum_to_index()).sum();
-        Self::UNICODE_TILES[index]
-    }
 }
 
 #[macro_export]

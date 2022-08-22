@@ -6,6 +6,7 @@ use crate::model::{
     coordinate::Coordinate,
     fastgen::generate,
     grid::Grid,
+    interval::Max,
     testlevel::{ascii_to_tile, parse_level, TEST_LEVELS},
     tile::{Square, Tile},
 };
@@ -23,9 +24,8 @@ pub struct LevelProperty {
 
 impl Arbitrary for LevelProperty {
     fn arbitrary(g: &mut quickcheck::Gen) -> Self {
-        const MAX: usize = 10;
         LevelProperty {
-            dimension: Coordinate::<usize>::arbitrary(g).map(|v| v % MAX),
+            dimension: Coordinate::<Max<10>>::arbitrary(g).map(Max::to_usize),
         }
     }
 }

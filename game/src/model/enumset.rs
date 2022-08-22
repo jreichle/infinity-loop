@@ -554,7 +554,7 @@ mod test {
 
     use quickcheck::Gen;
 
-    use crate::model::{enumset::*, tile::Square};
+    use crate::model::{enumset::*, interval::Max, tile::Square};
 
     #[quickcheck]
     fn set_to_index_and_back_is_id(set: EnumSet<EnumSet<Option<bool>>>) -> bool {
@@ -569,8 +569,8 @@ mod test {
     }
 
     #[quickcheck]
-    fn bitshift_is_inverse_of_trailing_zeroes(index: u8) -> bool {
-        let index = (index % u64::BITS as u8) as u64;
+    fn bitshift_is_inverse_of_trailing_zeroes(index: Max<63>) -> bool {
+        let index = index.to_u64();
         (1u64 << index).trailing_zeros() as u64 == index
     }
 

@@ -137,7 +137,7 @@ impl Finite for bool {
 
 impl Finite for Ordering {
     fn unchecked_index_to_enum(value: u64) -> Self {
-        match value % 3 {
+        match value % Self::CARDINALITY {
             0 => Ordering::Less,
             1 => Ordering::Equal,
             _ => Ordering::Greater,
