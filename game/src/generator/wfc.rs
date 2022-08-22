@@ -82,7 +82,7 @@ impl WfcGenerator {
         }
     }
 
-    /// Update the weights by counting the possiblies of the non-collapsed cells 
+    /// Update the weights by counting the possiblies of the non-collapsed cells
     fn update_weights(board: &Sentinel<Square>, weights: &mut HashMap<Tile<Square>, usize>) {
         weights.clear();
 
@@ -118,7 +118,6 @@ impl WfcGenerator {
 
         total_weight.ln() - (total_log_weight / total_weight)
     }
-
 
     fn find_entropy_cell(
         board: &Sentinel<Square>,
@@ -216,12 +215,25 @@ impl WfcGenerator {
     }
 
     /// Check if all cells on the board have only a single eigenstate
-    fn is_all_collapsed(board: &Sentinel<Square>) -> bool {
+    pub fn is_all_collapsed(board: &Sentinel<Square>) -> bool {
         board.0.as_slice().iter().all(|c| c.is_collapsed())
     }
 
+    pub fn extract_grid(board: &Sentinel<Square>) -> Grid<Tile<Square>> {
+        let grid = board.extract_grid()
+            .map(EnumSet::unwrap_if_singleton)
+            .map( | tile | {
+                match tile {
+                    Some(tile) => tile,
+                    None => Tile::<Square>::NO_CONNECTIONS
+                }
+            } );
+
+        grid
+    }
+
     /// Print the incompleted map in the current state
-    fn print_map(board: &Sentinel<Square>) {
+    pub fn print_map(board: &Sentinel<Square>) {
         let map = board.0.elements();
         let width = board.0.columns();
 
@@ -241,17 +253,20 @@ impl WfcGenerator {
         }
     }
 
-    /// Generates a level with the predefined settings
-    pub fn generate(&self) -> Result<Grid<Tile<Square>>, String> {
-        let dimension = Coordinate::new(self.height, self.width);
-
+    pub fn init_board(&self) -> (Sentinel<Square>, HashMap<Tile<Square>, usize>) {
         // initialize board with all possiblities, then update edge tiles
-        let board: Sentinel<Square> = Grid::init(dimension, |_| self.available_tiles)
-            .with_sentinels(Tile::NO_CONNECTIONS.into())
-            .minimize();
+        let board: Sentinel<Square> = Grid::init(
+            Coordinate {
+                row: self.height,
+                column: self.width,
+            },
+            |_| self.available_tiles,
+        )
+        .with_sentinels(Tile::NO_CONNECTIONS.into())
+        .minimize();
 
         // initialize superpositions
-        let mut board = board
+        let board = board
             .0
             .coordinates()
             .into_iter()
@@ -260,14 +275,36 @@ impl WfcGenerator {
         let mut weights: HashMap<Tile<Square>, usize> = HashMap::new();
         WfcGenerator::update_weights(&board, &mut weights);
 
-        let mut passes: usize = 0;
-        let mut current_coordinate: Coordinate<isize>;
+        (board, weights)
+    }
 
+    // one step in wfc
+    pub fn iteration_step(
+        &self,
+        mut board: Sentinel<Square>,
+        mut weights: HashMap<Tile<Square>, usize>,
+    ) -> (Sentinel<Square>, HashMap<Tile<Square>, usize>) {
+        let current_coordinate = WfcGenerator::find_entropy_cell(&board, &weights);
+        WfcGenerator::collapse_cell(&mut board, &weights, current_coordinate);
+        WfcGenerator::propagate(&mut board, current_coordinate, self.prop_limit);
+        WfcGenerator::update_weights(&board, &mut weights);
+
+        if PRINT_INTERMEDIATE_RESULTS {
+            WfcGenerator::print_map(&board);
+            print!("{esc}[2J{esc}[1;1H", esc = 27 as char);
+        }
+
+        (board, weights)
+    }
+
+    /// Generates a level with the predefined settings
+    pub fn generate(&self) -> Result<Grid<Tile<Square>>, String> {
+        
+        let (mut board, mut weights) = self.init_board();
+
+        let mut passes: usize = 0;
         loop {
-            current_coordinate = WfcGenerator::find_entropy_cell(&board, &weights);
-            WfcGenerator::collapse_cell(&mut board, &weights, current_coordinate);
-            WfcGenerator::propagate(&mut board, current_coordinate, self.prop_limit);
-            WfcGenerator::update_weights(&board, &mut weights);
+            (board, weights) = self.iteration_step(board, weights);
 
             passes += 1;
 
