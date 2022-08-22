@@ -2,15 +2,16 @@ use yew::html;
 use yew::prelude::*;
 
 mod components;
-// use components::map::map::MapComponent;
+// use components::map_preview::level_preview::LevelPreviewComponent;
 use components::editor::editor::EditorComponent;
-use components::map_preview::level_preview::LevelPreviewComponent;
+use components::map::board::BoardComponent;
+// use components::wfc_visualizer::live_map::WfcVisualizerComponent;
 
 mod helper;
 use helper::screen::Screen;
+use game::model::coordinate::Coordinate;
+use game::model::fastgen::generate;
 
-// use game::model::coordinate::Coordinate;
-// use game::model::fastgen::generate;
 
 #[function_component(App)]
 fn app() -> Html {
@@ -47,6 +48,7 @@ fn app() -> Html {
                             <div id="container">
                                 // <MapComponent grid_map={grid_map} />
                                 <LevelPreviewComponent level_count=30 />
+                // <LevelPreviewComponent level_count=100 />
                             </div>
                         }
                     },

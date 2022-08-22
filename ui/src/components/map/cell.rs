@@ -3,11 +3,11 @@ use yew::{html, Callback, Properties};
 
 use game::model::coordinate::Coordinate;
 
-use super::map_reducer::{MapAction, MapState};
+use crate::components::map::board_reducer::{BoardAction, BoardState};
 
 #[derive(Properties, PartialEq, Clone)]
 pub struct CellComponentProps {
-    pub map_state: UseReducerHandle<MapState>,
+    pub board_state: UseReducerHandle<BoardState>,
     pub row_number: isize,
     pub column_number: isize,
 }
@@ -17,8 +17,8 @@ pub fn cell_component(props: &CellComponentProps) -> Html {
     let (row, column) = (props.row_number.clone(), props.column_number.clone());
     let index = Coordinate { row, column };
 
-    let map_state = props.map_state.clone();
-    let cell_tile = map_state.level_grid.get(index.clone()).unwrap();
+    let board_state = props.board_state.clone();
+    let cell_tile = board_state.level_grid.get(index.clone()).unwrap();
     let cell_symbol = cell_tile.to_string().chars().next().unwrap();
     let cell_img = get_index(cell_symbol.clone());
 
@@ -38,11 +38,10 @@ pub fn cell_component(props: &CellComponentProps) -> Html {
             row,
             column
         );
-        if e.button() == 2 {
+        board_state.dispatch(BoardAction::TurnCell(index));
             map_state.dispatch(MapAction::ChangeTileShape(index));
         }
         else {
-        map_state.dispatch(MapAction::TurnCell(index));
         }
     });
 

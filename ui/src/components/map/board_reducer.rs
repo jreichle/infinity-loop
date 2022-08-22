@@ -10,7 +10,7 @@ use game::model::tile::{Square, Tile};
 use game::model::fastgen::generate;
 
 // reducer's action
-pub enum MapAction {
+pub enum BoardAction {
     TurnCell(Coordinate<isize>),
     ChangeTileShape(Coordinate<isize>),
     NextLevel,
@@ -20,14 +20,14 @@ pub enum MapAction {
 
 // reducer's state
 #[derive(Clone, Debug, PartialEq, Eq)]
-pub struct MapState {
+pub struct BoardState {
     pub level_number: usize,
     pub level_size: Coordinate<usize>,
     pub level_grid: Grid<Tile<Square>>,
     pub allow_tile_change: bool,
 }
 
-impl Default for MapState {
+impl Default for BoardState {
     fn default() -> Self {
         Self {
             level_number: 1,
@@ -55,8 +55,8 @@ pub fn highlight_cells(row: usize, column: usize) {
     hl.forget();
 }
 
-impl Reducible for MapState {
-    type Action = MapAction;
+impl Reducible for BoardState {
+    type Action = BoardAction;
 
     fn reduce(self: Rc<Self>, action: Self::Action) -> Rc<Self> {
         let mut new_level_grid: Grid<Tile<Square>> = self.level_grid.clone();
@@ -64,10 +64,10 @@ impl Reducible for MapState {
         let mut new_level_number: usize = self.level_number.clone();
 
         match action {
-            MapAction::TurnCell(index) => {
+            BoardAction::TurnCell(index) => {
                 new_level_grid = new_level_grid.rotate_clockwise(index).unwrap();
             }
-            MapAction::NextLevel => {
+            BoardAction::NextLevel => {
                 new_level_number += 1;
                 new_level_size = Coordinate {
                     row: new_level_size.row + 1,
@@ -75,11 +75,11 @@ impl Reducible for MapState {
                 };
                 new_level_grid = generate(new_level_size, new_level_number as u64)
             }
-            MapAction::GetHint => {
+            BoardAction::GetHint => {
                 log::info!("Get hint.");
                 highlight_cells(3,3);
             }
-            MapAction::SolveLevel => {
+            BoardAction::SolveLevel => {
                 log::info!("Solve level");
             }
                     new_level_grid = new_level_grid.change_tile_shape(index).unwrap();
@@ -95,9 +95,9 @@ impl Reducible for MapState {
     }
 }
 
-impl MapState {
-    pub fn set(grid: Grid<Tile<Square>>, allow_tile_change: bool) -> impl Fn() -> MapState {
-        move || MapState {
+impl BoardState {
+    pub fn set(grid: Grid<Tile<Square>>) -> impl Fn() -> BoardState {
+        move || BoardState {
             level_number: 1,
             level_size: grid.dimensions(),
             level_grid: grid.clone(),

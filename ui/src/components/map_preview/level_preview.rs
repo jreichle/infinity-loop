@@ -20,7 +20,7 @@ pub fn level_preview_component(props: &LevelPreviewComponentProps) -> Html {
                         <LevelComponent 
                             level_grid={generate(Coordinate { row: 5, column: 5 }, level_index.try_into().unwrap())} 
                             level_index={level_index} 
-                            is_completed={ if level_index % 3 == 0 { false } else { true } }
+                            is_completed={ if level_index > 20 { false } else { true } }
                         />
                     }
                 }).collect::<Html>()
