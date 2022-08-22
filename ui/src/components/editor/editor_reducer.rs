@@ -59,7 +59,13 @@ impl Reducible for EditorState {
                     Tile::ALL_CONNECTIONS.0, 
                     40000, 
                     1000);
-                new_map.level_grid = wfc.generate().unwrap();
+
+                let mut generation_result = wfc.generate();
+                while let Err(_) = generation_result {
+                    generation_result = wfc.generate();
+                }
+
+                new_map.level_grid = generation_result.unwrap();
                 log::info!("Generated grid\n{}", new_map.level_grid.to_string());
             },
         };
