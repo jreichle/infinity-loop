@@ -1,9 +1,8 @@
-use game::model::coordinate::Coordinate;
-use game::model::tile::Square;
 use yew::prelude::*;
 use yew::{html, Callback, Html};
 
 use game::model::gameboard::GameBoard;
+use game::model::tile::Square;
 use game::model::{grid::Grid, tile::Tile};
 
 use crate::components::map::map_reducer::MapAction;
@@ -32,6 +31,14 @@ pub fn map_component(props: &RowComponentProps) -> Html {
         })
     };
 
+    let hint_onclick: Callback<MouseEvent> = {
+        let map = map.clone();
+        Callback::from(move |_| {
+            map.dispatch(MapAction::GetHint);
+            log::info!("[Button click] Hint.");
+        })
+    };
+
     let solve_onclick: Callback<MouseEvent> = {
         let map = map.clone();
         Callback::from(move |_| {
@@ -47,8 +54,6 @@ pub fn map_component(props: &RowComponentProps) -> Html {
             map.dispatch(MapAction::NextLevel);
         })
     };
-
-    // TODO: only pass row state & cell state instead of the whole game state
 
     html! {
         <>
@@ -69,6 +74,9 @@ pub fn map_component(props: &RowComponentProps) -> Html {
                 <button
                     onclick={check_onclick}
                     >{"check"}</button>
+                <button
+                    onclick={hint_onclick}
+                    >{"hint"}</button>
                 <button
                     onclick={solve_onclick}
                     >{"solve"}</button>

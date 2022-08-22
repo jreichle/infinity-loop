@@ -7,12 +7,12 @@ use std::{
 
 use quickcheck::{Arbitrary, Gen};
 
-use super::coordinate::Coordinate;
 use super::gameboard::GameBoard;
 use super::{
     accesserror::AccessError,
     tile::{Square, Tile},
 };
+use super::{coordinate::Coordinate, interval::Max};
 
 /// Defines a fully filled 2D-grid with coordinate-based access
 ///
@@ -407,8 +407,9 @@ impl<A: Display> Display for Grid<A> {
 
 impl<A: Arbitrary> Arbitrary for Grid<A> {
     fn arbitrary(g: &mut Gen) -> Self {
-        let rows = u8::arbitrary(g) as usize % 10;
-        let columns = u8::arbitrary(g) as usize % 10;
+        const SIZE: usize = 10;
+        let rows = Max::<SIZE>::arbitrary(g).to_usize();
+        let columns = Max::<SIZE>::arbitrary(g).to_usize();
         let elements = (0..rows * columns).map(|_| A::arbitrary(g)).collect();
         Self {
             rows,
@@ -421,16 +422,15 @@ impl<A: Arbitrary> Arbitrary for Grid<A> {
 #[cfg(test)]
 mod grid_tests {
 
-    use crate::model::coordinate::Coordinate;
+    use crate::model::{coordinate::Coordinate, interval::Max};
 
     use super::Grid;
 
     // restrict size grid to avoid excessive vector allocation
     #[quickcheck]
-    fn ensure_dimensions(dimensions: Coordinate<u8>) -> bool {
-        let dimensions = dimensions.map(|v| v as usize);
-        let board = Grid::filled_with(dimensions, 0);
-        board.dimensions() == dimensions
+    fn ensure_dimensions(dimensions: Coordinate<Max<100>>) -> bool {
+        let dimensions = dimensions.map(Max::to_usize);
+        Grid::filled_with(dimensions, 0).dimensions() == dimensions
     }
 }
 

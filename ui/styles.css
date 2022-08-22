@@ -22,9 +22,9 @@ body {
 }
 
 #title {
-  color: #FFF;
+  color: #fff;
   font-size: 50px;
-  font-family: 'Franklin Gothic Medium', 'Arial Narrow', Arial, sans-serif;
+  font-family: "Franklin Gothic Medium", "Arial Narrow", Arial, sans-serif;
   padding: 5px;
   position: absolute;
   top: 0;
@@ -39,6 +39,7 @@ body {
   align-items: center;
   justify-content: center;
   line-height: 0;
+  margin: 10vh 0 0 0;
 }
 
 #controller {
@@ -73,7 +74,11 @@ button {
 }
 
 .cell:hover {
-  background-color: #E0E0FF;
+  background-color: #e0e0ff;
+}
+
+.cell-hint-highlight {
+  background-color: #ffa3a3;
 }
 
 #footer {

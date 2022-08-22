@@ -1,21 +1,22 @@
-use game::model::gameboard::GameBoard;
+use yew::prelude::*;
+
 use std::rc::Rc;
+use wasm_bindgen::{prelude::*, JsCast};
 use yew::prelude::*;
 
 use game::model::coordinate::Coordinate;
+use game::model::fastgen::generate;
+use game::model::gameboard::GameBoard;
 use game::model::grid::Grid;
 use game::model::tile::{Square, Tile};
 
-use game::model::fastgen::generate;
-
-// reducer's action
 pub enum MapAction {
     TurnCell(Coordinate<isize>),
     NextLevel,
+    GetHint,
     SolveLevel,
 }
 
-// reducer's state
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct MapState {
     pub level_number: usize,
@@ -31,6 +32,27 @@ impl Default for MapState {
             level_grid: generate(Coordinate { row: 5, column: 5 }, 1),
         }
     }
+}
+
+#[wasm_bindgen]
+pub fn highlight_cells(row: usize, column: usize) {
+    let window = web_sys::window().unwrap();
+    let document = window.document().unwrap();
+    let cell = document
+        .get_element_by_id(&format!("cell-r-{}-c-{}", row, column))
+        .unwrap();
+
+    let class_names = cell.get_attribute("class").unwrap();
+    let highlight_class_names = format!("{} {}", class_names.clone(), "cell-hint-highlight");
+    cell.set_class_name(&highlight_class_names);
+    let hl = Closure::<dyn Fn()>::new(move || {
+        cell.set_class_name(&class_names);
+    });
+
+    window
+        .set_timeout_with_callback_and_timeout_and_arguments_0(hl.as_ref().unchecked_ref(), 500)
+        .ok();
+    hl.forget();
 }
 
 impl Reducible for MapState {
@@ -57,6 +79,10 @@ impl Reducible for MapState {
                 if let Some(solution) = self.level_grid.solve().next() {
                     new_level_grid = solution;
                 }
+            }
+            MapAction::GetHint => {
+                log::info!("Get hint.");
+                highlight_cells(3, 3);
             }
         };
 

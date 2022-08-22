@@ -1659,6 +1659,7 @@ dependencies = [
  "log",
  "reqwasm",
  "serde",
+ "wasm-bindgen",
  "wasm-logger",
  "web-sys",
  "yew",

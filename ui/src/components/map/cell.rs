@@ -19,7 +19,7 @@ pub fn cell_component(props: &CellComponentProps) -> Html {
 
     let map_state = props.map_state.clone();
     let cell_tile = map_state.level_grid.get(index.clone()).unwrap();
-    let cell_symbol = cell_tile.get_value();
+    let cell_symbol = cell_tile.to_string().chars().next().unwrap();
     let cell_img = get_index(cell_symbol.clone());
 
     let img_path = vec![
@@ -31,10 +31,10 @@ pub fn cell_component(props: &CellComponentProps) -> Html {
         "data/tiles/5.svg",
     ];
 
+    // let angle = use_state(|| 0_usize);
     let onclick = Callback::from(move |_| {
         log::info!(
-            "Tile {} with coordinate ({}, {}) has been clicked.",
-            cell_symbol,
+            "Tile with coordinate ({}, {}) has been clicked.",
             row,
             column
         );
@@ -42,8 +42,8 @@ pub fn cell_component(props: &CellComponentProps) -> Html {
     });
 
     html! {
-        <div class="cell">
-            <img src={ img_path[cell_img] }
+        <div id={format!("cell-r-{}-c-{}", row, column)} class={format!("cell row-{} col-{}", row, column)}>
+            <img src={img_path[cell_img]}
                 onclick={onclick}
                 style={format!("{}{}{}","transform:rotate(", get_angle(cell_symbol), "deg);")}
             />

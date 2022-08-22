@@ -137,15 +137,15 @@ impl<A: Copy> From<A> for Coordinate<A> {
 impl<A> From<(A, A)> for Coordinate<A> {
     /// isomorphic to [`(A, A)`]
     fn from(tuple: (A, A)) -> Self {
-        // optimization: coerce as no-op, if same runtime representation
+        // possible optimization: coerce as no-op, if same runtime representation
         Self::new(tuple.0, tuple.1)
     }
 }
 
 impl<A> From<[A; 2]> for Coordinate<A> {
-    /// isomorphic to [`[A; 2]`]
+    /// isomorphic to [`\[A; 2\]`]
     fn from(array: [A; 2]) -> Self {
-        // optimization: coerce as no-op, if same runtime representation
+        // possible optimization: coerce as no-op, if same runtime representation
         let [x, y] = array;
         Self::new(x, y)
     }
@@ -160,7 +160,7 @@ impl<A> From<[A; 2]> for Coordinate<A> {
 
 impl<A: Display> Display for Coordinate<A> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "(row: {:04}, column: {:04})", self.row, self.column)
+        write!(f, "(row: {:>4}, column: {:>4})", self.row, self.column)
     }
 }
 

@@ -1,18 +1,23 @@
 use rand::Rng;
-use std::{collections::HashMap, fmt::Display, hash::Hash, ops::Neg};
+use std::{collections::HashMap, fmt::Display, hash::Hash};
 
 use crate::model::{
     coordinate::Coordinate,
     enumset::EnumSet,
     finite::Finite,
     grid::Grid,
-    solver::{step, Sentinel, Superposition},
+    solver::{propagate_restrictions_to_all_neighbors, Sentinel, Superposition},
     tile::{
-        Square::{self, Down, Left, Right, Up},
+        Square::{self},
         Tile,
     },
 };
 
+///! This file contains a implementation of the wave function collapse (WFC) algorithm for our game.
+///! Wave function collapse is a constraint-based method of generating a map/level with the given rules
+
+/// Setting this to true will allow you to see each step of the generation process
+/// This will enable displaying the current uncompleted map after each iteration
 const PRINT_INTERMEDIATE_RESULTS: bool = false;
 
 impl<A: Finite + Eq + Hash + Clone + Copy + Display> EnumSet<A> {
@@ -20,6 +25,7 @@ impl<A: Finite + Eq + Hash + Clone + Copy + Display> EnumSet<A> {
         self.len() <= 1
     }
 
+    /// reduce the current cell in the map to a single eigenstate
     fn collapse(&mut self, weights: &HashMap<A, usize>) {
         let mut weight: f64;
         let mut option_weights: HashMap<A, f64> = HashMap::new();
@@ -28,7 +34,7 @@ impl<A: Finite + Eq + Hash + Clone + Copy + Display> EnumSet<A> {
         let mut rng = rand::thread_rng();
 
         for cell_option in self.iter() {
-            weight = weights.get(&cell_option).unwrap().clone() as f64;
+            weight = *weights.get(&cell_option).unwrap() as f64;
             total_weight += weight;
             option_weights.insert(cell_option, weight);
         }
@@ -49,6 +55,7 @@ impl<A: Finite + Eq + Hash + Clone + Copy + Display> EnumSet<A> {
     }
 }
 
+/// A generator with fixed settings, which can be reused for multiple level generations.
 #[derive(Clone, PartialEq, Eq)]
 pub struct WfcGenerator {
     width: usize,
@@ -75,6 +82,7 @@ impl WfcGenerator {
         }
     }
 
+    /// Update the weights by counting the possiblies of the non-collapsed cells 
     fn update_weights(board: &Sentinel<Square>, weights: &mut HashMap<Tile<Square>, usize>) {
         weights.clear();
 
@@ -103,13 +111,14 @@ impl WfcGenerator {
         total_log_weight = 0.0;
 
         for tile in cell.iter() {
-            weight = weights.get(&tile).unwrap().clone() as f64;
+            weight = *weights.get(&tile).unwrap() as f64;
             total_weight += weight;
             total_log_weight += weight * weight.ln();
         }
 
         total_weight.ln() - (total_log_weight / total_weight)
     }
+
 
     fn find_entropy_cell(
         board: &Sentinel<Square>,
@@ -136,12 +145,13 @@ impl WfcGenerator {
 
             if entropy_rng < min {
                 min = entropy_rng;
-                min_coordinate = cell_coordinate.clone();
+                min_coordinate = *cell_coordinate;
             }
         }
         min_coordinate
     }
 
+    /// Collapse the cell with given coordinates
     fn collapse_cell(
         board: &mut Sentinel<Square>,
         weights: &HashMap<Tile<Square>, usize>,
@@ -150,6 +160,7 @@ impl WfcGenerator {
         board.0.get_mut(cell_coordinate).unwrap().collapse(weights)
     }
 
+    /// Propagate through all neigbouring cells that are affected by the last collapse
     fn propagate(
         board: &mut Sentinel<Square>,
         cell_coordinate: Coordinate<isize>,
@@ -204,10 +215,12 @@ impl WfcGenerator {
         }
     }
 
+    /// Check if all cells on the board have only a single eigenstate
     fn is_all_collapsed(board: &Sentinel<Square>) -> bool {
-        board.0.as_slice().into_iter().all(|c| c.is_collapsed())
+        board.0.as_slice().iter().all(|c| c.is_collapsed())
     }
 
+    /// Print the incompleted map in the current state
     fn print_map(board: &Sentinel<Square>) {
         let map = board.0.elements();
         let width = board.0.columns();
@@ -223,11 +236,12 @@ impl WfcGenerator {
             }
 
             if index % width == width - 1 {
-                print!("\n");
+                println!();
             }
         }
     }
 
+    /// Generates a level with the predefined settings
     pub fn generate(&self) -> Result<Grid<Tile<Square>>, String> {
         let dimension = Coordinate::new(self.height, self.width);
 
@@ -237,10 +251,13 @@ impl WfcGenerator {
             .minimize();
 
         // initialize superpositions
-        let mut board = board.0.coordinates().into_iter().fold(board.clone(), step);
+        let mut board = board
+            .0
+            .coordinates()
+            .into_iter()
+            .fold(board, propagate_restrictions_to_all_neighbors);
 
         let mut weights: HashMap<Tile<Square>, usize> = HashMap::new();
-        // update weights
         WfcGenerator::update_weights(&board, &mut weights);
 
         let mut passes: usize = 0;
@@ -264,7 +281,7 @@ impl WfcGenerator {
                 break;
             }
         }
-        board.extract_if_collapsed().ok_or("ERROR".into())
+        board.extract_if_collapsed().ok_or_else(|| "ERROR".into())
     }
 }
 
@@ -272,7 +289,6 @@ impl WfcGenerator {
 mod tests {
 
     use crate::generator::wfc::WfcGenerator;
-    use crate::model::testlevel::unicode_to_tile;
     use crate::model::{
         enumset::EnumSet,
         tile::{
