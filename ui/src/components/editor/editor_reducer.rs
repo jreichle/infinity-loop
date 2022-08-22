@@ -57,8 +57,8 @@ impl Reducible for EditorState {
                 let wfc = WfcGenerator::new(new_map.level_size.column,
                     new_map.level_size.row, 
                     Tile::ALL_CONNECTIONS.0, 
-                    2, 
-                    4);
+                    40000, 
+                    1000);
                 new_map.level_grid = wfc.generate().unwrap();
                 log::info!("Generated grid\n{}", new_map.level_grid.to_string());
             },
