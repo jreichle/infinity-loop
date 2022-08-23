@@ -85,7 +85,7 @@ impl<K: Finite, V> EnumMap<K, V> {
     }
 
     pub fn clear(&mut self) {
-        self.0.clear()
+        self.0.fill_with(|| None)
     }
 
     pub fn get(&self, key: K) -> Option<&V> {

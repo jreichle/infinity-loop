@@ -1,5 +1,5 @@
 use rand::Rng;
-use std::{collections::HashMap, fmt::Display, hash::Hash};
+use std::{fmt::Display, hash::Hash};
 
 use crate::model::{
     coordinate::Coordinate,
@@ -10,7 +10,7 @@ use crate::model::{
     tile::{
         Square::{self},
         Tile,
-    },
+    }, enummap::EnumMap,
 };
 
 const PRINT_INTERMEDIATE_RESULTS: bool = false;
@@ -20,15 +20,15 @@ impl<A: Finite + Eq + Hash + Clone + Copy + Display> EnumSet<A> {
         self.len() <= 1
     }
 
-    fn collapse(&mut self, weights: &HashMap<A, usize>) {
+    fn collapse(&mut self, weights: &EnumMap<A, usize>) {
         let mut weight: f64;
-        let mut option_weights: HashMap<A, f64> = HashMap::new();
+        let mut option_weights: EnumMap<A, f64> = EnumMap::empty();
         let mut total_weight: f64 = 0.0;
 
         let mut rng = rand::thread_rng();
 
         for cell_option in self.iter() {
-            weight = *weights.get(&cell_option).unwrap() as f64;
+            weight = weights[cell_option].unwrap() as f64;
             total_weight += weight;
             option_weights.insert(cell_option, weight);
         }
@@ -39,7 +39,7 @@ impl<A: Finite + Eq + Hash + Clone + Copy + Display> EnumSet<A> {
             rng_weights -= weight;
             if rng_weights < 0.0 {
                 for tile in A::all_enums_ascending() {
-                    if &tile != option {
+                    if tile != option {
                         self.remove(tile);
                     }
                 }
@@ -75,7 +75,7 @@ impl WfcGenerator {
         }
     }
 
-    fn update_weights(board: &Sentinel<Square>, weights: &mut HashMap<Tile<Square>, usize>) {
+    fn update_weights(board: &Sentinel<Square>, weights: &mut EnumMap<Tile<Square>, usize>) {
         weights.clear();
 
         // initialize weights
@@ -88,7 +88,7 @@ impl WfcGenerator {
         for cell in board.0.elements().into_iter() {
             if !cell.is_collapsed() {
                 cell.into_iter().for_each(|tile| {
-                    *weights.get_mut(&tile).unwrap() += 1;
+                    weights[tile] = weights[tile].map(|x| x + 1);
                 });
             }
         }
@@ -96,14 +96,14 @@ impl WfcGenerator {
 
     fn shannon_entropy(
         cell: &Superposition<Square>,
-        weights: &HashMap<Tile<Square>, usize>,
+        weights: &EnumMap<Tile<Square>, usize>,
     ) -> f64 {
         let (mut weight, mut total_weight, mut total_log_weight): (f64, f64, f64);
         total_weight = 0.0;
         total_log_weight = 0.0;
 
         for tile in cell.iter() {
-            weight = *weights.get(&tile).unwrap() as f64;
+            weight = weights[tile].unwrap() as f64;
             total_weight += weight;
             total_log_weight += weight * weight.ln();
         }
@@ -113,7 +113,7 @@ impl WfcGenerator {
 
     fn find_entropy_cell(
         board: &Sentinel<Square>,
-        weights: &HashMap<Tile<Square>, usize>,
+        weights: &EnumMap<Tile<Square>, usize>,
     ) -> Coordinate<isize> {
         let mut min = std::f64::MAX;
         let mut min_coordinate: Coordinate<isize> = Coordinate { row: 0, column: 0 };
@@ -144,7 +144,7 @@ impl WfcGenerator {
 
     fn collapse_cell(
         board: &mut Sentinel<Square>,
-        weights: &HashMap<Tile<Square>, usize>,
+        weights: &EnumMap<Tile<Square>, usize>,
         cell_coordinate: Coordinate<isize>,
     ) {
         board.0.get_mut(cell_coordinate).unwrap().collapse(weights)
@@ -243,7 +243,7 @@ impl WfcGenerator {
             .into_iter()
             .fold(board, propagate_restrictions_to_all_neighbors);
 
-        let mut weights: HashMap<Tile<Square>, usize> = HashMap::new();
+        let mut weights: EnumMap<Tile<Square>, usize> = EnumMap::empty();
         // update weights
         WfcGenerator::update_weights(&board, &mut weights);
 
