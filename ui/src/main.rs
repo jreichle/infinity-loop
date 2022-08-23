@@ -46,22 +46,25 @@ fn app() -> Html {
                     Screen::Editor => {
                         html! {
                             <div id="container">
-                                // <MapComponent grid_map={grid_map} />
-                                <LevelPreviewComponent level_count=30 />
+                                <EditorComponent screen={screen.clone()}/>
                             </div>
                         }
                     },
                     Screen::Level(user_grid) => {
                         html! {
                             <div id="container">
-                                <BoardComponent level_grid={user_grid.clone()} />
+                                <BoardComponent 
+                                    level_grid={user_grid.clone()}
+                                    screen={screen.clone()}/>
                             </div>
                         }
                     },
                     _ => {
                         html! {
                             <div id="container">
-                                <BoardComponent level_grid={generate(Coordinate { row: 5, column: 5 }, 99)} />
+                                <BoardComponent 
+                                    level_grid={generate(Coordinate { row: 5, column: 5 }, 99)} 
+                                    screen={screen.clone()}/>
                             </div>
                         }
                     },

@@ -82,6 +82,7 @@ impl Reducible for BoardState {
                 log::info!("Solve level");
             }
             BoardAction::ChangeTileShape(index) => {
+                    log::info!("Change tile shape");
                     new_level_grid = new_level_grid.change_tile_shape(index).unwrap();
             }
         };
@@ -106,7 +107,7 @@ impl BoardState {
         }
     }
 
-    pub fn new(grid: Grid<Tile<Square>>, allow_tile_change: bool) -> MapState {
-        MapState::set(grid, allow_tile_change)()
+    pub fn new(grid: Grid<Tile<Square>>, allow_tile_change: bool) -> BoardState {
+        BoardState::set(grid, allow_tile_change)()
     }
 }

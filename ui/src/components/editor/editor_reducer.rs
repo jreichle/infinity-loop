@@ -11,12 +11,12 @@ use game::model::tile::{Square, Tile};
 use game::model::fastgen;
 use game::generator::wfc::WfcGenerator;
 
-use super::super::map::map_reducer::MapState;
+use crate::components::map::board_reducer::BoardState;
 
 #[derive(Clone, Debug, PartialEq)]
 pub struct EditorState
 {
-    pub map: MapState
+    pub board: BoardState
 }
 
 // reducer's action
@@ -30,7 +30,7 @@ pub enum EditorAction {
 impl Default for EditorState {
     fn default() -> Self {
         Self {
-            map: MapState::default()
+            board: BoardState::default()
         }
     }
 }
@@ -39,23 +39,23 @@ impl Reducible for EditorState {
     type Action = EditorAction;
 
     fn reduce(self: Rc<Self>, action: Self::Action) -> Rc<Self> {
-        let mut new_map = self.map.clone();
+        let mut new_board = self.board.clone();
 
         match action {
             EditorAction::TurnCell(index) => {
-                new_map.level_grid = new_map.level_grid.rotate_clockwise(index).unwrap();
+                new_board.level_grid = new_board.level_grid.rotate_clockwise(index).unwrap();
             }
             EditorAction::ChangeSize(size) => {
-                new_map.level_grid.resize(size);
+                new_board.level_grid.resize(size);
             },
             EditorAction::GenerateFastGen => {
                 let mut rng = rand::thread_rng();
-                new_map.level_grid = fastgen::generate(new_map.level_size, rng.gen_range(0..10000));
-                log::info!("Generated grid\n{}", new_map.level_grid.to_string());
+                new_board.level_grid = fastgen::generate(new_board.level_size, rng.gen_range(0..10000));
+                log::info!("Generated grid\n{}", new_board.level_grid.to_string());
             },
             EditorAction::GenerateWFC =>{
-                let wfc = WfcGenerator::new(new_map.level_size.column,
-                    new_map.level_size.row, 
+                let wfc = WfcGenerator::new(new_board.level_size.column,
+                    new_board.level_size.row, 
                     Tile::ALL_CONNECTIONS.0, 
                     40000, 
                     1000);
@@ -65,22 +65,22 @@ impl Reducible for EditorState {
                     generation_result = wfc.generate();
                 }
 
-                new_map.level_grid = generation_result.unwrap();
-                log::info!("Generated grid\n{}", new_map.level_grid.to_string());
+                new_board.level_grid = generation_result.unwrap();
+                log::info!("Generated grid\n{}", new_board.level_grid.to_string());
             },
         };
 
         Self {
-            map: new_map
+            board: new_board
         }
         .into()
     }
 }
 
 impl EditorState {
-    pub fn set(map: MapState) -> impl Fn() -> EditorState {
+    pub fn set(board: BoardState) -> impl Fn() -> EditorState {
         move || EditorState {
-            map: map.clone()
+            board: board.clone()
         }
     }
 }
