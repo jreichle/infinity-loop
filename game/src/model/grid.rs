@@ -393,6 +393,10 @@ impl Grid<Tile<Square>>
             }
         })
     }
+
+    pub fn rotate_clockwise_n_times(&self, index: Coordinate<isize>, repetitions: u64) -> Result<Self, AccessError> {
+        self.adjust_at(index, |x| x.rotated_clockwise(repetitions))
+    }
 }
 
 // Index trait is not designed to return Option

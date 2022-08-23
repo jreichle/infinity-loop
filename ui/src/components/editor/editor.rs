@@ -67,6 +67,15 @@ pub fn editor_component(props: &EditorComponentProps) -> Html {
         })
     };
 
+    let shuffleTileRotations_onclick: Callback<MouseEvent> = {
+        let editor = editor.clone();
+        Callback::from(move |_| {
+            log::info!("[Button click] Generate WFC.");
+            editor.dispatch(EditorAction::ShuffleTileRotations);
+        })
+    };
+
+
     let play_onclick: Callback<MouseEvent> = {
         let s = props.screen.clone();
         let g = editor.grid.clone();
@@ -85,22 +94,25 @@ pub fn editor_component(props: &EditorComponentProps) -> Html {
             <div id="controller">
                 <button
                     onclick={generateFastGen_onclick}
-                    >{"Generate with FastGen"}</button>
+                    >{"-Generate with FastGen-"}</button>
                 <button
                     onclick={generateWFC_onclick}
-                    >{"Generate with WFC"}</button>
+                    >{"-Generate with WFC-"}</button>
                 <button
                     onclick={checkCPS_onclick}
-                    >{"Check validity with Constraint Propagation Solver"}</button>
+                    >{"-Check validity with Constraint Propagation Solver-"}</button>
                 <button
                     onclick={checkSAT_onclick}
-                    >{"Check validity with SAT Solver"}</button>
+                    >{"-Check validity with SAT Solver-"}</button>
                 <button
                     onclick={checkSolved_onclick}
-                    >{"Check if solved"}</button>
+                    >{"-Check if solved-"}</button>
+                <button
+                    onclick={shuffleTileRotations_onclick}
+                    >{"-Shuffle tile rotations-"}</button>
                 <button
                     onclick={play_onclick}
-                    >{"Play"}</button>
+                    >{"-Play-"}</button>
             </div>
         </>
     }
