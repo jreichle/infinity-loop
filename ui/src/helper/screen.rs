@@ -1,6 +1,9 @@
+use game::model::{grid::Grid, tile::Tile, tile::Square};
+
 #[derive(PartialEq)]
 pub enum Screen {
-    Title,
+    Level(Grid<Tile<Square>>),
     Overview,
-    Level,
+    Title,
+    Editor,
 }

@@ -4,6 +4,10 @@ use yew::prelude::*;
 mod components;
 use components::map::map::MapComponent;
 use components::map_preview::level_preview::LevelPreviewComponent;
+// use components::map_preview::level_preview::LevelPreviewComponent;
+use components::editor::editor::EditorComponent;
+use components::map::board::BoardComponent;
+// use components::wfc_visualizer::live_map::WfcVisualizerComponent;
 
 mod helper;
 use helper::screen::Screen;
@@ -14,11 +18,24 @@ use game::model::fastgen::generate;
 
 #[function_component(App)]
 fn app() -> Html {
+    let grid_map = generate(Coordinate { row: 5, column: 5 }, 99);
     let screen = use_state(|| Screen::Title);
     let to_overview: Callback<MouseEvent> = {
         let screen = screen.clone();
         Callback::from(move |_| {
             screen.clone().set(Screen::Overview);
+        })
+    };
+    let to_level: Callback<MouseEvent> = {
+        let screen = screen.clone();
+        Callback::from(move |_| {
+            screen.set(Screen::Level(generate(Coordinate { row: 5, column: 5 }, 99)));
+        })
+    };
+    let to_editor: Callback<MouseEvent> = {
+        let screen = screen.clone();
+        Callback::from(move |_| {
+            screen.set(Screen::Editor);
         })
     };
 
@@ -29,26 +46,35 @@ fn app() -> Html {
     html! {
         <>
             <div id="title">{"Rusty infinity loop!"}</div>
-            if *screen == Screen::Title {
-                <div id="container">
-                    <button onclick={to_overview}>{"Start"}</button>
-                </div>
-            }
-            if *screen == Screen::Overview {
-                <div id="container">
-                    <LevelPreviewComponent
-                        level_count=20
-                        screen={screen.clone()}
-                        dimension={dimension}
-                        level_number={level_number}
 
-                    />
-                </div>
-            }
-            if *screen == Screen::Level {
-                <div id="container">
-                    <MapComponent grid_map={grid_map} />
-                </div>
+            {
+                match &*screen {
+                    Screen::Editor => {
+                        html! {
+                            <div id="container">
+                                <EditorComponent screen={screen.clone()}/>
+                            </div>
+                        }
+                    },
+                    Screen::Level(user_grid) => {
+                        html! {
+                            <div id="container">
+                                <BoardComponent
+                                    level_grid={user_grid.clone()}
+                                    screen={screen.clone()}/>
+                            </div>
+                        }
+                    },
+                    _ => {
+                        html! {
+                            <div id="container">
+                                <BoardComponent
+                                    level_grid={generate(Coordinate { row: 5, column: 5 }, 99)}
+                                    screen={screen.clone()}/>
+                            </div>
+                        }
+                    },
+                }
             }
             <div id="footer">
                 <a href={"https://uni2work.ifi.lmu.de/course/S22/IfI/Rust"}>
