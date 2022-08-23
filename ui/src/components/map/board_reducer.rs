@@ -12,7 +12,6 @@ use game::model::fastgen::generate;
 // reducer's action
 pub enum BoardAction {
     TurnCell(Coordinate<isize>),
-    ChangeTileShape(Coordinate<isize>),
     NextLevel,
     GetHint,
     SolveLevel,
@@ -23,7 +22,7 @@ pub enum BoardAction {
 pub struct BoardState {
     pub level_number: usize,
     pub level_size: Coordinate<usize>,
-    pub level_grid: Grid<Tile<Square>>,
+    pub level_grid: Grid<Tile<Square>>
 }
 
 impl Default for BoardState {
@@ -31,8 +30,7 @@ impl Default for BoardState {
         Self {
             level_number: 1,
             level_size: Coordinate { row: 5, column: 5 },
-            level_grid: generate(Coordinate { row: 5, column: 5 }, 1),
-            allow_tile_change: false
+            level_grid: generate(Coordinate { row: 5, column: 5 }, 1)
         }
     }
 }
@@ -81,33 +79,27 @@ impl Reducible for BoardState {
             BoardAction::SolveLevel => {
                 log::info!("Solve level");
             }
-            BoardAction::ChangeTileShape(index) => {
-                    log::info!("Change tile shape");
-                    new_level_grid = new_level_grid.change_tile_shape(index).unwrap();
-            }
         };
 
         Self {
             level_number: new_level_number,
             level_size: new_level_size,
-            level_grid: new_level_grid.clone(),
-            allow_tile_change: self.allow_tile_change
+            level_grid: new_level_grid.clone()
         }
         .into()
     }
 }
 
 impl BoardState {
-    pub fn set(grid: Grid<Tile<Square>>, allow_tile_change: bool) -> impl Fn() -> BoardState {
+    pub fn set(grid: Grid<Tile<Square>>) -> impl Fn() -> BoardState {
         move || BoardState {
             level_number: 1,
             level_size: grid.dimensions(),
-            level_grid: grid.clone(),
-            allow_tile_change: allow_tile_change
+            level_grid: grid.clone()
         }
     }
 
-    pub fn new(grid: Grid<Tile<Square>>, allow_tile_change: bool) -> BoardState {
-        BoardState::set(grid, allow_tile_change)()
+    pub fn new(grid: Grid<Tile<Square>>) -> BoardState {
+        BoardState::set(grid)()
     }
 }

@@ -11,18 +11,18 @@ use game::model::tile::{Square, Tile};
 use game::model::fastgen;
 use game::generator::wfc::WfcGenerator;
 
-use crate::components::map::board_reducer::BoardState;
-
 #[derive(Clone, Debug, PartialEq)]
 pub struct EditorState
 {
-    pub board: BoardState
+    pub grid_size: Coordinate<usize>,
+    pub grid: Grid<Tile<Square>>
 }
 
 // reducer's action
 pub enum EditorAction {
-    ChangeSize(Coordinate<usize>),
     TurnCell(Coordinate<isize>),
+    ChangeTileShape(Coordinate<isize>),
+    ChangeSize(Coordinate<usize>),
     GenerateFastGen,
     GenerateWFC
 }
@@ -30,7 +30,8 @@ pub enum EditorAction {
 impl Default for EditorState {
     fn default() -> Self {
         Self {
-            board: BoardState::default()
+            grid_size: Coordinate { row: 5, column: 5 },
+            grid: fastgen::generate(Coordinate { row: 5, column: 5 }, 1)
         }
     }
 }
@@ -39,23 +40,27 @@ impl Reducible for EditorState {
     type Action = EditorAction;
 
     fn reduce(self: Rc<Self>, action: Self::Action) -> Rc<Self> {
-        let mut new_board = self.board.clone();
+        let mut new_grid = self.grid.clone();
 
         match action {
             EditorAction::TurnCell(index) => {
-                new_board.level_grid = new_board.level_grid.rotate_clockwise(index).unwrap();
+                new_grid = new_grid.rotate_clockwise(index).unwrap();
+            }
+            EditorAction::ChangeTileShape(index) => {
+                log::info!("Change tile shape");
+                new_grid = new_grid.change_tile_shape(index).unwrap();
             }
             EditorAction::ChangeSize(size) => {
-                new_board.level_grid.resize(size);
-            },
+                new_grid.resize(size);
+            }
             EditorAction::GenerateFastGen => {
                 let mut rng = rand::thread_rng();
-                new_board.level_grid = fastgen::generate(new_board.level_size, rng.gen_range(0..10000));
-                log::info!("Generated grid\n{}", new_board.level_grid.to_string());
-            },
+                new_grid = fastgen::generate(self.grid_size, rng.gen_range(0..10000));
+                log::info!("Generated grid\n{}", new_grid.to_string());
+            }
             EditorAction::GenerateWFC =>{
-                let wfc = WfcGenerator::new(new_board.level_size.column,
-                    new_board.level_size.row, 
+                let wfc = WfcGenerator::new(self.grid_size.column,
+                    self.grid_size.row, 
                     Tile::ALL_CONNECTIONS.0, 
                     40000, 
                     1000);
@@ -65,22 +70,24 @@ impl Reducible for EditorState {
                     generation_result = wfc.generate();
                 }
 
-                new_board.level_grid = generation_result.unwrap();
-                log::info!("Generated grid\n{}", new_board.level_grid.to_string());
-            },
+                new_grid = generation_result.unwrap();
+                log::info!("Generated grid\n{}", new_grid.to_string());
+            }
         };
 
         Self {
-            board: new_board
+            grid_size: new_grid.dimensions(),
+            grid: new_grid
         }
         .into()
     }
 }
 
 impl EditorState {
-    pub fn set(board: BoardState) -> impl Fn() -> EditorState {
+    pub fn set(grid: Grid<Tile<Square>>) -> impl Fn() -> EditorState {
         move || EditorState {
-            board: board.clone()
+            grid_size: grid.dimensions(),
+            grid: grid.clone()
         }
     }
 }

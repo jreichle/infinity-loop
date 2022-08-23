@@ -5,10 +5,9 @@ use yew::{html, Callback, Html, InputEvent};
 
 use game::model::gameboard::GameBoard;
 
-use crate::components::map::board_reducer::{BoardState, BoardAction};
 use crate::components::editor::editor_reducer::{EditorState, EditorAction};
 
-use crate::components::map::grid::GridComponent;
+use crate::components::editor::grid::GridComponent;
 
 use crate::helper::screen::Screen;
 
@@ -20,9 +19,9 @@ pub struct EditorComponentProps {
 #[function_component(EditorComponent)]
 pub fn editor_component(props: &EditorComponentProps) -> Html {
     let new_grid = generate(Coordinate { row: 5, column: 5 }, 99);
-    let editor = use_reducer_eq(EditorState::set(BoardState::new(new_grid, true)));
+    let editor = use_reducer_eq(EditorState::set(new_grid));
 
-    let map_grid = editor.board.level_grid.clone();
+    let map_grid = editor.grid.clone();
     let (_, height) = map_grid.dimensions().to_tuple();
 
     let generateFastGen_onclick: Callback<MouseEvent> = {
@@ -60,7 +59,7 @@ pub fn editor_component(props: &EditorComponentProps) -> Html {
     };
 
     let checkSolved_onclick: Callback<MouseEvent> = {
-        let g = editor.board.level_grid.clone();
+        let g = editor.grid.clone();
         Callback::from(move |_| {
             log::info!("[Button click] Check is solved.");
             log::info!("Current grid\n{}", g.to_string());
@@ -70,7 +69,7 @@ pub fn editor_component(props: &EditorComponentProps) -> Html {
 
     let play_onclick: Callback<MouseEvent> = {
         let s = props.screen.clone();
-        let g = editor.board.level_grid.clone();
+        let g = editor.grid.clone();
         Callback::from(move |_| {
             log::info!("[Button click] Play custom grid.");
             log::info!("Current grid\n{}", g.to_string());
@@ -80,9 +79,13 @@ pub fn editor_component(props: &EditorComponentProps) -> Html {
 
     // TODO: only pass row state & cell state instead of the whole game state
 
+    log::info!("Zefix!");
+    let g = editor.grid.clone();
+    log::info!("Current grid\n{}", g.to_string());
+
     html! {
         <>
-            <GridComponent board_state={use_reducer_eq(BoardState::set(editor.board.level_grid.clone(), true))} />
+            <GridComponent editor_state={editor} />
             <div id="controller">
                 <button
                     onclick={generateFastGen_onclick}
