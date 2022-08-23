@@ -4,7 +4,19 @@
     <cargoProject FILE="$PROJECT_DIR$/Cargo.toml" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="2ef32588-f1e8-483f-8233-915b881a70de" name="Changes" comment="" />
+    <list default="true" id="2ef32588-f1e8-483f-8233-915b881a70de" name="Changes" comment="">
+      <change afterPath="$PROJECT_DIR$/ui/src/components/map_preview/level.rs" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/ui/src/components/map_preview/level_preview.rs" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/ui/src/components/map_preview/mod.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/ui/src/components/map/cell.rs" beforeDir="false" afterPath="$PROJECT_DIR$/ui/src/components/map/cell.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/ui/src/components/map/map.rs" beforeDir="false" afterPath="$PROJECT_DIR$/ui/src/components/map/map.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/ui/src/components/mod.rs" beforeDir="false" afterPath="$PROJECT_DIR$/ui/src/components/mod.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/ui/src/components/overview/mod.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/ui/src/components/overview/overview.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/ui/src/main.rs" beforeDir="false" afterPath="$PROJECT_DIR$/ui/src/main.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/ui/styles.css" beforeDir="false" afterPath="$PROJECT_DIR$/ui/styles.css" afterDir="false" />
+    </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -50,6 +62,8 @@
       <updated>1659522176624</updated>
       <workItem from="1659522180261" duration="50000" />
       <workItem from="1659962837832" duration="166000" />
+      <workItem from="1660925881673" duration="684000" />
+      <workItem from="1661165945517" duration="1534000" />
     </task>
     <servers />
   </component>

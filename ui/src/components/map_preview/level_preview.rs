@@ -2,25 +2,41 @@ use yew::prelude::*;
 use yew::{html, Html};
 
 use super::level::LevelComponent;
+use super::preview_reducer::PreviewState;
+use crate::helper::screen::Screen;
 use game::model::coordinate::Coordinate;
 use game::model::fastgen::generate;
+use game::model::grid::Grid;
+use game::model::tile::{Square, Tile};
 
 #[derive(Properties, PartialEq, Clone)]
 pub struct LevelPreviewComponentProps {
-    pub level_count: usize,
+    pub screen: UseStateHandle<Screen>,
+    pub dimension: UseStateHandle<Coordinate<usize>>,
+    pub level_number: UseStateHandle<usize>,
 }
 
 #[function_component(LevelPreviewComponent)]
-pub fn level_preview_component(props: &LevelPreviewComponentProps) -> Html { 
-    html!{
+pub fn level_preview_component(props: &LevelPreviewComponentProps) -> Html {
+    let level_count = 20;
+    let generated_levels = (0..level_count)
+        .into_iter()
+        .map(|index| generate(*props.dimension, index as u64))
+        .collect::<Vec<Grid<Tile<Square>>>>();
+
+    let reducer = use_reducer(PreviewState::set(generated_levels));
+
+    // TODO: add form to change dimension
+
+    html! {
         <div id="preview-container">
             {
-                (1..=props.level_count).into_iter().map( | level_index | {
+                (0..level_count).into_iter().map( | level_index | {
                     html!{
-                        <LevelComponent 
-                            level_grid={generate(Coordinate { row: 5, column: 5 }, level_index.try_into().unwrap())} 
-                            level_index={level_index} 
-                            is_completed={ if level_index > 20 { false } else { true } }
+                        <LevelComponent
+                            preview_state={reducer.clone()}
+                            screen={props.screen.clone()}
+                            level_index={level_index}
                         />
                     }
                 }).collect::<Html>()

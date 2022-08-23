@@ -1,4 +1,4 @@
-use game::model::{grid::Grid, tile::Tile, tile::Square};
+use game::model::{grid::Grid, tile::Square, tile::Tile};
 
 #[derive(PartialEq)]
 pub enum Screen {
@@ -6,4 +6,5 @@ pub enum Screen {
     Overview,
     Title,
     Editor,
+    Solving,
 }
