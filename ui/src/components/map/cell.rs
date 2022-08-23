@@ -1,8 +1,8 @@
 use yew::prelude::*;
 use yew::{html, Callback, Properties};
 
-use game::model::coordinate::Coordinate;
 use crate::components::map::board_reducer::{BoardAction, BoardState};
+use game::model::coordinate::Coordinate;
 
 #[derive(Properties, PartialEq, Clone)]
 pub struct CellComponentProps {
@@ -31,7 +31,7 @@ pub fn cell_component(props: &CellComponentProps) -> Html {
     ];
 
     let board = board_state.clone();
-    let onclick = Callback::from(move |e:MouseEvent| {
+    let onclick = Callback::from(move |e: MouseEvent| {
         log::info!(
             "Tile {} with coordinate ({}, {}) has been clicked.",
             cell_symbol,
@@ -42,10 +42,15 @@ pub fn cell_component(props: &CellComponentProps) -> Html {
     });
 
     html! {
-        <div id={format!("cell-r-{}-c-{}", row, column)} class={format!("cell row-{} col-{}", row, column)}>
+        <div
+            id={format!("cell-r-{}-c-{}", row, column)}
+            class={format!("cell row-{} col-{}", row, column)}>
             <img src={img_path[cell_img]}
                 onclick={onclick}
-                style={format!("{}{}{}","transform:rotate(", get_angle(cell_symbol), "deg);")}
+                style={format!("{}{}{}",
+                    "transform:rotate(",
+                    get_angle(cell_symbol),
+                    "deg);")}
             />
         </div>
     }

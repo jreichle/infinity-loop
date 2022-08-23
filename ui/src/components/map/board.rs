@@ -1,15 +1,15 @@
+use crate::helper::screen::Screen;
 use yew::prelude::*;
 use yew::{html, Callback};
-use crate::helper::screen::Screen;
 
 use game::model::{
     grid::Grid,
-    tile::{Tile, Square},
+    tile::{Square, Tile},
 };
 
-use crate::components::map::
-    {board_reducer::{BoardAction,BoardState},
-    grid::GridComponent
+use crate::components::map::{
+    board_reducer::{BoardAction, BoardState},
+    grid::GridComponent,
 };
 
 #[derive(Properties, PartialEq, Clone)]
@@ -19,9 +19,9 @@ pub struct BoardComponentProps {
 }
 
 #[function_component(BoardComponent)]
-pub fn board_component(props: &BoardComponentProps) -> Html {    
+pub fn board_component(props: &BoardComponentProps) -> Html {
     let board = use_reducer_eq(BoardState::set_grid(props.level_grid.clone()));
-    
+
     let check_onclick: Callback<MouseEvent> = {
         let level_grid = board.level_grid.clone();
         Callback::from(move |_| {
@@ -33,39 +33,40 @@ pub fn board_component(props: &BoardComponentProps) -> Html {
     let hint_onclick: Callback<MouseEvent> = {
         let board = board.clone();
         Callback::from(move |_| {
-            board.dispatch(BoardAction::GetHint);
             log::info!("[Button click] Hint.");
+            board.dispatch(BoardAction::GetHint);
         })
     };
 
     let solve_onclick: Callback<MouseEvent> = {
+        let board = board.clone();
         Callback::from(move |_| {
             log::info!("[Button click] Solve.");
+            board.dispatch(BoardAction::SolveLevel);
         })
     };
 
     let next_onclick: Callback<MouseEvent> = {
         let board = board.clone();
         Callback::from(move |_| {
-            board.dispatch(BoardAction::NextLevel);
             log::info!("[Button click] Next.");
+            board.dispatch(BoardAction::NextLevel);
         })
     };
 
     let editor_onclick: Callback<MouseEvent> = {
-        let s = props.screen.clone();
+        let screen = props.screen.clone();
         Callback::from(move |_| {
             log::info!("[Button click] Editor");
-            s.set(Screen::Editor)
+            screen.set(Screen::Editor)
         })
     };
 
     html! {
         <>
-
             <GridComponent board_state={board} />
             <div id="controller">
-                <button 
+                <button
                     onclick={check_onclick}>
                     {"-check-"}
                     // {"🔍"}
@@ -84,13 +85,13 @@ pub fn board_component(props: &BoardComponentProps) -> Html {
                     // {"🔮"}
                     // <img src="icons/magic.svg" alt="Solve level" />
                 </button>
-                <button 
+                <button
                     onclick={next_onclick}>
                     {"-next-"}
                     // {"⏭️"}
                     // <img src="icons/next.svg" alt="Next level" />
                 </button>
-                <button 
+                <button
                     onclick={editor_onclick}
                     style="margin-top:20px">
                     {"-editor-"}

@@ -5,7 +5,7 @@ use yew::{html, Callback, Html, InputEvent};
 
 use game::model::gameboard::GameBoard;
 
-use crate::components::editor::editor_reducer::{EditorState, EditorAction};
+use crate::components::editor::editor_reducer::{EditorAction, EditorState};
 
 use crate::components::editor::grid::GridComponent;
 
@@ -44,10 +44,13 @@ pub fn editor_component(props: &EditorComponentProps) -> Html {
         Callback::from(move |_| {
             log::info!("[Button click] Check with CPS.");
             log::info!("Current grid\n{}", map_grid.to_string());
-            log::info!("Is valid grid? {}", match map_grid.solve().count() {
-                0 => "No".to_string(),
-                n => format!("Yes, and it has {} possible solutions", n),
-            });
+            log::info!(
+                "Is valid grid? {}",
+                match map_grid.solve().count() {
+                    0 => "No".to_string(),
+                    n => format!("Yes, and it has {} possible solutions", n),
+                }
+            );
         })
     };
 
@@ -75,7 +78,6 @@ pub fn editor_component(props: &EditorComponentProps) -> Html {
         })
     };
 
-
     let play_onclick: Callback<MouseEvent> = {
         let s = props.screen.clone();
         let g = editor.grid.clone();
@@ -85,8 +87,6 @@ pub fn editor_component(props: &EditorComponentProps) -> Html {
             s.set(Screen::Level(g.clone()))
         })
     };
-
-    // TODO: only pass row state & cell state instead of the whole game state
 
     html! {
         <>
