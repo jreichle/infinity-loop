@@ -649,7 +649,7 @@ mod test {
     }
 
     #[quickcheck]
-    fn enumset_invariant(set: EnumSet<EnumSet<bool>>) -> bool {
+    fn enumset_invariant_holds_true(set: EnumSet<EnumSet<bool>>) -> bool {
         set.0 & EnumSet::<EnumSet<bool>>::USED_BITS == set.0
             && set.intersection(EnumSet::FULL) == set
             && set.union(EnumSet::EMPTY) == set
@@ -661,7 +661,7 @@ mod test {
     }
 
     #[quickcheck]
-    fn iterator_of_singleton_set_contains_single_element(element: EnumSet<bool>) -> bool {
+    fn iterator_of_singleton_set_contains_the_single_element(element: EnumSet<bool>) -> bool {
         let mut iter = EnumSet::from(element).iter();
         iter.next() == Some(element) && iter.next() == None
     }
