@@ -79,10 +79,6 @@ pub fn editor_component(props: &EditorComponentProps) -> Html {
 
     // TODO: only pass row state & cell state instead of the whole game state
 
-    log::info!("Zefix!");
-    let g = editor.grid.clone();
-    log::info!("Current grid\n{}", g.to_string());
-
     html! {
         <>
             <GridComponent editor_state={editor} />

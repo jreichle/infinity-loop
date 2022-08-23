@@ -30,15 +30,15 @@
 - [X] implement puzzle solver
 
 ### Level Editor
-- [ ] Get tiles shown
-- [ ] Turn cells
-- [ ] Check with CPS
+- [x] Get tiles shown
+- [x] Turn cells
+- [x] Check with CPS
 - [ ] Check with SAT
-- [ ] Check if level is already solved
-- [ ] Generate with FastGen
-- [ ] Generate with WFC
+- [x] Check if level is already solved
+- [x] Generate with FastGen
+- [x] Generate with WFC
 - [ ] Change size
-- [ ] Play custom grid
+- [x] Play custom grid
 - [ ] Create user-, not console-messages
 - [ ] Scramble current grid
 
