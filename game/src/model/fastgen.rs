@@ -1,4 +1,8 @@
-use rand::{distributions::Standard, prelude::StdRng, Rng, SeedableRng};
+use rand::{
+    distributions::{Standard, Uniform},
+    prelude::StdRng,
+    Rng, SeedableRng,
+};
 
 use super::{
     coordinate::Coordinate,
@@ -52,6 +56,14 @@ pub fn generate(dimension: Coordinate<usize>, seed: u64) -> Grid<Tile<Square>> {
         .minimize()
         .extract_if_collapsed()
         .expect("error in algorithm")
+}
+
+impl<A: Finite> Grid<Tile<A>> {
+    pub fn scramble(self, seed: u64) -> Self {
+        let distribution = Uniform::new(0, A::CARDINALITY);
+        self.zip(StdRng::seed_from_u64(seed).sample_iter(distribution))
+            .map(|(t, r)| t.rotated_clockwise(r))
+    }
 }
 
 #[cfg(test)]
