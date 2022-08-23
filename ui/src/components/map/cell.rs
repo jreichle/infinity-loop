@@ -2,7 +2,6 @@ use yew::prelude::*;
 use yew::{html, Callback, Properties};
 
 use game::model::coordinate::Coordinate;
-
 use crate::components::map::board_reducer::{BoardAction, BoardState};
 
 #[derive(Properties, PartialEq, Clone)]

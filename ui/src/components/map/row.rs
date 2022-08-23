@@ -1,8 +1,10 @@
 use yew::prelude::*;
 use yew::{html, Properties};
 
-use super::cell::CellComponent;
-use super::board_reducer::BoardState;
+use crate::components::map::{
+    cell::CellComponent,
+    board_reducer::BoardState,
+};
 
 #[derive(Properties, PartialEq, Clone)]
 pub struct RowComponentProps {
@@ -12,7 +14,7 @@ pub struct RowComponentProps {
 
 #[function_component(RowComponent)]
 pub fn row_component(props: &RowComponentProps) -> Html {
-    let (_, width) = props.board_state.level_size.to_tuple();
+    let (_, width) = props.board_state.level_grid.dimensions().to_tuple();
 
     html! {
         <div class="cell-row">

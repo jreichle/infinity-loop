@@ -1,11 +1,10 @@
-use game::model::tile::Square;
 use yew::prelude::*;
-use yew::{html, Html, Callback};
+use yew::{html, Callback};
 use crate::helper::screen::Screen;
 
 use game::model::{
     grid::Grid,
-    tile::Tile,
+    tile::{Tile, Square},
 };
 
 use crate::components::map::
@@ -21,10 +20,10 @@ pub struct BoardComponentProps {
 
 #[function_component(BoardComponent)]
 pub fn board_component(props: &BoardComponentProps) -> Html {    
-    let board = use_reducer_eq(BoardState::set(props.level_grid.clone()));
-    let level_grid = board.level_grid.clone();
-
+    let board = use_reducer_eq(BoardState::set_grid(props.level_grid.clone()));
+    
     let check_onclick: Callback<MouseEvent> = {
+        let level_grid = board.level_grid.clone();
         Callback::from(move |_| {
             log::info!("LEVEL\n{}", level_grid.to_string());
             log::info!("[Button click] Check.");

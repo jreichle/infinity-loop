@@ -1,17 +1,21 @@
+use std::ops::Add;
 use std::rc::Rc;
 use yew::prelude::*;
 
 use wasm_bindgen::{prelude::*, JsCast};
 
-use game::model::gameboard::GameBoard;
-use game::model::coordinate::Coordinate;
-use game::model::grid::Grid;
-use game::model::tile::{Square, Tile};
-use game::model::fastgen::generate;
+use game::model::{
+    tile::{Square, Tile},
+    coordinate::Coordinate,
+    grid::Grid,
+    gameboard::GameBoard,
+    fastgen::generate,
+};
 
 // reducer's action
 pub enum BoardAction {
     TurnCell(Coordinate<isize>),
+    ReplaceGrid(Grid<Tile<Square>>),
     NextLevel,
     GetHint,
     SolveLevel,
@@ -21,16 +25,14 @@ pub enum BoardAction {
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct BoardState {
     pub level_number: usize,
-    pub level_size: Coordinate<usize>,
-    pub level_grid: Grid<Tile<Square>>
+    pub level_grid: Grid<Tile<Square>>,
 }
 
 impl Default for BoardState {
     fn default() -> Self {
         Self {
             level_number: 1,
-            level_size: Coordinate { row: 5, column: 5 },
-            level_grid: generate(Coordinate { row: 5, column: 5 }, 1)
+            level_grid: generate(Coordinate { row: 5, column: 5 }, 1),
         }
     }
 }
@@ -39,8 +41,10 @@ impl Default for BoardState {
 pub fn highlight_cells(row: usize, column: usize) {
     let window = web_sys::window().unwrap();
     let document = window.document().unwrap();
-    let cell = document.get_element_by_id(&format!("cell-r-{}-c-{}", row, column)).unwrap();
-    
+    let cell = document
+        .get_element_by_id(&format!("cell-r-{}-c-{}", row, column))
+        .unwrap();
+
     let class_names = cell.get_attribute("class").unwrap();
     let highlight_class_names = format!("{} {}", class_names.clone(), "cell-hint-highlight");
     cell.set_class_name(&highlight_class_names);
@@ -48,7 +52,9 @@ pub fn highlight_cells(row: usize, column: usize) {
         cell.set_class_name(&class_names);
     });
 
-    window.set_timeout_with_callback_and_timeout_and_arguments_0(hl.as_ref().unchecked_ref(), 500).ok();
+    window
+        .set_timeout_with_callback_and_timeout_and_arguments_0(hl.as_ref().unchecked_ref(), 500)
+        .ok();
     hl.forget();
 }
 
@@ -56,25 +62,24 @@ impl Reducible for BoardState {
     type Action = BoardAction;
 
     fn reduce(self: Rc<Self>, action: Self::Action) -> Rc<Self> {
-        let mut new_level_grid: Grid<Tile<Square>> = self.level_grid.clone();
-        let mut new_level_size: Coordinate<usize> = self.level_size;
         let mut new_level_number: usize = self.level_number.clone();
+        let mut new_level_grid: Grid<Tile<Square>> = self.level_grid.clone();
 
         match action {
             BoardAction::TurnCell(index) => {
                 new_level_grid = new_level_grid.rotate_clockwise(index).unwrap();
             }
+            BoardAction::ReplaceGrid(grid) => {
+                new_level_grid = grid;
+            }
             BoardAction::NextLevel => {
                 new_level_number += 1;
-                new_level_size = Coordinate {
-                    row: new_level_size.row + 1,
-                    column: new_level_size.column + 1,
-                };
-                new_level_grid = generate(new_level_size, new_level_number as u64)
+                new_level_grid =
+                    generate(self.level_grid.dimensions().add(1), new_level_number as u64)
             }
             BoardAction::GetHint => {
                 log::info!("Get hint.");
-                highlight_cells(3,3);
+                highlight_cells(3, 3);
             }
             BoardAction::SolveLevel => {
                 log::info!("Solve level");
@@ -83,23 +88,24 @@ impl Reducible for BoardState {
 
         Self {
             level_number: new_level_number,
-            level_size: new_level_size,
-            level_grid: new_level_grid.clone()
+            level_grid: new_level_grid.clone(),
         }
         .into()
     }
 }
 
 impl BoardState {
-    pub fn set(grid: Grid<Tile<Square>>) -> impl Fn() -> BoardState {
+    pub fn set_size(dimensions: Coordinate<usize>) -> impl Fn() -> BoardState {
         move || BoardState {
             level_number: 1,
-            level_size: grid.dimensions(),
-            level_grid: grid.clone()
+            level_grid: generate(dimensions, 1),
         }
     }
 
-    pub fn new(grid: Grid<Tile<Square>>) -> BoardState {
-        BoardState::set(grid)()
+    pub fn set_grid(grid: Grid<Tile<Square>>) -> impl Fn() -> BoardState {
+        move || BoardState {
+            level_number: 1,
+            level_grid: grid.clone(),
+        }
     }
 }

@@ -1,15 +1,8 @@
-use game::model::tile::Square;
 use yew::prelude::*;
 use yew::{html, Html};
 
-use game::model::{
-    grid::Grid,
-    tile::Tile,
-};
-
 use crate::components::map::row::RowComponent;
-
-use super::board_reducer::BoardState;
+use crate::components::map::board_reducer::BoardState;
 
 #[derive(Properties, PartialEq, Clone)]
 pub struct GridComponentProps {
