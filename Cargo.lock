@@ -1657,6 +1657,7 @@ dependencies = [
  "game",
  "getrandom",
  "log",
+ "rand",
  "reqwasm",
  "serde",
  "wasm-bindgen",

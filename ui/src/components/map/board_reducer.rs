@@ -22,7 +22,7 @@ pub enum BoardAction {
 pub struct BoardState {
     pub level_number: usize,
     pub level_size: Coordinate<usize>,
-    pub level_grid: Grid<Tile<Square>>,
+    pub level_grid: Grid<Tile<Square>>
 }
 
 impl Default for BoardState {
@@ -30,7 +30,7 @@ impl Default for BoardState {
         Self {
             level_number: 1,
             level_size: Coordinate { row: 5, column: 5 },
-            level_grid: generate(Coordinate { row: 5, column: 5 }, 1),
+            level_grid: generate(Coordinate { row: 5, column: 5 }, 1)
         }
     }
 }
@@ -84,7 +84,7 @@ impl Reducible for BoardState {
         Self {
             level_number: new_level_number,
             level_size: new_level_size,
-            level_grid: new_level_grid.clone(),
+            level_grid: new_level_grid.clone()
         }
         .into()
     }
@@ -95,7 +95,11 @@ impl BoardState {
         move || BoardState {
             level_number: 1,
             level_size: grid.dimensions(),
-            level_grid: grid.clone(),
+            level_grid: grid.clone()
         }
+    }
+
+    pub fn new(grid: Grid<Tile<Square>>) -> BoardState {
+        BoardState::set(grid)()
     }
 }

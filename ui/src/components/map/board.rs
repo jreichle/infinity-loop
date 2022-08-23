@@ -1,6 +1,7 @@
 use game::model::tile::Square;
 use yew::prelude::*;
 use yew::{html, Html, Callback};
+use crate::helper::screen::Screen;
 
 use game::model::{
     grid::Grid,
@@ -15,6 +16,7 @@ use crate::components::map::
 #[derive(Properties, PartialEq, Clone)]
 pub struct BoardComponentProps {
     pub level_grid: Grid<Tile<Square>>,
+    pub screen: UseStateHandle<Screen>,
 }
 
 #[function_component(BoardComponent)]
@@ -51,6 +53,14 @@ pub fn board_component(props: &BoardComponentProps) -> Html {
         })
     };
 
+    let editor_onclick: Callback<MouseEvent> = {
+        let s = props.screen.clone();
+        Callback::from(move |_| {
+            log::info!("[Button click] Editor");
+            s.set(Screen::Editor)
+        })
+    };
+
     html! {
         <>
 
@@ -80,6 +90,11 @@ pub fn board_component(props: &BoardComponentProps) -> Html {
                     {"-next-"}
                     // {"⏭️"}
                     // <img src="icons/next.svg" alt="Next level" />
+                </button>
+                <button 
+                    onclick={editor_onclick}
+                    style="margin-top:20px">
+                    {"-editor-"}
                 </button>
             </div>
         </>
