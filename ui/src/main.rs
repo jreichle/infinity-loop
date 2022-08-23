@@ -22,7 +22,9 @@ fn app() -> Html {
         })
     };
 
-    let grid_map = generate(Coordinate::new(5, 5), 1);
+    let dimension = use_state(|| Coordinate::new(5 as usize, 5 as usize));
+    let level_number = use_state(|| 0);
+    let grid_map = generate(*dimension, 1);
 
     html! {
         <>
@@ -37,6 +39,9 @@ fn app() -> Html {
                     <LevelPreviewComponent
                         level_count=20
                         screen={screen.clone()}
+                        dimension={dimension}
+                        level_number={level_number}
+
                     />
                 </div>
             }

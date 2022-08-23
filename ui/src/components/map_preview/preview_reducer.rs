@@ -56,7 +56,6 @@ impl PreviewState {
     ) -> impl Fn() -> PreviewState {
         for i in 0..extracted_levels.len() {
             let mut level_grid = extracted_levels[i].clone();
-            log::info!("before rand: \n {}", level_grid);
             let dimension = level_grid.dimensions();
             while level_grid.is_solved() {
                 for row in 0..dimension.row {
@@ -70,8 +69,6 @@ impl PreviewState {
                     }
                 }
             }
-
-            log::info!("after rand: \n {}", level_grid);
             extracted_levels.remove(i);
             extracted_levels.insert(i, level_grid);
         }

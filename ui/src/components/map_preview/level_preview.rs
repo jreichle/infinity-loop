@@ -25,24 +25,22 @@ use game::model::tile::{Square, Tile};
 pub struct LevelPreviewComponentProps {
     pub level_count: usize,
     pub screen: UseStateHandle<Screen>,
+    pub dimension: UseStateHandle<Coordinate<usize>>,
+    pub level_number: UseStateHandle<usize>,
 }
 
 #[function_component(LevelPreviewComponent)]
 pub fn level_preview_component(props: &LevelPreviewComponentProps) -> Html {
-    /*
-    for i in (1..props.level_count) {
-        levels.push(generate(Coordinate::new(5, 5), index as u64));
-    }
-    */
     let generated_levels = (0..props.level_count)
         .into_iter()
-        .map(|index| generate(Coordinate::new(5, 5), index as u64))
+        .map(|index| generate(*props.dimension, index as u64))
         .collect::<Vec<Grid<Tile<Square>>>>();
 
     let reducer = use_reducer(PreviewState::set(generated_levels, 0));
 
     // TODO: figure out which level
     // TODO: add form to change dimension
+
     html! {
         <div id="preview-container">
             {
