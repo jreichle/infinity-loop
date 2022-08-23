@@ -40,13 +40,9 @@ pub fn board_component(props: &BoardComponentProps) -> Html {
 
     let solve_onclick: Callback<MouseEvent> = {
         let board = board.clone();
-        let screen = props.screen.clone();
         Callback::from(move |_| {
             log::info!("[Button click] Solve.");
-            let mut solved_versions = board.level_grid.solve();
-            if let Some(solved_level) = solved_versions.next() {
-                screen.set(Screen::Level(solved_level));
-            }
+            board.dispatch(BoardAction::SolveLevel);
         })
     };
 

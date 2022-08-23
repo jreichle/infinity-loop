@@ -4,6 +4,8 @@ use yew::prelude::*;
 
 use wasm_bindgen::{prelude::*, JsCast};
 
+use crate::helper::level_randomizer::randomize_level;
+
 use game::model::{
     coordinate::Coordinate,
     fastgen::generate,
@@ -74,15 +76,21 @@ impl Reducible for BoardState {
             }
             BoardAction::NextLevel => {
                 new_level_number += 1;
-                new_level_grid =
-                    generate(self.level_grid.dimensions().add(1), new_level_number as u64)
+                new_level_grid = randomize_level(generate(
+                    self.level_grid.dimensions().add(1),
+                    new_level_number as u64,
+                ));
             }
             BoardAction::GetHint => {
                 log::info!("Get hint.");
                 highlight_cells(3, 3);
             }
             BoardAction::SolveLevel => {
-                log::info!("Solve level");
+                let mut solved_versions = new_level_grid.solve();
+                if let Some(solved_level) = solved_versions.next() {
+                    log::info!("solved level:\n {}", solved_level);
+                    new_level_grid = solved_level;
+                }
             }
         };
 
