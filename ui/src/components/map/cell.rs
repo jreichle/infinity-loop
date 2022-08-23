@@ -51,7 +51,7 @@ pub fn cell_component(props: &CellComponentProps) -> Html {
     }
 }
 
-fn get_angle(cell_symbol: char) -> usize {
+pub fn get_angle(cell_symbol: char) -> usize {
     match cell_symbol {
         ' ' | '╋' | '╹' | '┗' | '┣' => 0,
         '╺' | '━' | '┏' | '┳' => 90,
@@ -61,7 +61,7 @@ fn get_angle(cell_symbol: char) -> usize {
     }
 }
 
-fn get_index(cell_symbol: char) -> usize {
+pub fn get_index(cell_symbol: char) -> usize {
     match cell_symbol {
         ' ' => 0,
         '╹' | '╺' | '╻' | '╸' => 1,

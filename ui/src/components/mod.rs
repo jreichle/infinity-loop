@@ -1,2 +1,2 @@
 pub mod map;
-pub mod overview;
+pub mod map_preview;

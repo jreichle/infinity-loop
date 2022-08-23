@@ -5,29 +5,15 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="2ef32588-f1e8-483f-8233-915b881a70de" name="Changes" comment="">
-      <change afterPath="$PROJECT_DIR$/docs/images/example-level-solution.png" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/docs/images/example-level.png" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/game/src/model/interval.rs" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/ui/src/components/map_preview/level.rs" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/ui/src/components/map_preview/level_preview.rs" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/ui/src/components/map_preview/mod.rs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Cargo.lock" beforeDir="false" afterPath="$PROJECT_DIR$/Cargo.lock" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/docs/concepts.md" beforeDir="false" afterPath="$PROJECT_DIR$/docs/concepts.md" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/game/src/generator/levelstream.rs" beforeDir="false" afterPath="$PROJECT_DIR$/game/src/generator/levelstream.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/game/src/generator/wfc.rs" beforeDir="false" afterPath="$PROJECT_DIR$/game/src/generator/wfc.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/game/src/model/coordinate.rs" beforeDir="false" afterPath="$PROJECT_DIR$/game/src/model/coordinate.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/game/src/model/enummap.rs" beforeDir="false" afterPath="$PROJECT_DIR$/game/src/model/enummap.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/game/src/model/enumset.rs" beforeDir="false" afterPath="$PROJECT_DIR$/game/src/model/enumset.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/game/src/model/fastgen.rs" beforeDir="false" afterPath="$PROJECT_DIR$/game/src/model/fastgen.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/game/src/model/finite.rs" beforeDir="false" afterPath="$PROJECT_DIR$/game/src/model/finite.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/game/src/model/grid.rs" beforeDir="false" afterPath="$PROJECT_DIR$/game/src/model/grid.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/game/src/model/hint.rs" beforeDir="false" afterPath="$PROJECT_DIR$/game/src/model/hint.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/game/src/model/mod.rs" beforeDir="false" afterPath="$PROJECT_DIR$/game/src/model/mod.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/game/src/model/solver.rs" beforeDir="false" afterPath="$PROJECT_DIR$/game/src/model/solver.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/game/src/model/tile.rs" beforeDir="false" afterPath="$PROJECT_DIR$/game/src/model/tile.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/ui/Cargo.toml" beforeDir="false" afterPath="$PROJECT_DIR$/ui/Cargo.toml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/ui/src/components/map/cell.rs" beforeDir="false" afterPath="$PROJECT_DIR$/ui/src/components/map/cell.rs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/ui/src/components/map/map.rs" beforeDir="false" afterPath="$PROJECT_DIR$/ui/src/components/map/map.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/ui/src/components/map/map_reducer.rs" beforeDir="false" afterPath="$PROJECT_DIR$/ui/src/components/map/map_reducer.rs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/ui/src/components/mod.rs" beforeDir="false" afterPath="$PROJECT_DIR$/ui/src/components/mod.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/ui/src/components/overview/mod.rs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/ui/src/components/overview/overview.rs" beforeDir="false" />
       <change beforePath="$PROJECT_DIR$/ui/src/main.rs" beforeDir="false" afterPath="$PROJECT_DIR$/ui/src/main.rs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/ui/styles.css" beforeDir="false" afterPath="$PROJECT_DIR$/ui/styles.css" afterDir="false" />
     </list>
@@ -77,6 +63,7 @@
       <workItem from="1659522180261" duration="50000" />
       <workItem from="1659962837832" duration="166000" />
       <workItem from="1660925881673" duration="684000" />
+      <workItem from="1661165945517" duration="1534000" />
     </task>
     <servers />
   </component>

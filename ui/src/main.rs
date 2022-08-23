@@ -1,10 +1,9 @@
-// use components::map::MapLayout;
 use yew::html;
 use yew::prelude::*;
 
 mod components;
 use components::map::map::MapComponent;
-use components::overview::overview::OverviewComponent;
+use components::map_preview::level_preview::LevelPreviewComponent;
 
 mod helper;
 use helper::screen::Screen;
@@ -22,19 +21,8 @@ fn app() -> Html {
             screen.clone().set(Screen::Overview);
         })
     };
-    let to_level: Callback<MouseEvent> = {
-        let screen = screen.clone();
-        Callback::from(move |_| {
-            screen.set(Screen::Level);
-        })
-    };
 
-    let grid_map = generate(Coordinate { row: 5, column: 5 }, 99);
-
-    // TODO: give level stream to both overview and level
-    let level_stream = level_stream(LevelProperty {
-        dimension: Coordinate::new(3, 3),
-    });
+    let grid_map = generate(Coordinate::new(5, 5), 1);
 
     html! {
         <>
@@ -46,8 +34,10 @@ fn app() -> Html {
             }
             if *screen == Screen::Overview {
                 <div id="container">
-                    <OverviewComponent />
-                    <button onclick={to_level}>{"level"}</button>
+                    <LevelPreviewComponent
+                        level_count=20
+                        screen={screen.clone()}
+                    />
                 </div>
             }
             if *screen == Screen::Level {
