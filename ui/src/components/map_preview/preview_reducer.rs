@@ -1,4 +1,3 @@
-use rand::Rng;
 use std::rc::Rc;
 use yew::prelude::*;
 
@@ -7,6 +6,8 @@ use game::model::coordinate::Coordinate;
 use game::model::gameboard::GameBoard;
 use game::model::grid::Grid;
 use game::model::tile::{Square, Tile};
+
+use crate::helper::level_randomizer::randomize_level;
 
 pub enum PreviewAction {
     Random,
@@ -29,7 +30,6 @@ impl Reducible for PreviewState {
             PreviewAction::LoadNew(num) => log::info!("load new levels"),
         };
 
-        // TODO: make new_extracted_levels, new_chosen_level
         Self { extracted_levels }.into()
     }
 }
@@ -44,22 +44,6 @@ impl Default for PreviewState {
 
 impl PreviewState {
     pub fn set(mut extracted_levels: Vec<Grid<Tile<Square>>>) -> impl Fn() -> PreviewState {
-        fn randomize_level(mut level: Grid<Tile<Square>>) -> Grid<Tile<Square>> {
-            let dimension = level.dimensions();
-            while level.is_solved() {
-                for row in 0..dimension.row {
-                    for col in 0..dimension.column {
-                        let num = rand::thread_rng().gen_range(0..3);
-                        for _ in 0..num {
-                            level = level
-                                .rotate_clockwise(Coordinate::new(row as isize, col as isize))
-                                .unwrap();
-                        }
-                    }
-                }
-            }
-            level
-        }
         for i in 0..extracted_levels.len() {
             let new_level = randomize_level(extracted_levels[i].clone());
             extracted_levels.remove(i);

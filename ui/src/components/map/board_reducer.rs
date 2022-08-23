@@ -5,11 +5,11 @@ use yew::prelude::*;
 use wasm_bindgen::{prelude::*, JsCast};
 
 use game::model::{
-    tile::{Square, Tile},
     coordinate::Coordinate,
-    grid::Grid,
-    gameboard::GameBoard,
     fastgen::generate,
+    gameboard::GameBoard,
+    grid::Grid,
+    tile::{Square, Tile},
 };
 
 // reducer's action

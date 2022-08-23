@@ -69,15 +69,16 @@ fn app() -> Html {
                             </div>
                         }
                     },
-                    _ => {
+                    Screen::Solving => {
                         html! {
                             <div id="container">
-                                <BoardComponent
-                                    level_grid={grid_map.clone()}
-                                    screen={screen.clone()}/>
+                                <div>
+                                    {"Solving Level ..."}
+                                </div>
                             </div>
                         }
-                    },
+                    }
+
                 }
             }
             <div id="footer">

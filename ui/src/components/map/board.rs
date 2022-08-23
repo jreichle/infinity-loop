@@ -40,9 +40,13 @@ pub fn board_component(props: &BoardComponentProps) -> Html {
 
     let solve_onclick: Callback<MouseEvent> = {
         let board = board.clone();
+        let screen = props.screen.clone();
         Callback::from(move |_| {
             log::info!("[Button click] Solve.");
-            board.dispatch(BoardAction::SolveLevel);
+            let mut solved_versions = board.level_grid.solve();
+            if let Some(solved_level) = solved_versions.next() {
+                screen.set(Screen::Level(solved_level));
+            }
         })
     };
 
@@ -59,6 +63,14 @@ pub fn board_component(props: &BoardComponentProps) -> Html {
         Callback::from(move |_| {
             log::info!("[Button click] Editor");
             screen.set(Screen::Editor)
+        })
+    };
+
+    let to_preview: Callback<MouseEvent> = {
+        let screen = props.screen.clone();
+        Callback::from(move |_| {
+            log::info!("[Button click] Editor");
+            screen.set(Screen::Overview);
         })
     };
 
@@ -95,6 +107,10 @@ pub fn board_component(props: &BoardComponentProps) -> Html {
                     onclick={editor_onclick}
                     style="margin-top:20px">
                     {"-editor-"}
+                </button>
+                <button
+                    onclick={to_preview}>
+                    {"-preview-"}
                 </button>
             </div>
         </>
