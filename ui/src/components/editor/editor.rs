@@ -1,16 +1,15 @@
 use game::model::coordinate::Coordinate;
-use game::model::tile::Square;
 use game::model::fastgen::generate;
 use yew::prelude::*;
 use yew::{html, Callback, Html, InputEvent};
 
 use game::model::gameboard::GameBoard;
-use game::model::{grid::Grid, tile::Tile};
 
 use crate::components::map::board_reducer::{BoardState, BoardAction};
 use crate::components::editor::editor_reducer::{EditorState, EditorAction};
 
-use crate::components::map::row::RowComponent;
+use crate::components::map::grid::GridComponent;
+
 use crate::helper::screen::Screen;
 
 #[derive(Properties, PartialEq, Clone)]
@@ -83,19 +82,7 @@ pub fn editor_component(props: &EditorComponentProps) -> Html {
 
     html! {
         <>
-            <div class="game-board">
-                {
-                    (0..height).into_iter().map(| row_number | {
-                        html!{
-                            <RowComponent
-                                key={row_number}
-                                row_number={row_number as isize}
-                                board_state={use_reducer_eq(BoardState::set(editor.board.level_grid.clone(), true))}
-                            />
-                        }
-                    }).collect::<Html>()
-                }
-            </div>
+            <GridComponent board_state={use_reducer_eq(BoardState::set(editor.board.level_grid.clone(), true))} />
             <div id="controller">
                 <button
                     onclick={generateFastGen_onclick}
