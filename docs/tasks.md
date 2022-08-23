@@ -40,7 +40,8 @@
 - [ ] Change size
 - [x] Play custom grid
 - [ ] Create user-, not console-messages
-- [ ] Scramble current grid
+- [x] Shuffle current grid tile rotations
+
 
 - [ ] Save Grid (optional)
 - [ ] Load Grid (optional)
