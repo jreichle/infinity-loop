@@ -19,7 +19,7 @@ pub struct BoardComponentProps {
 
 #[function_component(BoardComponent)]
 pub fn board_component(props: &BoardComponentProps) -> Html {    
-    let board = use_reducer_eq(BoardState::set(props.level_grid.clone()));
+    let board = use_reducer_eq(BoardState::set(props.level_grid.clone(), true));
     let level_grid = board.level_grid.clone();
 
     let check_onclick: Callback<MouseEvent> = {

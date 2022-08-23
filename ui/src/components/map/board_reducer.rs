@@ -24,7 +24,6 @@ pub struct BoardState {
     pub level_number: usize,
     pub level_size: Coordinate<usize>,
     pub level_grid: Grid<Tile<Square>>,
-    pub allow_tile_change: bool,
 }
 
 impl Default for BoardState {
@@ -82,25 +81,28 @@ impl Reducible for BoardState {
             BoardAction::SolveLevel => {
                 log::info!("Solve level");
             }
+            BoardAction::ChangeTileShape(index) => {
                     new_level_grid = new_level_grid.change_tile_shape(index).unwrap();
-                }
+            }
         };
 
         Self {
             level_number: new_level_number,
             level_size: new_level_size,
             level_grid: new_level_grid.clone(),
+            allow_tile_change: self.allow_tile_change
         }
         .into()
     }
 }
 
 impl BoardState {
-    pub fn set(grid: Grid<Tile<Square>>) -> impl Fn() -> BoardState {
+    pub fn set(grid: Grid<Tile<Square>>, allow_tile_change: bool) -> impl Fn() -> BoardState {
         move || BoardState {
             level_number: 1,
             level_size: grid.dimensions(),
             level_grid: grid.clone(),
+            allow_tile_change: allow_tile_change
         }
     }
 

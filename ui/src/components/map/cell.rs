@@ -23,14 +23,15 @@ pub fn cell_component(props: &CellComponentProps) -> Html {
     let cell_img = get_index(cell_symbol.clone());
 
     let img_path = vec![
-        "ui/dist/data/tiles/0.svg",
-        "ui/dist/data/tiles/1.svg",
-        "ui/dist/data/tiles/2.svg",
-        "ui/dist/data/tiles/3.svg",
-        "ui/dist/data/tiles/4.svg",
-        "ui/dist/data/tiles/5.svg",
+        "data/tiles/0.svg",
+        "data/tiles/1.svg",
+        "data/tiles/2.svg",
+        "data/tiles/3.svg",
+        "data/tiles/4.svg",
+        "data/tiles/5.svg",
     ];
 
+    let board = board_state.clone();
     let onclick = Callback::from(move |e:MouseEvent| {
         log::info!(
             "Tile {} with coordinate ({}, {}) has been clicked.",
@@ -38,17 +39,24 @@ pub fn cell_component(props: &CellComponentProps) -> Html {
             row,
             column
         );
-        board_state.dispatch(BoardAction::TurnCell(index));
-            map_state.dispatch(MapAction::ChangeTileShape(index));
-        }
-        else {
-        }
+        board.dispatch(BoardAction::TurnCell(index));
+    });
+
+    let onwheel = Callback::from(move |_| {
+        log::info!(
+            "Tile {} with coordinate ({}, {}) has been couble-clicked.",
+            cell_symbol,
+            row,
+            column
+        );
+        board_state.dispatch(BoardAction::ChangeTileShape(index));
     });
 
     html! {
         <div id={format!("cell-r-{}-c-{}", row, column)} class={format!("cell row-{} col-{}", row, column)}>
             <img src={img_path[cell_img]}
                 onclick={onclick}
+                onwheel={onwheel}
                 style={format!("{}{}{}","transform:rotate(", get_angle(cell_symbol), "deg);")}
             />
         </div>

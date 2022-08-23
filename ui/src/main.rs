@@ -43,36 +43,28 @@ fn app() -> Html {
 
             {
                 match &*screen {
-                    Screen::Title => {
+                    Screen::Editor => {
                         html! {
                             <div id="container">
                                 // <MapComponent grid_map={grid_map} />
                                 <LevelPreviewComponent level_count=30 />
-                // <LevelPreviewComponent level_count=100 />
-                            </div>
-                        }
-                    },
-                    Screen::Overview => {
-                        html! {
-                            <div id="container">
-                                <button onclick={to_level}>{"level"}</button>
-                            </div>
-                        }
-                    },
-                    Screen::Editor => {
-                        html! {
-                            <div id="container">
-                                <EditorComponent screen={screen.clone()}/>
                             </div>
                         }
                     },
                     Screen::Level(user_grid) => {
                         html! {
                             <div id="container">
-                                <MapComponent grid_map={user_grid.clone()} />
+                                <BoardComponent level_grid={user_grid.clone()} />
                             </div>
                         }
-                    }
+                    },
+                    _ => {
+                        html! {
+                            <div id="container">
+                                <BoardComponent level_grid={generate(Coordinate { row: 5, column: 5 }, 99)} />
+                            </div>
+                        }
+                    },
                 }
             }
 
