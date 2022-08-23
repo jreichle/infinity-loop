@@ -145,29 +145,65 @@ mod tests {
     }
 }
 
-// meet       = and
-// join       = or
-// complement = not
-
+/// | lattice    | operator                       | logic | set              |   |       |
+/// |------------|--------------------------------|-------|------------------|---|-------|
+/// | meet       | [`bitAnd`][std::ops::BitAnd] & | ∧     | ∩ (intersection) | 1 | full  |
+/// | join       | [`bitOr`][std::ops::BitOr] \|  | ∨     | ∪ (union)        | 0 | empty |
+/// | complement | [`not`][std::ops::Not] !       | ¬     | S^C (complement) |   |       |
 trait MeetSemilattice: Sized + BitAnd<Output = Self> {}
+
 trait JoinSemilattice: Sized + BitOr<Output = Self> {}
+
 trait Lattice: JoinSemilattice + MeetSemilattice {}
 
 impl<A: MeetSemilattice + JoinSemilattice> Lattice for A {}
 
 trait BoundedLattice2: Lattice {
-    /// least
+    /// least element
     const BOTTOM: Self;
 
-    /// greatest
+    /// greatest element
     const TOP: Self;
+
+    /// greatest lower bound of all values
+    ///
+    /// lazy fold: early return if [`Self::BOTTOM`]
+    fn and<I: IntoIterator<Item = Self>>(iter: I) -> Self
+    where
+        Self: PartialEq,
+    {
+        let mut acc = Self::TOP;
+        for v in iter.into_iter() {
+            if acc == Self::BOTTOM {
+                break;
+            }
+            acc = acc & v
+        }
+        acc
+    }
+
+    /// least upper bound of all values
+    ///
+    /// lazy fold: early return if [`Self::TOP`]
+    fn or<I: IntoIterator<Item = Self>>(iter: I) -> Self
+    where
+        Self: PartialEq,
+    {
+        let mut acc = Self::BOTTOM;
+        for v in iter.into_iter() {
+            if acc == Self::TOP {
+                break;
+            }
+            acc = acc | v
+        }
+        acc
+    }
 }
+trait DistributiveLattice: Lattice {}
 
-trait DistributiveLattice: Not<Output = Self> {}
+trait BooleanAlgebra: BoundedLattice2 + DistributiveLattice + Not<Output = Self> {}
 
-trait BooleanAlgebra: DistributiveLattice {}
-
-impl<A: BoundedLattice2 + DistributiveLattice> BooleanAlgebra for A {}
+impl<A: BoundedLattice2 + DistributiveLattice + Not<Output = Self>> BooleanAlgebra for A {}
 
 // () does not implement bit operators
 // impl JoinSemilattice for () {}
@@ -222,9 +258,156 @@ impl<A: Finite> DistributiveLattice for Tile<A> {}
 
 /*
 hint function
-inline BitArray in EnumSet
 make solver to propagator by accepting evidence as possible tiles
 put general purpose features into core folder
 maybe seperate levelstream and unfold iterator
 
 */
+
+#[cfg(test)]
+mod tests2 {
+
+    use crate::model::tile::Square;
+
+    use super::*;
+    use std::iter::{self};
+
+    #[quickcheck]
+    fn bool_associativity(x: bool, y: bool, z: bool) -> bool {
+        join_associativity(x, y, z) && meet_associativity(x, y, z)
+    }
+
+    #[quickcheck]
+    fn bool_commutativity(x: bool, y: bool) -> bool {
+        join_commutativity(x, y) && meet_commutativity(x, y)
+    }
+
+    #[quickcheck]
+    fn bool_idempotency(x: bool) -> bool {
+        join_idempotency(x) && meet_idempotency(x)
+    }
+
+    #[quickcheck]
+    fn bool_absorption(x: bool, y: bool) -> bool {
+        join_absorption(x, y) && meet_absorption(x, y)
+    }
+
+    #[quickcheck]
+    fn bool_identity_element(x: bool) -> bool {
+        join_identity_element(x) && meet_identity_element(x)
+    }
+
+    #[quickcheck]
+    fn bool_distributivity(x: bool, y: bool, z: bool) -> bool {
+        join_distributivity(x, y, z) && meet_distributivity(x, y, z)
+    }
+
+    #[quickcheck]
+    fn bool_complement(x: bool) -> bool {
+        join_complement(x) && meet_complement(x)
+    }
+
+    #[quickcheck]
+    fn tile_associativity(x: Tile<Square>, y: Tile<Square>, z: Tile<Square>) -> bool {
+        join_associativity(x, y, z) && meet_associativity(x, y, z)
+    }
+
+    #[quickcheck]
+    fn tile_commutativity(x: Tile<Square>, y: Tile<Square>) -> bool {
+        join_commutativity(x, y) && meet_commutativity(x, y)
+    }
+
+    #[quickcheck]
+    fn tile_idempotency(x: Tile<Square>) -> bool {
+        join_idempotency(x) && meet_idempotency(x)
+    }
+
+    #[quickcheck]
+    fn tile_absorption(x: Tile<Square>, y: Tile<Square>) -> bool {
+        join_absorption(x, y) && meet_absorption(x, y)
+    }
+
+    #[quickcheck]
+    fn tile_identity_element(x: Tile<Square>) -> bool {
+        join_identity_element(x) && meet_identity_element(x)
+    }
+
+    #[quickcheck]
+    fn tile_distributivity(x: Tile<Square>, y: Tile<Square>, z: Tile<Square>) -> bool {
+        join_distributivity(x, y, z) && meet_distributivity(x, y, z)
+    }
+
+    #[quickcheck]
+    fn tile_complement(x: Tile<Square>) -> bool {
+        join_complement(x) && meet_complement(x)
+    }
+
+    #[quickcheck]
+    fn tile_fold_is_lazy(x: Tile<Square>) -> bool {
+        and_fold_is_lazy(x) && or_fold_is_lazy(x)
+    }
+
+    fn join_associativity<A: JoinSemilattice + PartialEq + Copy>(x: A, y: A, z: A) -> bool {
+        (x | y) | z == x | (y | z)
+    }
+
+    fn meet_associativity<A: MeetSemilattice + PartialEq + Copy>(x: A, y: A, z: A) -> bool {
+        (x & y) & z == x & (y & z)
+    }
+
+    fn join_commutativity<A: JoinSemilattice + PartialEq + Copy>(x: A, y: A) -> bool {
+        x | y == y | x
+    }
+
+    fn meet_commutativity<A: MeetSemilattice + PartialEq + Copy>(x: A, y: A) -> bool {
+        x & y == y & x
+    }
+
+    fn join_idempotency<A: JoinSemilattice + PartialEq + Copy>(x: A) -> bool {
+        x | x == x
+    }
+
+    fn meet_idempotency<A: MeetSemilattice + PartialEq + Copy>(x: A) -> bool {
+        x & x == x
+    }
+
+    fn join_absorption<A: Lattice + PartialEq + Copy>(x: A, y: A) -> bool {
+        x | (x & y) == x
+    }
+
+    fn meet_absorption<A: Lattice + PartialEq + Copy>(x: A, y: A) -> bool {
+        x & (x | y) == x
+    }
+
+    fn join_identity_element<A: BoundedLattice2 + PartialEq + Copy>(x: A) -> bool {
+        x | A::BOTTOM == x
+    }
+
+    fn meet_identity_element<A: BoundedLattice2 + PartialEq + Copy>(x: A) -> bool {
+        x & A::TOP == x
+    }
+
+    fn and_fold_is_lazy<A: BoundedLattice2 + PartialEq + Clone>(x: A) -> bool {
+        BoundedLattice2::and(iter::once(A::BOTTOM).chain(iter::repeat(x))) == A::BOTTOM
+    }
+
+    fn or_fold_is_lazy<A: BoundedLattice2 + PartialEq + Clone>(x: A) -> bool {
+        BoundedLattice2::or(iter::once(A::TOP).chain(iter::repeat(x))) == A::TOP
+    }
+
+    fn join_distributivity<A: DistributiveLattice + PartialEq + Copy>(x: A, y: A, z: A) -> bool {
+        x | (y & z) == (x | y) & (x | z)
+    }
+
+    fn meet_distributivity<A: DistributiveLattice + PartialEq + Copy>(x: A, y: A, z: A) -> bool {
+        x & (y | z) == (x & y) | (x & z)
+    }
+
+    fn join_complement<A: BooleanAlgebra + PartialEq + Copy>(x: A) -> bool {
+        x | !x == A::TOP
+    }
+
+    fn meet_complement<A: BooleanAlgebra + PartialEq + Copy>(x: A) -> bool {
+        x & !x == A::BOTTOM
+    }
+}
