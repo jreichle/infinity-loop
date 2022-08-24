@@ -107,10 +107,10 @@ impl<A: Finite + Clone> SentinelGrid<Tile<A>> {
 
 impl<A: Clone + Display + Finite + BoundedLattice + Iterator> Display for SentinelGrid<A>
 where
-    <A as IntoIterator>::Item: Debug + BoundedLattice,
+    <A as IntoIterator>::Item: Debug + BoundedLattice + PartialEq,
 {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        self.0.map(BoundedLattice::join_all).fmt(f)
+        self.0.map(BoundedLattice::or).fmt(f)
     }
 }
 
@@ -244,14 +244,14 @@ fn memoize<A: Finite, B: Copy, F: Fn(A) -> B>(f: F) -> impl FnMut(A) -> B {
     }
 }
 
-impl<A: Copy + Finite + Neg<Output = A>> Superposition<A> {
+impl<A: Copy + Finite + Neg<Output = A> + PartialEq> Superposition<A> {
     /// Generates all propagation information from on a single superposition
     pub fn extract_common_connections(self) -> EnumMap<A, Superposition<A>> {
-        let present_evidence = Tile::meet_all(self)
+        let present_evidence = BoundedLattice::and(self)
             .0
             .into_iter()
             .map(|x| (x, subset_containing(-x)));
-        let absent_evidence = Tile::join_all(self)
+        let absent_evidence = BoundedLattice::or(self)
             .0
             .not()
             .into_iter()
@@ -350,7 +350,7 @@ pub fn propagate_restrictions_to_all_neighbors(
     evidence.into_iter().fold(grid, |acc, c| {
         SentinelGrid(
             acc.0
-                .try_adjust_at(index.get_neighbor_index(c.0), |s| s.meet(c.1)),
+                .try_adjust_at(index.get_neighbor_index(c.0), |s| s & c.1),
         )
     })
 }

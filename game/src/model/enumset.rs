@@ -9,7 +9,7 @@ use std::{
 
 use quickcheck::Arbitrary;
 
-use super::{cardinality::Cardinality, finite::Finite, lattice::BoundedLattice, num::Num};
+use super::{cardinality::Cardinality, finite::Finite, num::Num};
 
 // prefered representation, supports sets with arbitrary capacity
 // struct EnumSet<A: Cardinality>([BitArray; (A::CARDINALITY + CAPACITY - 1) / CAPACITY], PhantomData<A>);
@@ -441,25 +441,6 @@ impl<A: Finite> From<A> for EnumSet<A> {
 impl<A: Arbitrary + Finite> Arbitrary for EnumSet<A> {
     fn arbitrary(g: &mut quickcheck::Gen) -> Self {
         Vec::arbitrary(g).into_iter().collect()
-    }
-}
-
-/// poset under inclusion
-impl<A: Cardinality> BoundedLattice for EnumSet<A> {
-    fn bottom() -> Self {
-        Self::EMPTY
-    }
-
-    fn top() -> Self {
-        Self::FULL
-    }
-
-    fn meet(self, other: Self) -> Self {
-        self.intersection(other)
-    }
-
-    fn join(self, other: Self) -> Self {
-        self.union(other)
     }
 }
 
