@@ -12,7 +12,7 @@ use quickcheck::Arbitrary;
 use super::{cardinality::Cardinality, finite::Finite, lattice::BoundedLattice, num::Num};
 
 // prefered representation, supports sets with arbitrary capacity
-// struct EnumSet<A: Cardinality>([BitStorage; (A::CARDINALITY + CAPACITY - 1) / CAPACITY], PhantomData<A>);
+// struct EnumSet<A: Cardinality>([BitArray; (A::CARDINALITY + CAPACITY - 1) / CAPACITY], PhantomData<A>);
 
 /// Defines the runtime representation and storage [`CAPACITY`] of a [`EnumSet`]
 ///
@@ -21,7 +21,7 @@ type BitArray = u64;
 
 /// Indicates the maximum number of elements that can be stored in a [`EnumSet`]
 ///
-/// This is based on the number of bits in the underlying [`BitStorage`] type
+/// This is based on the number of bits in the underlying [`BitArray`] type
 const CAPACITY: u64 = BitArray::BITS as u64;
 
 /// Set for storing elements of statically enumerable types with known cardinality, as witnessed by the traits [Cardinality] and [Finite]
@@ -30,17 +30,19 @@ const CAPACITY: u64 = BitArray::BITS as u64;
 ///
 /// This implementation uses a fixed amount of memory and does not grow dynamically
 ///
-/// Using types that exceed the maximum storing capacity leads to a compile-time error: [`BitStorage::BITS`] ≥ [`A::CARDINALITY`]
+/// Using types that exceed the maximum storing capacity leads to a compile-time error: [`BitArray::BITS`] ≥ [`A::CARDINALITY`][Cardinality]
 ///
 /// This struct deliberately does not implement the [`Default`] trait, instead use [`EnumSet::EMPTY`] or [`EnumSet::FULL`]
+///
+/// `EnumSet` is a specialized implementation of an [`EnumMap`][super::enummap::EnumMap]: `EnumSet<A> ≅ EnumMap<A, ()>`
 ///
 /// # Invariants
 ///
 /// 1. bits exceeding [`A::Cardinality`] are always set to 0
-/// 2. [`Finite`] of EnumSet<A> is order isomprphic ⟺ [`Finite`] of A is order isomorphic:
-///     ∀x, y : A, s1, s2 : EnumSet<A>. (s1 ≤ s2 ⟺ s1.enum_to_index() ≤ s2.enum_to_index()) ⟺ (x ≤ y ⟺ x.enum_to_index() ≤ y.enum_to_index())
+/// 2. [`Finite`] of EnumSet<A> is order isomorphic ⟺ [`Finite`] of A is order isomorphic:
+///     `∀x, y : A, s1, s2 : EnumSet<A>. (s1 ≤ s2 ⟺ s1.enum_to_index() ≤ s2.enum_to_index()) ⟺ (x ≤ y ⟺ x.enum_to_index() ≤ y.enum_to_index())`
 ///
-/// Invariant #1 ensures canonical representation for equality checks
+/// Invariant #1 ensures canonical representation for easy equality checks
 #[derive(Debug)]
 pub struct EnumSet<A>(BitArray, PhantomData<A>); // alternative names: FiniteSet, FinSet
 
@@ -341,7 +343,7 @@ impl<A: Finite> Iterator for Iter<A> {
             None
         } else {
             Some(A::unchecked_index_to_enum(
-                bits.leading_zeros() as u64 + self.index - 1,
+                CAPACITY - bits.leading_zeros() as u64 + self.index - 1,
             ))
         }
     }
@@ -672,8 +674,13 @@ mod test {
     }
 
     #[quickcheck]
-    fn iter_last_is_last_value_of_iterator(set: EnumSet<EnumSet<bool>>) -> bool {
-        set.iter().collect::<Vec<_>>().last() == set.iter().last().as_ref()
+    fn iter_last_is_last_value_of_iterator(
+        set: EnumSet<Max<{ CAPACITY as usize - 1 }>>,
+        random: usize,
+    ) -> bool {
+        let skip_distance = random.checked_rem(set.len() as usize).unwrap_or_default();
+        set.iter().skip(skip_distance).collect::<Vec<_>>().last()
+            == set.iter().skip(skip_distance).last().as_ref()
     }
 
     #[quickcheck]
