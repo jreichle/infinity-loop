@@ -178,7 +178,7 @@ impl<K: Finite, V: Clone> Iterator for Iter<K, V> {
 
     fn size_hint(&self) -> (usize, Option<usize>) {
         let size = self.elements[self.index..]
-            .into_iter()
+            .iter()
             .filter(|x| x.is_some())
             .count() as usize;
         (size, Some(size))
@@ -186,7 +186,7 @@ impl<K: Finite, V: Clone> Iterator for Iter<K, V> {
 
     fn count(self) -> usize {
         self.elements[self.index..]
-            .into_iter()
+            .iter()
             .filter(|x| x.is_some())
             .count() as usize
     }
