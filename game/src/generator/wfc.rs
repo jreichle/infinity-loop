@@ -3,6 +3,7 @@ use std::{fmt::Display, hash::Hash};
 
 use crate::model::{
     coordinate::Coordinate,
+    enummap::EnumMap,
     enumset::EnumSet,
     finite::Finite,
     grid::Grid,
@@ -10,7 +11,7 @@ use crate::model::{
     tile::{
         Square::{self},
         Tile,
-    }, enummap::EnumMap,
+    },
 };
 
 const PRINT_INTERMEDIATE_RESULTS: bool = false;
