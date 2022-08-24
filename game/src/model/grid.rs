@@ -361,8 +361,8 @@ impl Grid<Tile<Square>>
         for r in 0..size.row {
             for c in 0..size.column {
                 if r < self.rows && c < self.columns {
-                    let index = r * c;
-                    new_elements[index] = self.elements[index];
+                    let new_index = c + size.column * r;
+                    new_elements[new_index] = self.elements[self.get_vec_index(Coordinate { column: c as isize, row: r as isize})];
                 }
             }
         }

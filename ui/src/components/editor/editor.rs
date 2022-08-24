@@ -73,7 +73,7 @@ pub fn editor_component(props: &EditorComponentProps) -> Html {
     let shuffleTileRotations_onclick: Callback<MouseEvent> = {
         let editor = editor.clone();
         Callback::from(move |_| {
-            log::info!("[Button click] Generate WFC.");
+            log::info!("[Button click] Shuffle tile rotations.");
             editor.dispatch(EditorAction::ShuffleTileRotations);
         })
     };
@@ -88,8 +88,69 @@ pub fn editor_component(props: &EditorComponentProps) -> Html {
         })
     };
 
+    let resizeWidthPlusOne_onclick: Callback<MouseEvent> = {
+        let editor = editor.clone();
+        Callback::from(move |_| {
+            log::info!("[Button click] Resize width +1.");
+            log::info!("[Button click] Resize width +1.{} {}", editor.grid_size.column + 1, editor.grid_size.row);
+            editor.dispatch(EditorAction::ChangeSize(Coordinate { column: editor.grid_size.column + 1, row: editor.grid_size.row }));
+        })
+    };
+
+    let resizeWidthMinusOne_onclick: Callback<MouseEvent> = {
+        let editor = editor.clone();
+        Callback::from(move |_| {
+            log::info!("[Button click] Resize width -1.");
+            if editor.grid_size.column > 1 {
+                log::info!("[Button click] Resize width +1.{} {}", editor.grid_size.column - 1, editor.grid_size.row);
+                editor.dispatch(EditorAction::ChangeSize(Coordinate { column: editor.grid_size.column - 1, row: editor.grid_size.row }));
+            }
+        })
+    };
+
+    let resizeHeightPlusOne_onclick: Callback<MouseEvent> = {
+        let editor = editor.clone();
+        Callback::from(move |_| {
+            log::info!("[Button click] Resize height +1.");
+            log::info!("[Button click] Resize width +1.{} {}", editor.grid_size.column, editor.grid_size.row + 1);
+            editor.dispatch(EditorAction::ChangeSize(Coordinate { column: editor.grid_size.column, row: editor.grid_size.row + 1 }));
+        })
+    };
+
+    let resizeHeightMinusOne_onclick: Callback<MouseEvent> = {
+        let editor = editor.clone();
+        Callback::from(move |_| {
+            log::info!("[Button click] Resize height -1.");
+            if editor.grid_size.row > 1 {
+                log::info!("[Button click] Resize width +1.{} {}", editor.grid_size.column, editor.grid_size.row - 1);
+                editor.dispatch(EditorAction::ChangeSize(Coordinate { column: editor.grid_size.column, row: editor.grid_size.row - 1 }));
+            }
+        })
+    };
+
     html! {
         <>
+            <section id="controller">
+                <ul style="list-style-type: none">
+                    <li><button
+                        onclick={resizeHeightMinusOne_onclick}
+                        style="width:80px;height:50px;margin-left:65px;margin-right:20px"
+                        >{"-"}</button></li>
+                    <li><button
+                        onclick={resizeWidthMinusOne_onclick}
+                        style="width:80px;height:50px"
+                        >{"-"}</button>
+                    <b style="width:80px;height:50px">{"Resize"}</b>
+                    <button
+                        onclick={resizeWidthPlusOne_onclick}
+                        style="width:80px;height:50px;margin-right:20px"
+                        >{"+"}</button></li>
+                    <li><button
+                        onclick={resizeHeightPlusOne_onclick}
+                        style="width:80px;height:50px;margin-left:65px;margin-right:20px"
+                        >{"+"}</button></li>
+                </ul>
+            </section>
             <GridComponent editor_state={editor} />
             <div id="controller">
                 <button
