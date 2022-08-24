@@ -9,7 +9,6 @@ use std::{
 use quickcheck::Arbitrary;
 
 use super::{
-    cardinality::Cardinality,
     coordinate::Coordinate,
     enummap::EnumMap,
     enumset::EnumSet,
@@ -229,39 +228,6 @@ impl<A> SentinelGrid<EnumSet<A>> {
     }
 }
 
-impl<A: Finite + Copy> Superposition<A> {
-    /// restricts superposition to only include tiles with specified connection and direction
-    pub fn restrict_tile(self, connection: Connection<A>) -> Self {
-        let iter = self.into_iter();
-        match connection {
-            Connection(ref d, Status::Absent) => iter.filter(|t| !t.0.contains(*d)).collect(),
-            Connection(ref d, Status::Present) => iter.filter(|t| t.0.contains(*d)).collect(),
-        }
-    }
-
-    /// restricts superposition to only include tiles with the specified connection and direction
-    pub fn restrict_tile2(self, connection: Connection<A>) -> Self {
-        // improve by precomputing BitSets without tiles of certain connections and take intersection to achieve filtering
-        self.intersection(connection.to_filter())
-    }
-}
-
-impl<A: Finite + Copy> Connection<A> {
-    fn to_filter(self) -> EnumSet<Tile<A>> {
-        EnumSet::FULL
-            .into_iter()
-            .filter(|t: &Tile<A>| match self.1 {
-                Status::Absent => !t.0.contains(self.0),
-                Status::Present => t.0.contains(self.0),
-            })
-            .collect()
-    }
-
-    fn to_filter_memoized(self) -> EnumSet<Tile<A>> {
-        memoize(Self::to_filter)(self)
-    }
-}
-
 /// memoizing combinator for unary functions
 fn memoize<A: Finite, B: Copy, F: Fn(A) -> B>(f: F) -> impl FnMut(A) -> B {
     let mut cache = vec![None; A::CARDINALITY as usize];
@@ -278,98 +244,9 @@ fn memoize<A: Finite, B: Copy, F: Fn(A) -> B>(f: F) -> impl FnMut(A) -> B {
     }
 }
 
-/// Indicates if a connection is absent oe present
-#[derive(Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Debug, Hash)]
-pub enum Status {
-    Absent,
-    Present,
-}
-
-impl Cardinality for Status {
-    const CARDINALITY: u64 = 2;
-}
-
-impl Finite for Status {
-    fn unchecked_index_to_enum(value: u64) -> Self {
-        match value % Self::CARDINALITY {
-            0 => Self::Absent,
-            _ => Self::Present,
-        }
-    }
-
-    fn enum_to_index(&self) -> u64 {
-        match self {
-            Self::Absent => 0,
-            Self::Present => 1,
-        }
-    }
-}
-
-impl Arbitrary for Status {
-    fn arbitrary(g: &mut quickcheck::Gen) -> Self {
-        *g.choose(&[Status::Absent, Status::Present]).unwrap()
-    }
-}
-
-/// Defines a connection pointing to the neighoring tile
-#[derive(Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Debug, Hash)]
-pub struct Connection<A>(A, Status);
-
-impl<A: Cardinality> Cardinality for Connection<A> {
-    const CARDINALITY: u64 = A::CARDINALITY * Status::CARDINALITY;
-}
-
-impl<A: Finite> Finite for Connection<A> {
-    fn unchecked_index_to_enum(value: u64) -> Self {
-        let value = value % Self::CARDINALITY;
-        Self(
-            A::unchecked_index_to_enum(value % A::CARDINALITY),
-            Status::unchecked_index_to_enum(value / A::CARDINALITY),
-        )
-    }
-
-    fn enum_to_index(&self) -> u64 {
-        self.0.enum_to_index() + A::CARDINALITY * self.1.enum_to_index()
-    }
-}
-
-impl<A: Arbitrary> Arbitrary for Connection<A> {
-    fn arbitrary(g: &mut quickcheck::Gen) -> Self {
-        Connection(A::arbitrary(g), Status::arbitrary(g))
-    }
-}
-
-impl Neg for Connection<Square> {
-    type Output = Self;
-
-    /// Returns a connection pointing in the opposite direction
-    fn neg(self) -> Self::Output {
-        let Connection(d, s) = self;
-        Connection(-d, s)
-    }
-}
-
 impl<A: Copy + Finite + Neg<Output = A>> Superposition<A> {
-    /// Extracts the common connections over all states from the superposition
-    ///
-    /// eg. if there is a common [Up] connection between all states, then the result includes [Connection::Present(Up)]
-    pub fn extract_common_connections(self) -> Vec<Connection<A>> {
-        // an empty superposition leads to all overlaps simultaneously but since
-        // an empty superposition cannot be further reduced and already signifies
-        // no solution, the result does not matter
-        let present_connections = Tile::meet_all(self)
-            .0
-            .into_iter()
-            .map(|d| Connection(d, Status::Present));
-        let absent_connections = Tile::join_all(self)
-            .0
-            .not()
-            .into_iter()
-            .map(|d| Connection(d, Status::Absent));
-        present_connections.chain(absent_connections).collect()
-    }
-
-    pub fn extract_common_connections2(self) -> EnumMap<A, Superposition<A>> {
+    /// Generates all propagation information from on a single superposition
+    pub fn extract_common_connections(self) -> EnumMap<A, Superposition<A>> {
         let present_evidence = Tile::meet_all(self)
             .0
             .into_iter()
@@ -422,7 +299,7 @@ impl Sentinel<Square> {
             |g| {
                 g.0.coordinates()
                     .into_iter()
-                    .fold(g.clone(), propagate_restrictions_to_all_neighbors2)
+                    .fold(g.clone(), propagate_restrictions_to_all_neighbors)
             },
             SentinelGrid::eq,
         )
@@ -462,32 +339,11 @@ pub fn propagate_restrictions_to_all_neighbors(
     index: Coordinate<isize>,
 ) -> Sentinel<Square> {
     // determine common connections
-    let connections = grid
-        .0
-        .get(index)
-        .copied()
-        .map(Superposition::extract_common_connections)
-        .unwrap_or_default();
-
-    // propagate connection information to neighbors
-    connections.into_iter().fold(grid, |acc, c| {
-        SentinelGrid(
-            acc.0
-                .try_adjust_at(index.get_neighbor_index(c.0), |s| s.restrict_tile(-c)),
-        )
-    })
-}
-
-pub fn propagate_restrictions_to_all_neighbors2(
-    grid: Sentinel<Square>,
-    index: Coordinate<isize>,
-) -> Sentinel<Square> {
-    // determine common connections
     let evidence = grid
         .0
         .get(index)
         .copied()
-        .map(Superposition::extract_common_connections2)
+        .map(Superposition::extract_common_connections)
         .unwrap_or_default();
 
     // propagate connection information to neighbors
@@ -551,14 +407,7 @@ const _: Superposition<Square> = EnumSet::FULL;
 mod tests {
 
     use super::*;
-    use crate::{
-        enumset,
-        model::{
-            interval::Max,
-            tile::{Square, Tile},
-        },
-        tile,
-    };
+    use crate::model::interval::Max;
 
     #[quickcheck]
     fn tile_configurations_have_same_number_of_connections(tile: Tile<Square>) -> bool {
@@ -566,14 +415,6 @@ mod tests {
         tile.superimpose()
             .into_iter()
             .all(|t| t.0.len() == connections)
-    }
-
-    #[quickcheck]
-    fn restrict_tile_sanity_check() -> bool {
-        let superposition = EnumSet::from_iter(tile!(Up, Right).superimpose());
-        let connection = Connection(Right, Status::Present);
-        superposition.restrict_tile(connection)
-            == EnumSet::from_iter([tile!(Up, Right), tile!(Right, Down)])
     }
 
     #[quickcheck]
@@ -601,31 +442,5 @@ mod tests {
         sentinel: Tile<Square>,
     ) -> bool {
         grid == grid.with_sentinels(sentinel).extract_grid()
-    }
-
-    #[quickcheck]
-    fn propagate_restrictions_to_all_neighbors_id(
-        grid: Sentinel<Square>,
-        index: Coordinate<Max<10>>,
-    ) -> bool {
-        let index = index.map(Max::to_isize);
-        propagate_restrictions_to_all_neighbors(grid.clone(), index)
-            == propagate_restrictions_to_all_neighbors2(grid, index)
-    }
-
-    // #[quickcheck]
-    fn test(sup: Superposition<Square>) -> bool {
-        let expected = sup
-            .extract_common_connections()
-            .into_iter()
-            .map(|x| (x, x.neg().to_filter().to_string()))
-            .collect::<Vec<_>>();
-        let actual = sup
-            .extract_common_connections2()
-            .into_iter()
-            .map(|x| (x.0, x.1.to_string()))
-            .collect::<Vec<_>>();
-        println!("sup:\t{sup}\nexpected:\t{expected:?}\nactual:\t{actual:?}\n");
-        true
     }
 }
