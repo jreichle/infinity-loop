@@ -99,12 +99,6 @@ impl<A> Clone for Tile<A> {
 
 impl<A> Copy for Tile<A> {}
 
-impl<A> Default for Tile<A> {
-    fn default() -> Self {
-        Self::NO_CONNECTIONS
-    }
-}
-
 impl<A: Finite> Not for Tile<A> {
     type Output = Self;
 

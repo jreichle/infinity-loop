@@ -300,8 +300,8 @@ impl GameBoard for Grid<Tile<Square>> {
         } = self.dimensions().map(|x| x as isize);
 
         let enclose_sentinels = |mut v: Vec<Self::Tile>| {
-            v.insert(0, Self::Tile::default());
-            v.push(Self::Tile::default());
+            v.insert(0, Self::Tile::NO_CONNECTIONS);
+            v.push(Self::Tile::NO_CONNECTIONS);
             v
         };
         let row_slice = |r| {
@@ -394,7 +394,7 @@ impl<A: Display> Display for Grid<A> {
             } else {
                 self.elements
                     .iter()
-                    .map(|x| format!("{x}"))
+                    .map(ToString::to_string)
                     .collect::<Vec<String>>()
                     .chunks_exact(self.columns)
                     .map(|s| s.join(""))
