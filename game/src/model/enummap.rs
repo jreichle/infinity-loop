@@ -8,26 +8,16 @@ use quickcheck::Arbitrary;
 
 use super::{cardinality::Cardinality, finite::Finite};
 
-///!-------------------
-///! UNDER CONSTRUCTION
-///!-------------------
-
-// alternative representation
-// pub struct EnumMap<K, V>([Option<V>; StorageSize::BITS as usize], PhantomData<K>);
-
-/// underlying integer type
-type StorageSize = u64;
-
 /// dense structure, preallocates all memory instead of growing dynamically
 ///
 /// for use case in enums and assuming even distribution,
-/// 87.5% of inhabitants require vec of size of half or more of total capacity
+/// 87.5% of inhabitants require a vector of size of half or more of total capacity
 ///
 /// one notable exception are maps with a single key
 ///
 /// # Invariant
 ///
-/// ∀m : EnumMap<K, _>. m.0.len() ≡ K::CARDINALITY()
+/// `∀m : EnumMap<K, _>. m.0.len() ≡ K::CARDINALITY()`
 #[derive(PartialEq, Eq, PartialOrd, Ord, Debug, Hash)]
 pub struct EnumMap<K, V>(Vec<Option<V>>, PhantomData<K>);
 
@@ -49,17 +39,9 @@ impl<K: Cardinality, V: Clone> EnumMap<K, V> {
     }
 }
 
-impl<K: Finite, V: Clone> EnumMap<K, V> {
-    pub fn inserted(self, key: K, value: V) -> Self {
-        let mut set = self;
-        set.0[key.enum_to_index() as usize] = Some(value);
-        set
-    }
-
-    pub fn removed(self, key: K) -> Self {
-        let mut set = self;
-        set.0[key.enum_to_index() as usize] = None;
-        set
+impl<K, V> EnumMap<K, V> {
+    pub fn clear(&mut self) {
+        self.0.fill_with(|| None)
     }
 }
 
@@ -82,10 +64,6 @@ impl<K: Finite, V> EnumMap<K, V> {
 
     pub fn remove(&mut self, key: K) {
         self.0[key.enum_to_index() as usize] = None;
-    }
-
-    pub fn clear(&mut self) {
-        self.0.fill_with(|| None)
     }
 
     pub fn get(&self, key: K) -> Option<&V> {
@@ -116,6 +94,18 @@ impl<K: Finite, V> EnumMap<K, V> {
 }
 
 impl<K: Finite, V: Clone> EnumMap<K, V> {
+    pub fn inserted(self, key: K, value: V) -> Self {
+        let mut set = self;
+        set.0[key.enum_to_index() as usize] = Some(value);
+        set
+    }
+
+    pub fn removed(self, key: K) -> Self {
+        let mut set = self;
+        set.0[key.enum_to_index() as usize] = None;
+        set
+    }
+
     pub fn iter(&self) -> Iter<K, V> {
         Iter {
             elements: self.0.clone(),
@@ -210,6 +200,12 @@ impl<K: Finite, V: Clone> FromIterator<(K, V)> for EnumMap<K, V> {
         let mut map = Self::empty();
         iter.into_iter().for_each(|(k, v)| map.insert(k, v));
         map
+    }
+}
+
+impl<K: Finite, V> Extend<(K, V)> for EnumMap<K, V> {
+    fn extend<T: IntoIterator<Item = (K, V)>>(&mut self, iter: T) {
+        iter.into_iter().for_each(|(k, v)| self.insert(k, v));
     }
 }
 
