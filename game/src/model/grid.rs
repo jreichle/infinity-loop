@@ -373,7 +373,7 @@ impl Grid<Tile<Square>> {
         self.elements = new_elements;
     }
 
-    pub fn change_tile_shape(&mut self, index: Coordinate<isize>) -> Result<Self, AccessError> {
+    pub fn change_tile_shape(&self, index: Coordinate<isize>) -> Result<Self, AccessError> {
         self.adjust_at(index, |tile| -> Tile<Square> {
             match tile.0.len() {
                 0 => tile!(Square::Up),
