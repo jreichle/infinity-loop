@@ -37,10 +37,11 @@
 - [x] Check if level is already solved
 - [x] Generate with FastGen
 - [x] Generate with WFC
-- [ ] Change size
+- [x] Change size
 - [x] Play custom grid
 - [ ] Create user-, not console-messages
 - [x] Shuffle current grid tile rotations
+- [ ] Adjust editor to level previews
 
 
 - [ ] Save Grid (optional)
