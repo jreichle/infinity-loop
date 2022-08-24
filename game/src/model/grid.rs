@@ -7,6 +7,8 @@ use std::{
 
 use quickcheck::{Arbitrary, Gen};
 
+use crate::{enumset, tile};
+
 use super::coordinate::Coordinate;
 use super::gameboard::GameBoard;
 use super::{
@@ -347,6 +349,57 @@ impl GameBoard for Grid<Tile<Square>> {
                 )
             })
             .collect()
+    }
+}
+
+impl Grid<Tile<Square>> {
+    pub fn resize(&mut self, size: Coordinate<usize>) {
+        let mut new_elements = vec![Tile::NO_CONNECTIONS; size.row * size.column];
+
+        for r in 0..size.row {
+            for c in 0..size.column {
+                if r < self.rows && c < self.columns {
+                    let new_index = c + size.column * r;
+                    new_elements[new_index] = self.elements[self.get_vec_index(Coordinate {
+                        column: c as isize,
+                        row: r as isize,
+                    })];
+                }
+            }
+        }
+
+        self.rows = size.row;
+        self.columns = size.column;
+        self.elements = new_elements;
+    }
+
+    pub fn change_tile_shape(&mut self, index: Coordinate<isize>) -> Result<Self, AccessError> {
+        self.adjust_at(index, |tile| -> Tile<Square> {
+            match tile.0.len() {
+                0 => tile!(Square::Up),
+                1 => tile!(Square::Up, Square::Right),
+                2 => {
+                    if tile.0.contains(Square::Up) && tile.0.contains(Square::Down)
+                        || tile.0.contains(Square::Left) && tile.0.contains(Square::Right)
+                    {
+                        tile!(Square::Up, Square::Right, Square::Down)
+                    } else {
+                        tile!(Square::Up, Square::Down)
+                    }
+                }
+                3 => Tile::ALL_CONNECTIONS,
+                4 => Tile::NO_CONNECTIONS,
+                _ => Tile::NO_CONNECTIONS,
+            }
+        })
+    }
+
+    pub fn rotate_clockwise_n_times(
+        &self,
+        index: Coordinate<isize>,
+        repetitions: u64,
+    ) -> Result<Self, AccessError> {
+        self.adjust_at(index, |x| x.rotated_clockwise(repetitions))
     }
 }
 

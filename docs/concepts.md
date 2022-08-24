@@ -10,19 +10,11 @@ Infinity loop is a puzzle game built out of a grid of tiles, each with a particu
 
 ![unsolved][unsolvedexample]
 
-TODO: add screenshot of an arbitrary puzzle
-
 **And its solution:**
 
 ![solved][solvedexample]
 
-TODO: add screenshot of its solutions
-
 > **_NOTE:_**  A given puzzle may have multiple valid solutions.
-
-Besides to the basic game functionality, this Infinity-Loop implementation includes several additional features.
-TODO: or
-This Infinity-Loop implementation includes several additional features to extend the basic game functionality
 
 **Component Overview:**
 
@@ -86,9 +78,13 @@ Developer: Johannes Reichle
 
 Developer: Simon Redl
 
-### The Wave Function Collapse Generator
+### The Wave Function Collapse (WFC) Generator
 
 Developer: Alexander Jensen
+
+Wave function collapse is the process by which a system changes from a superposition of states to a discrete state with a clearly defined value of a given measurable quantity by interacting with its environment.
+
+Wave function collapse occurs when a wave function—initially in a superposition of several eigenstates—reduces to a single eigenstate due to interaction with the external world. - [Wiki](https://en.wikipedia.org/wiki/Wave_function_collapse)
 
 ## Level Solver
 
@@ -119,8 +115,8 @@ Optional: The gameboard can be serialized, to replay it in another session.
 
 TODO: können wir auch den schwierigkeitsgrad bestimmen?
 
-[unsolvedexample]: <./unsolved.jpg>
-[solvedexample]: <./solved.jpg>
+[unsolvedexample]: <images/example-level.png>
+[solvedexample]: <images/example-level-solution.png>
 
 [propagator]: <https://qfpl.io/share/talks/propagators/slides.pdf>
 

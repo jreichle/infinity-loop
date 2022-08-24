@@ -14,6 +14,11 @@ use crate::model::{
     },
 };
 
+///! This file contains a implementation of the wave function collapse (WFC) algorithm for our game.
+///! Wave function collapse is a constraint-based method of generating a map/level with the given rules
+
+/// Setting this to true will allow you to see each step of the generation process
+/// This will enable displaying the current uncompleted map after each iteration
 const PRINT_INTERMEDIATE_RESULTS: bool = false;
 
 impl<A: Finite + Eq + Hash + Clone + Copy + Display> EnumSet<A> {
@@ -50,6 +55,7 @@ impl<A: Finite + Eq + Hash + Clone + Copy + Display> EnumSet<A> {
     }
 }
 
+/// A generator with fixed settings, which can be reused for multiple level generations.
 #[derive(Clone, PartialEq, Eq)]
 pub struct WfcGenerator {
     width: usize,
@@ -143,6 +149,7 @@ impl WfcGenerator {
         min_coordinate
     }
 
+    /// Collapse the cell with given coordinates
     fn collapse_cell(
         board: &mut Sentinel<Square>,
         weights: &EnumMap<Tile<Square>, usize>,
@@ -151,6 +158,7 @@ impl WfcGenerator {
         board.0.get_mut(cell_coordinate).unwrap().collapse(weights)
     }
 
+    /// Propagate through all neigbouring cells that are affected by the last collapse
     fn propagate(
         board: &mut Sentinel<Square>,
         cell_coordinate: Coordinate<isize>,
@@ -205,11 +213,19 @@ impl WfcGenerator {
         }
     }
 
-    fn is_all_collapsed(board: &Sentinel<Square>) -> bool {
+    /// Check if all cells on the board have only a single eigenstate
+    pub fn is_all_collapsed(board: &Sentinel<Square>) -> bool {
         board.0.as_slice().iter().all(|c| c.is_collapsed())
     }
 
-    fn print_map(board: &Sentinel<Square>) {
+    pub fn extract_grid(board: &Sentinel<Square>) -> Grid<Tile<Square>> {
+        board
+            .extract_grid()
+            .map(|set| set.unwrap_if_singleton().unwrap_or(Tile::NO_CONNECTIONS))
+    }
+
+    /// Print the incompleted map in the current state
+    pub fn print_map(board: &Sentinel<Square>) {
         let map = board.0.elements();
         let width = board.0.columns();
 
@@ -229,16 +245,20 @@ impl WfcGenerator {
         }
     }
 
-    pub fn generate(&self) -> Result<Grid<Tile<Square>>, String> {
-        let dimension = Coordinate::new(self.height, self.width);
-
+    pub fn init_board(&self) -> (Sentinel<Square>, EnumMap<Tile<Square>, usize>) {
         // initialize board with all possiblities, then update edge tiles
-        let board: Sentinel<Square> = Grid::init(dimension, |_| self.available_tiles)
-            .with_sentinels(Tile::NO_CONNECTIONS.into())
-            .minimize();
+        let board: Sentinel<Square> = Grid::init(
+            Coordinate {
+                row: self.height,
+                column: self.width,
+            },
+            |_| self.available_tiles,
+        )
+        .with_sentinels(Tile::NO_CONNECTIONS.into())
+        .minimize();
 
         // initialize superpositions
-        let mut board = board
+        let board = board
             .0
             .coordinates()
             .into_iter()
@@ -248,14 +268,35 @@ impl WfcGenerator {
         // update weights
         WfcGenerator::update_weights(&board, &mut weights);
 
-        let mut passes: usize = 0;
-        let mut current_coordinate: Coordinate<isize>;
+        (board, weights)
+    }
 
+    // one step in wfc
+    pub fn iteration_step(
+        &self,
+        mut board: Sentinel<Square>,
+        mut weights: EnumMap<Tile<Square>, usize>,
+    ) -> (Sentinel<Square>, EnumMap<Tile<Square>, usize>) {
+        let current_coordinate = WfcGenerator::find_entropy_cell(&board, &weights);
+        WfcGenerator::collapse_cell(&mut board, &weights, current_coordinate);
+        WfcGenerator::propagate(&mut board, current_coordinate, self.prop_limit);
+        WfcGenerator::update_weights(&board, &mut weights);
+
+        if PRINT_INTERMEDIATE_RESULTS {
+            WfcGenerator::print_map(&board);
+            print!("{esc}[2J{esc}[1;1H", esc = 27 as char);
+        }
+
+        (board, weights)
+    }
+
+    /// Generates a level with the predefined settings
+    pub fn generate(&self) -> Result<Grid<Tile<Square>>, String> {
+        let (mut board, mut weights) = self.init_board();
+
+        let mut passes: usize = 0;
         loop {
-            current_coordinate = WfcGenerator::find_entropy_cell(&board, &weights);
-            WfcGenerator::collapse_cell(&mut board, &weights, current_coordinate);
-            WfcGenerator::propagate(&mut board, current_coordinate, self.prop_limit);
-            WfcGenerator::update_weights(&board, &mut weights);
+            (board, weights) = self.iteration_step(board, weights);
 
             passes += 1;
 
