@@ -16,12 +16,12 @@ pub trait BoundedLattice: Sized {
 
     /// greatest lower bound of both elements
     ///
-    /// forms monoid with [BoundedLattice<A>::MAXIMUM] as neutral element
+    /// forms monoid with [BoundedLattice<A>::top] as neutral element
     fn meet(self, other: Self) -> Self;
 
     /// least upper bound of both elements
     ///
-    /// forms monoid with [BoundedLattice<A>::MINIMUM] as neutral element
+    /// forms monoid with [BoundedLattice<A>::bottom] as neutral element
     fn join(self, other: Self) -> Self;
 
     /// greatest lower bound of all elements
