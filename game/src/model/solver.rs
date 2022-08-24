@@ -11,6 +11,7 @@ use quickcheck::Arbitrary;
 use super::{
     cardinality::Cardinality,
     coordinate::Coordinate,
+    enummap::EnumMap,
     enumset::EnumSet,
     finite::Finite,
     grid::Grid,
@@ -105,16 +106,24 @@ impl<A: Finite + Clone> SentinelGrid<Tile<A>> {
     }
 }
 
-impl Display for SentinelGrid<Superposition<Square>> {
+impl<A: Clone + Display + Finite + BoundedLattice + Iterator> Display for SentinelGrid<A>
+where
+    <A as IntoIterator>::Item: Debug + BoundedLattice,
+{
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        let grid = self.0.map(|s| Tile::join_all(s.into_iter()));
-        Display::fmt(&grid, f)
+        self.0.map(BoundedLattice::join_all).fmt(f)
     }
 }
 
-impl Arbitrary for SentinelGrid<Tile<Square>> {
+impl<A: Clone + Finite + 'static> Arbitrary for SentinelGrid<Tile<A>> {
     fn arbitrary(g: &mut quickcheck::Gen) -> Self {
-        Grid::arbitrary(g).with_sentinels(Tile::default())
+        Grid::arbitrary(g).with_sentinels(Tile::NO_CONNECTIONS)
+    }
+}
+
+impl<A: Clone + Finite + 'static> Arbitrary for SentinelGrid<Superposition<A>> {
+    fn arbitrary(g: &mut quickcheck::Gen) -> Self {
+        Grid::arbitrary(g).with_sentinels(Tile::NO_CONNECTIONS.into())
     }
 }
 
@@ -135,10 +144,10 @@ impl Square {
     /// Converts a direction to the respective delta coordinate
     fn to_coordinate(self) -> Coordinate<isize> {
         match self {
-            Up => Coordinate::new(-1, 0),
-            Right => Coordinate::new(0, 1),
-            Down => Coordinate::new(1, 0),
-            Left => Coordinate::new(0, -1),
+            Up => (-1, 0).into(),
+            Right => (0, 1).into(),
+            Down => (1, 0).into(),
+            Left => (0, -1).into(),
         }
     }
 
@@ -151,13 +160,13 @@ impl Square {
 impl Coordinate<isize> {
     /// Converts a coordinate to the respective direction, if it is a delta coordinate
     fn to_square(self) -> Option<Square> {
-        match self.to_tuple() {
-            (-1, 0) => Some(Up),
-            (0, 1) => Some(Right),
-            (1, 0) => Some(Down),
-            (0, -1) => Some(Left),
-            _ => None,
-        }
+        Some(match self.to_tuple() {
+            (-1, 0) => Up,
+            (0, 1) => Right,
+            (1, 0) => Down,
+            (0, -1) => Left,
+            _ => None?,
+        })
     }
 
     /// Returns the position of the neighboring tile in the given direction
@@ -340,7 +349,7 @@ impl Neg for Connection<Square> {
     }
 }
 
-impl<A: Finite> Superposition<A> {
+impl<A: Copy + Finite + Neg<Output = A>> Superposition<A> {
     /// Extracts the common connections over all states from the superposition
     ///
     /// eg. if there is a common [Up] connection between all states, then the result includes [Connection::Present(Up)]
@@ -359,6 +368,26 @@ impl<A: Finite> Superposition<A> {
             .map(|d| Connection(d, Status::Absent));
         present_connections.chain(absent_connections).collect()
     }
+
+    pub fn extract_common_connections2(self) -> EnumMap<A, Superposition<A>> {
+        let present_evidence = Tile::meet_all(self)
+            .0
+            .into_iter()
+            .map(|x| (x, subset_containing(-x)));
+        let absent_evidence = Tile::join_all(self)
+            .0
+            .not()
+            .into_iter()
+            .map(|x| (x, !subset_containing(-x)));
+        present_evidence.chain(absent_evidence).collect()
+    }
+}
+
+fn subset_containing<A: Copy + Finite>(value: A) -> Superposition<A> {
+    EnumSet::FULL
+        .into_iter()
+        .filter(|s: &Tile<A>| s.0.contains(value))
+        .collect()
 }
 
 /// iterative fixed point of a function
@@ -393,7 +422,7 @@ impl Sentinel<Square> {
             |g| {
                 g.0.coordinates()
                     .into_iter()
-                    .fold(g.clone(), propagate_restrictions_to_all_neighbors)
+                    .fold(g.clone(), propagate_restrictions_to_all_neighbors2)
             },
             SentinelGrid::eq,
         )
@@ -445,6 +474,27 @@ pub fn propagate_restrictions_to_all_neighbors(
         SentinelGrid(
             acc.0
                 .try_adjust_at(index.get_neighbor_index(c.0), |s| s.restrict_tile(-c)),
+        )
+    })
+}
+
+pub fn propagate_restrictions_to_all_neighbors2(
+    grid: Sentinel<Square>,
+    index: Coordinate<isize>,
+) -> Sentinel<Square> {
+    // determine common connections
+    let evidence = grid
+        .0
+        .get(index)
+        .copied()
+        .map(Superposition::extract_common_connections2)
+        .unwrap_or_default();
+
+    // propagate connection information to neighbors
+    evidence.into_iter().fold(grid, |acc, c| {
+        SentinelGrid(
+            acc.0
+                .try_adjust_at(index.get_neighbor_index(c.0), |s| s.meet(c.1)),
         )
     })
 }
@@ -551,5 +601,31 @@ mod tests {
         sentinel: Tile<Square>,
     ) -> bool {
         grid == grid.with_sentinels(sentinel).extract_grid()
+    }
+
+    #[quickcheck]
+    fn propagate_restrictions_to_all_neighbors_id(
+        grid: Sentinel<Square>,
+        index: Coordinate<Max<10>>,
+    ) -> bool {
+        let index = index.map(Max::to_isize);
+        propagate_restrictions_to_all_neighbors(grid.clone(), index)
+            == propagate_restrictions_to_all_neighbors2(grid, index)
+    }
+
+    // #[quickcheck]
+    fn test(sup: Superposition<Square>) -> bool {
+        let expected = sup
+            .extract_common_connections()
+            .into_iter()
+            .map(|x| (x, x.neg().to_filter().to_string()))
+            .collect::<Vec<_>>();
+        let actual = sup
+            .extract_common_connections2()
+            .into_iter()
+            .map(|x| (x.0, x.1.to_string()))
+            .collect::<Vec<_>>();
+        println!("sup:\t{sup}\nexpected:\t{expected:?}\nactual:\t{actual:?}\n");
+        true
     }
 }
