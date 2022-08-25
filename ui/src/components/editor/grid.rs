@@ -1,11 +1,5 @@
-use game::model::tile::Square;
 use yew::prelude::*;
 use yew::{html, Html};
-
-use game::model::{
-    grid::Grid,
-    tile::Tile,
-};
 
 use crate::components::editor::row::RowComponent;
 
@@ -17,8 +11,7 @@ pub struct GridComponentProps {
 }
 
 #[function_component(GridComponent)]
-pub fn grid_component(props: &GridComponentProps) -> Html {   
-    
+pub fn grid_component(props: &GridComponentProps) -> Html {
     let editor = props.editor_state.clone();
 
     // -- FROM grid -> is_solved
@@ -44,8 +37,8 @@ pub fn grid_component(props: &GridComponentProps) -> Html {
             <div class="game-board">
                 {
                     (0..height).into_iter().map(| row_number | {
-                        html!{ 
-                            <RowComponent key={row_number} row_number={row_number as isize} editor_state={editor.clone()} /> 
+                        html!{
+                            <RowComponent key={row_number} row_number={row_number as isize} editor_state={editor.clone()} />
                         }
                     }).collect::<Html>()
                 }

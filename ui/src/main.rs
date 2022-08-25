@@ -10,14 +10,11 @@ mod helper;
 use helper::screen::Screen;
 
 use game::model::coordinate::Coordinate;
-use game::model::fastgen::generate;
-use game::model::grid::Grid;
 
 #[function_component(App)]
 fn app() -> Html {
     let dimension = use_state(|| Coordinate::new(5 as usize, 5 as usize));
     let level_number = use_state(|| 0);
-    let grid_map = generate(*dimension, 1);
     let screen = use_state(|| Screen::Title);
 
     let to_preview: Callback<MouseEvent> = {
@@ -69,16 +66,6 @@ fn app() -> Html {
                             </div>
                         }
                     },
-                    Screen::Solving => {
-                        html! {
-                            <div id="container">
-                                <div>
-                                    {"Solving Level ..."}
-                                </div>
-                            </div>
-                        }
-                    }
-
                 }
             }
             <div id="footer">

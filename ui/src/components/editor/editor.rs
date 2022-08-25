@@ -1,7 +1,7 @@
 use game::model::coordinate::Coordinate;
 use game::model::fastgen::generate;
 use yew::prelude::*;
-use yew::{html, Callback, Html, InputEvent};
+use yew::{html, Callback};
 
 use game::model::gameboard::GameBoard;
 
@@ -22,9 +22,8 @@ pub fn editor_component(props: &EditorComponentProps) -> Html {
     let editor = use_reducer_eq(EditorState::set(new_grid));
 
     let map_grid = editor.grid.clone();
-    let (_, height) = map_grid.dimensions().to_tuple();
 
-    let generateFastGen_onclick: Callback<MouseEvent> = {
+    let generate_fast_gen_onclick: Callback<MouseEvent> = {
         let editor = editor.clone();
         Callback::from(move |_| {
             log::info!("[Button click] Generate FastGen.");
@@ -32,7 +31,7 @@ pub fn editor_component(props: &EditorComponentProps) -> Html {
         })
     };
 
-    let generateWFC_onclick: Callback<MouseEvent> = {
+    let generate_WFC_onclick: Callback<MouseEvent> = {
         let editor = editor.clone();
         Callback::from(move |_| {
             log::info!("[Button click] Generate WFC.");
@@ -40,7 +39,7 @@ pub fn editor_component(props: &EditorComponentProps) -> Html {
         })
     };
 
-    let checkCPS_onclick: Callback<MouseEvent> = {
+    let check_CPS_onclick: Callback<MouseEvent> = {
         Callback::from(move |_| {
             log::info!("[Button click] Check with CPS.");
             log::info!("Current grid\n{}", map_grid.to_string());
@@ -54,14 +53,14 @@ pub fn editor_component(props: &EditorComponentProps) -> Html {
         })
     };
 
-    let checkSAT_onclick: Callback<MouseEvent> = {
+    let check_SAT_onclick: Callback<MouseEvent> = {
         Callback::from(move |_| {
             log::info!("[Button click] Check with SAT.");
             log::info!("Not implemented yet");
         })
     };
 
-    let checkSolved_onclick: Callback<MouseEvent> = {
+    let check_solved_onclick: Callback<MouseEvent> = {
         let g = editor.grid.clone();
         Callback::from(move |_| {
             log::info!("[Button click] Check is solved.");
@@ -70,7 +69,7 @@ pub fn editor_component(props: &EditorComponentProps) -> Html {
         })
     };
 
-    let shuffleTileRotations_onclick: Callback<MouseEvent> = {
+    let shuffle_tile_rotations_onclick: Callback<MouseEvent> = {
         let editor = editor.clone();
         Callback::from(move |_| {
             log::info!("[Button click] Shuffle tile rotations.");
@@ -88,42 +87,70 @@ pub fn editor_component(props: &EditorComponentProps) -> Html {
         })
     };
 
-    let resizeWidthPlusOne_onclick: Callback<MouseEvent> = {
+    let resize_width_plus_one_onclick: Callback<MouseEvent> = {
         let editor = editor.clone();
         Callback::from(move |_| {
             log::info!("[Button click] Resize width +1.");
-            log::info!("[Button click] Resize width +1.{} {}", editor.grid_size.column + 1, editor.grid_size.row);
-            editor.dispatch(EditorAction::ChangeSize(Coordinate { column: editor.grid_size.column + 1, row: editor.grid_size.row }));
+            log::info!(
+                "[Button click] Resize width +1.{} {}",
+                editor.grid_size.column + 1,
+                editor.grid_size.row
+            );
+            editor.dispatch(EditorAction::ChangeSize(Coordinate {
+                column: editor.grid_size.column + 1,
+                row: editor.grid_size.row,
+            }));
         })
     };
 
-    let resizeWidthMinusOne_onclick: Callback<MouseEvent> = {
+    let resize_width_minus_one_onclick: Callback<MouseEvent> = {
         let editor = editor.clone();
         Callback::from(move |_| {
             log::info!("[Button click] Resize width -1.");
             if editor.grid_size.column > 1 {
-                log::info!("[Button click] Resize width +1.{} {}", editor.grid_size.column - 1, editor.grid_size.row);
-                editor.dispatch(EditorAction::ChangeSize(Coordinate { column: editor.grid_size.column - 1, row: editor.grid_size.row }));
+                log::info!(
+                    "[Button click] Resize width +1.{} {}",
+                    editor.grid_size.column - 1,
+                    editor.grid_size.row
+                );
+                editor.dispatch(EditorAction::ChangeSize(Coordinate {
+                    column: editor.grid_size.column - 1,
+                    row: editor.grid_size.row,
+                }));
             }
         })
     };
 
-    let resizeHeightPlusOne_onclick: Callback<MouseEvent> = {
+    let resize_height_plus_one_onclick: Callback<MouseEvent> = {
         let editor = editor.clone();
         Callback::from(move |_| {
             log::info!("[Button click] Resize height +1.");
-            log::info!("[Button click] Resize width +1.{} {}", editor.grid_size.column, editor.grid_size.row + 1);
-            editor.dispatch(EditorAction::ChangeSize(Coordinate { column: editor.grid_size.column, row: editor.grid_size.row + 1 }));
+            log::info!(
+                "[Button click] Resize width +1.{} {}",
+                editor.grid_size.column,
+                editor.grid_size.row + 1
+            );
+            editor.dispatch(EditorAction::ChangeSize(Coordinate {
+                column: editor.grid_size.column,
+                row: editor.grid_size.row + 1,
+            }));
         })
     };
 
-    let resizeHeightMinusOne_onclick: Callback<MouseEvent> = {
+    let resize_height_minus_one_onclick: Callback<MouseEvent> = {
         let editor = editor.clone();
         Callback::from(move |_| {
             log::info!("[Button click] Resize height -1.");
             if editor.grid_size.row > 1 {
-                log::info!("[Button click] Resize width +1.{} {}", editor.grid_size.column, editor.grid_size.row - 1);
-                editor.dispatch(EditorAction::ChangeSize(Coordinate { column: editor.grid_size.column, row: editor.grid_size.row - 1 }));
+                log::info!(
+                    "[Button click] Resize width +1.{} {}",
+                    editor.grid_size.column,
+                    editor.grid_size.row - 1
+                );
+                editor.dispatch(EditorAction::ChangeSize(Coordinate {
+                    column: editor.grid_size.column,
+                    row: editor.grid_size.row - 1,
+                }));
             }
         })
     };
@@ -133,20 +160,20 @@ pub fn editor_component(props: &EditorComponentProps) -> Html {
             <section id="controller">
                 <ul style="list-style-type: none">
                     <li><button
-                        onclick={resizeHeightMinusOne_onclick}
+                        onclick={resize_height_minus_one_onclick}
                         style="width:80px;height:50px;margin-left:65px;margin-right:20px"
                         >{"-"}</button></li>
                     <li><button
-                        onclick={resizeWidthMinusOne_onclick}
+                        onclick={resize_width_minus_one_onclick}
                         style="width:80px;height:50px"
                         >{"-"}</button>
                     <b style="width:80px;height:50px">{"Resize"}</b>
                     <button
-                        onclick={resizeWidthPlusOne_onclick}
+                        onclick={resize_width_plus_one_onclick}
                         style="width:80px;height:50px;margin-right:20px"
                         >{"+"}</button></li>
                     <li><button
-                        onclick={resizeHeightPlusOne_onclick}
+                        onclick={resize_height_plus_one_onclick}
                         style="width:80px;height:50px;margin-left:65px;margin-right:20px"
                         >{"+"}</button></li>
                 </ul>
@@ -154,22 +181,22 @@ pub fn editor_component(props: &EditorComponentProps) -> Html {
             <GridComponent editor_state={editor} />
             <div id="controller">
                 <button
-                    onclick={generateFastGen_onclick}
+                    onclick={generate_fast_gen_onclick}
                     >{"-Generate with FastGen-"}</button>
                 <button
-                    onclick={generateWFC_onclick}
+                    onclick={generate_WFC_onclick}
                     >{"-Generate with WFC-"}</button>
                 <button
-                    onclick={checkCPS_onclick}
+                    onclick={check_CPS_onclick}
                     >{"-Check validity with Constraint Propagation Solver-"}</button>
                 <button
-                    onclick={checkSAT_onclick}
+                    onclick={check_SAT_onclick}
                     >{"-Check validity with SAT Solver-"}</button>
                 <button
-                    onclick={checkSolved_onclick}
+                    onclick={check_solved_onclick}
                     >{"-Check if solved-"}</button>
                 <button
-                    onclick={shuffleTileRotations_onclick}
+                    onclick={shuffle_tile_rotations_onclick}
                     >{"-Shuffle tile rotations-"}</button>
                 <button
                     onclick={play_onclick}

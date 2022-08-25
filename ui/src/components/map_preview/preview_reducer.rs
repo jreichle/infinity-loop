@@ -1,9 +1,6 @@
 use std::rc::Rc;
 use yew::prelude::*;
 
-use game::generator::levelstream::{level_stream, LevelProperty};
-use game::model::coordinate::Coordinate;
-use game::model::gameboard::GameBoard;
 use game::model::grid::Grid;
 use game::model::tile::{Square, Tile};
 
