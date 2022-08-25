@@ -47,8 +47,7 @@ use super::{
 ///! This is functionally equivalent to having a neighbor outside the level without connection.
 ///! Using a layer of empty sentinel tiles around the level can be used to simplify the problem by eliminating the special border rule.
 ///! * square tiles under rotational symmetry form 6 equivalence classes
-///! * powerset of [Tile] forms a [bounded lattice](https://en.wikipedia.org/wiki/Lattice_(order)) partially ordered by inclusion with [EnumSet::all] as maximum and [EnumSet::new] as minimum
-///!
+///! 
 ///!
 
 // enable dot notation for function calls by associating them with their respective structs for autocomplete and to avoid parantheses
