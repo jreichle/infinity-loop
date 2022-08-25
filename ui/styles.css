@@ -69,6 +69,22 @@ body::-webkit-scrollbar-thumb {
   margin: 3vh 0 3vh 0;
 }
 
+#container button {
+  font-size: 2vmin;
+  font-family: 'Fira Code', monospace;
+  color:rgba(255, 255, 255, 0.7);
+  text-align: center;
+  background-color: transparent;
+  border: 0;
+  padding: 5px;
+  margin: 10px;
+}
+
+#container button:hover {
+  color: #FFF;
+  background-color: rgba(85, 90, 141, 0.4);
+}
+
 #controller {
   margin-left: 15px;
   display: flex;

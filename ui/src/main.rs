@@ -24,6 +24,13 @@ fn app() -> Html {
         })
     };
 
+    let to_editor: Callback<MouseEvent> = {
+        let screen = screen.clone();
+        Callback::from(move |_| {
+            screen.clone().set(Screen::Editor);
+        })
+    };
+
     html! {
         <>
             <div id="title">{"Rusty infinity loop!"}</div>
@@ -34,7 +41,10 @@ fn app() -> Html {
                         html! {
                             <div id="container">
                                 <button onclick={to_preview}>
-                                    {"Preview Levels"}
+                                    {"-Preview Levels-"}
+                                </button>
+                                <button onclick={to_editor}>
+                                    {"-Level Editor-"}
                                 </button>
                             </div>
                         }
