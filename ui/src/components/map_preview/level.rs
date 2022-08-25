@@ -5,14 +5,7 @@ use super::preview_reducer::PreviewState;
 use crate::components::map::cell::{get_angle, get_index};
 use crate::helper::screen::Screen;
 
-use rand::Rng;
-
-use game::model::gameboard::GameBoard;
-use game::model::{
-    coordinate::Coordinate,
-    grid::Grid,
-    tile::{Square, Tile},
-};
+use game::model::coordinate::Coordinate;
 
 #[derive(Properties, PartialEq, Clone)]
 pub struct LevelComponentProps {

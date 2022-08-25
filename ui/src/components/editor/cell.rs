@@ -3,7 +3,7 @@ use yew::{html, Callback, Properties};
 
 use game::model::coordinate::Coordinate;
 
-use super::editor_reducer::{EditorState, EditorAction};
+use super::editor_reducer::{EditorAction, EditorState};
 
 #[derive(Properties, PartialEq, Clone)]
 pub struct CellComponentProps {
@@ -32,7 +32,7 @@ pub fn cell_component(props: &CellComponentProps) -> Html {
     ];
 
     let editor = editor_state.clone();
-    let onclick = Callback::from(move |e:MouseEvent| {
+    let onclick = Callback::from(move |_| {
         log::info!(
             "Tile {} with coordinate ({}, {}) has been clicked.",
             cell_symbol,
