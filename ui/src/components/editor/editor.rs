@@ -155,6 +155,14 @@ pub fn editor_component(props: &EditorComponentProps) -> Html {
         })
     };
 
+    let preview_onclick: Callback<MouseEvent> = {
+        let screen = props.screen.clone();
+        Callback::from(move |_| {
+            log::info!("To Preview");
+            screen.set(Screen::Overview);
+        })
+    };
+
     html! {
         <>
             <section id="controller">
@@ -201,6 +209,9 @@ pub fn editor_component(props: &EditorComponentProps) -> Html {
                 <button
                     onclick={play_onclick}
                     >{"-Play-"}</button>
+                <button  onclick={preview_onclick}>
+                    {"-Preview levels-"}
+                </button>
             </div>
         </>
     }

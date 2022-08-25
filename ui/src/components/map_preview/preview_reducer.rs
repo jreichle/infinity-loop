@@ -23,7 +23,6 @@ impl Reducible for PreviewState {
     fn reduce(self: Rc<Self>, action: Self::Action) -> Rc<Self> {
         let mut extracted_levels = self.extracted_levels.clone();
 
-        log::info!("before: {}", extracted_levels.len());
         match action {
             PreviewAction::LoadNew(num, dimension) => {
                 let mut generated_levels = (0..num)
@@ -33,7 +32,6 @@ impl Reducible for PreviewState {
                 extracted_levels.append(&mut generated_levels);
             }
         }
-        log::info!("after: {}", extracted_levels.len());
 
         Self { extracted_levels }.into()
     }
