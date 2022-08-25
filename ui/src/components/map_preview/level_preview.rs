@@ -52,6 +52,17 @@ pub fn level_preview_component(props: &LevelPreviewComponentProps) -> Html {
         })
     };
 
+    let create_own_level: Callback<MouseEvent> = {
+        let level_count = level_count.clone();
+        let screen = props.screen.clone();
+        let reducer = reducer.clone();
+        Callback::from(move |_| {
+            log::info!("picking random level");
+            let num = rand::thread_rng().gen_range(0..*level_count);
+            screen.set(Screen::Editor);
+        })
+    };
+
     html! {
         <>
             <div id="preview-container">
@@ -75,6 +86,10 @@ pub fn level_preview_component(props: &LevelPreviewComponentProps) -> Html {
                 <button
                     onclick={pick_random_level}>
                     {"-pick random-"}
+                </button>
+                <button
+                    onclick={create_own_level}>
+                    {"-create your own-"}
                 </button>
             </div>
         </>
