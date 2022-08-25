@@ -50,7 +50,8 @@ impl Reducible for EditorState {
                 new_grid = new_grid.change_tile_shape(index).unwrap();
             }
             EditorAction::ChangeSize(size) => {
-                new_grid.resize(size);
+                let mut rng = rand::thread_rng();
+                new_grid = fastgen::generate(size, rng.gen_range(0..10000));
             }
             EditorAction::GenerateFastGen => {
                 let mut rng = rand::thread_rng();
