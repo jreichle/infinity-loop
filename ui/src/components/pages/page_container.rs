@@ -1,11 +1,13 @@
 use yew::html;
 use yew::prelude::*;
 
+use crate::helper::screen::Screen;
 use crate::components::editor::editor::EditorComponent;
 use crate::components::map::board::BoardComponent;
 use crate::components::map_preview::level_preview::LevelPreviewComponent;
 use crate::components::wfc_visualizer::wfc_board::WfcBoardComponent;
-use crate::helper::screen::Screen;
+use crate::components::pages::help_page::HelpPage;
+use crate::components::pages::credit_page::CreditPage;
 
 use game::model::coordinate::Coordinate;
 
@@ -36,6 +38,26 @@ pub fn page_container() -> Html {
         })
     };
 
+    let to_help: Callback<MouseEvent> = {
+        let screen = screen.clone();
+        Callback::from(move |_| {
+            screen.clone().set(Screen::Help);
+        })
+    };
+
+    let to_credit: Callback<MouseEvent> = {
+        let screen = screen.clone();
+        Callback::from(move |_| {
+            screen.clone().set(Screen::Credit);
+        })
+    };
+
+    let on_exit: Callback<MouseEvent> = {
+        Callback::from(move |_| {
+            web_sys::window().unwrap().alert_with_message("There is no way out of an infinite loop!").ok();
+        })
+    };
+
     html! {
         <div id="container">
             {
@@ -51,6 +73,15 @@ pub fn page_container() -> Html {
                                 </button>
                                 <button onclick={to_visualizer}>
                                     {"-Generation Visualizer-"}
+                                </button>
+                                <button onclick={to_help}>
+                                    {"-Help-"}
+                                </button>
+                                <button onclick={to_credit}>
+                                    {"-Credit-"}
+                                </button>
+                                <button onclick={on_exit}>
+                                    {"-Exit-"}
                                 </button>
                             </div>
                         }
@@ -80,6 +111,16 @@ pub fn page_container() -> Html {
                     Screen::Visualizer => {
                         html!{
                             <WfcBoardComponent screen={screen.clone()} />
+                        }
+                    },
+                    Screen::Help => {
+                        html!{
+                           <HelpPage screen={screen.clone()} /> 
+                        }
+                    },
+                    Screen::Credit => {
+                        html!{
+                            <CreditPage screen={screen.clone()} />
                         }
                     }
                 }

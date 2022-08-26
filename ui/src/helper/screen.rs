@@ -5,6 +5,8 @@ pub enum Screen {
     Level(Grid<Tile<Square>>),
     Overview,
     Title,
+    Help,
+    Credit,
     Editor,
     Visualizer,
 }
