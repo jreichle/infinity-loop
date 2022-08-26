@@ -2,7 +2,7 @@ use super::{
     coordinate::Coordinate,
     enumset::EnumSet,
     grid::Grid,
-    tile::{Square, Tile},
+    tile::{Square, Tile}, solver::*,
 };
 
 #[derive(Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Debug, Hash)]
@@ -29,19 +29,44 @@ fn generate_hint(grid: Grid<(Tile<Square>, Status)>) -> Result<Coordinate<isize>
         .next()
         .ok_or("puzzle has no solution")?;
     // how to handle multiple solutions? try to match any?
-    let _x = grid.zip(solution.with_index()).map(|((t, s), (i, c))| {
+    let difference_grid = grid.zip(solution.with_index()).map(|((t, s), (i, c))| {
         if s == Status::Changed {
             if t == c {
                 Ok(EnumSet::from(t))
             } else {
-                Err(i)
+                Err(i) // differs from solution
             }
         } else {
             Ok(t.superimpose())
         }
     });
 
-    // x.sequence();
+    match difference_grid.sequence() {
+        Err(c) => Ok(c),
+        Ok(g) => {
+            // propagate information until a superposition collapses
+            // concept: solve level with given information and generate return first newly collapsed index
 
-    panic!()
+            let mut sentinel = g.with_sentinels(Tile::NO_CONNECTIONS.into());
+            let mut has_changed = true;
+            // easier with a do while loop
+            while has_changed {
+                has_changed = false;
+                for coordinate in sentinel.0.coordinates() {
+                    let (s_new, changed) = propagate_restrictions_to_all_neighbors2(sentinel, coordinate, |old, new| {
+                        if old != new {
+                            has_changed = true;
+                        }
+                        old.len() != 1 && new.len() == 1
+                    });
+                    if let Some(c_changed) = changed.first() {
+                        return Ok(*c_changed)
+                    }
+                    sentinel = s_new;
+                }
+            }
+            Err("already solved".into())
+        }
+    }
+    
 }

@@ -298,7 +298,7 @@ impl Sentinel<Square> {
             |g| {
                 g.0.coordinates()
                     .into_iter()
-                    .fold(g.clone(), propagate_restrictions_to_all_neighbors)
+                    .fold(g.clone(), |g, c| propagate_restrictions_to_all_neighbors2(g, c, PartialEq::ne).0)
             },
             SentinelGrid::eq,
         )
@@ -351,6 +351,35 @@ pub fn propagate_restrictions_to_all_neighbors(
             acc.0
                 .try_adjust_at(index.get_neighbor_index(c.0), |s| s & c.1),
         )
+    })
+}
+// for solving change_test is inequality, for hint it is collapse
+pub fn propagate_restrictions_to_all_neighbors2<F: FnMut(&Superposition<Square>, &Superposition<Square>) -> bool>(
+    grid: Sentinel<Square>,
+    index: Coordinate<isize>,
+    mut change_test: F, 
+) -> (Sentinel<Square>, Vec<Coordinate<isize>>) {
+    // determine common connections
+    let evidence = grid
+        .0
+        .get(index)
+        .copied()
+        .map(Superposition::extract_common_connections)
+        .unwrap_or_default();
+
+    // propagate connection information to neighbors
+    // pushing to vec as side effect is unclean, but easiest implementation 
+    evidence.into_iter().fold((grid, vec![]), |(g, mut v), c| {
+        let neighbor_index = index.get_neighbor_index(c.0);
+        let sg = SentinelGrid(g.0.try_adjust_at(neighbor_index, |s| {
+            let merged = s & c.1;
+            if change_test(&s, &merged) {
+                // pushing to vec as side effect is unclean, but easiest implementation 
+                v.push(neighbor_index);
+            }
+            merged
+        }));
+        (sg, v)
     })
 }
 

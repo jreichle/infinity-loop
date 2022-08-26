@@ -168,7 +168,7 @@ impl<A> Grid<A> {
     }
 
     /// applies transformation to element at supplied index, if possible
-    pub fn try_adjust_at<F: Fn(A) -> A>(&self, index: Coordinate<isize>, transformation: F) -> Self
+    pub fn try_adjust_at<F: FnMut(A) -> A>(&self, index: Coordinate<isize>, transformation: F) -> Self
     where
         A: Clone,
     {
@@ -176,10 +176,10 @@ impl<A> Grid<A> {
             .unwrap_or_else(|_| self.clone())
     }
 
-    pub fn adjust_at<F: Fn(A) -> A>(
+    pub fn adjust_at<F: FnMut(A) -> A>(
         &self,
         index: Coordinate<isize>,
-        transformation: F,
+        mut transformation: F,
     ) -> Result<Self, AccessError>
     where
         A: Clone,
