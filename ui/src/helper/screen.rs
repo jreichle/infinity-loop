@@ -6,4 +6,5 @@ pub enum Screen {
     Overview,
     Title,
     Editor,
+    Visualizer,
 }

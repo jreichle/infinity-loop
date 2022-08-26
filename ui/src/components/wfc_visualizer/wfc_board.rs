@@ -32,6 +32,8 @@ fn go_to_next_step(
     wfc_generator.iteration_step(new_grid, new_weights)
 }
 
+
+
 #[function_component(WfcBoardComponent)]
 pub fn wfc_board_component() -> Html {
     let (width_ref, height_ref) = (use_node_ref(), use_node_ref());
