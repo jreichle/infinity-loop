@@ -163,6 +163,14 @@ pub fn editor_component(props: &EditorComponentProps) -> Html {
         })
     };
 
+    let back_onclick: Callback<MouseEvent> = {
+        let screen = props.screen.clone();
+        Callback::from(move |_| {
+            log::info!("[Button click] Editor");
+            screen.set(Screen::Title);
+        })
+    };
+
     html! {
         <>
             <section id="controller">
@@ -210,7 +218,10 @@ pub fn editor_component(props: &EditorComponentProps) -> Html {
                     onclick={play_onclick}
                     >{"-Play-"}</button>
                 <button  onclick={preview_onclick}>
-                    {"-Preview levels-"}
+                    {"-Levels-"}
+                </button>
+                <button  onclick={back_onclick}>
+                    {"-back-"}
                 </button>
             </div>
         </>

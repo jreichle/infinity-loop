@@ -58,6 +58,11 @@ body::-webkit-scrollbar-thumb {
   left: 3px;
 }
 
+#start-menu {
+  display: flex;
+  flex-direction: column;
+}
+
 #container {
   position: relative;
   display: flex;

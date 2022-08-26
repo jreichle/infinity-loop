@@ -5,37 +5,24 @@ use yew::{html, Callback};
 
 use game::generator::wfc::WfcGenerator;
 use game::model::{
-    enumset::EnumSet,
     enummap::EnumMap,
+    enumset::EnumSet,
     solver::SentinelGrid,
     tile::{Square, Tile},
 };
 
 // use std::collections::HashMap;
-
-
 use super::level::LevelComponent;
 use super::slider::SliderComponent;
+use crate::helper::screen::Screen;
 
-fn go_to_next_step(
-    wfc_generator: WfcGenerator,
-    sentinel_grid: SentinelGrid<EnumSet<Tile<Square>>>,
-    weights: EnumMap<Tile<Square>, usize>,
-) -> (
-    SentinelGrid<EnumSet<Tile<Square>>>,
-    EnumMap<Tile<Square>, usize>,
-) {
-    let (mut new_grid, mut new_weights) = (sentinel_grid, weights);
-    if WfcGenerator::is_all_collapsed(&new_grid) {
-        (new_grid, new_weights) = wfc_generator.init_board();
-    }
-    wfc_generator.iteration_step(new_grid, new_weights)
+#[derive(Properties, PartialEq, Clone)]
+pub struct WfcBoardComponentProps {
+    pub screen: UseStateHandle<Screen>,
 }
 
-
-
 #[function_component(WfcBoardComponent)]
-pub fn wfc_board_component() -> Html {
+pub fn wfc_board_component(props: &WfcBoardComponentProps) -> Html {
     let (width_ref, height_ref) = (use_node_ref(), use_node_ref());
     let playing = use_state(|| false);
     let interval_id = use_state(|| 0);
@@ -48,6 +35,21 @@ pub fn wfc_board_component() -> Html {
     let sentinel_grid = use_state_eq(|| sentinel_grid);
     let weights = use_state_eq(|| weights);
     let level_grid = use_state_eq(|| WfcGenerator::extract_grid(&sentinel_grid));
+
+    fn go_to_next_step(
+        wfc_generator: WfcGenerator,
+        sentinel_grid: SentinelGrid<EnumSet<Tile<Square>>>,
+        weights: EnumMap<Tile<Square>, usize>,
+    ) -> (
+        SentinelGrid<EnumSet<Tile<Square>>>,
+        EnumMap<Tile<Square>, usize>,
+    ) {
+        let (mut new_grid, mut new_weights) = (sentinel_grid, weights);
+        if WfcGenerator::is_all_collapsed(&new_grid) {
+            (new_grid, new_weights) = wfc_generator.init_board();
+        }
+        wfc_generator.iteration_step(new_grid, new_weights)
+    }
 
     let new_onclick: Callback<MouseEvent> = {
         let wfc_generator = wfc_generator.clone();
@@ -169,6 +171,14 @@ pub fn wfc_board_component() -> Html {
         })
     };
 
+    let back_onclick: Callback<MouseEvent> = {
+        let screen = props.screen.clone();
+        Callback::from(move |_| {
+            log::info!("[Button click] Editor");
+            screen.set(Screen::Title);
+        })
+    };
+
     html! {
         <div id="container">
             <LevelComponent level_grid={(*level_grid).clone()} />
@@ -196,6 +206,12 @@ pub fn wfc_board_component() -> Html {
                 >
                 {"-stop-"}
                 </button>
+                <button
+                    onclick={back_onclick}
+                >
+                {"-back-"}
+                </button>
+                
 
             </div>
         </div>

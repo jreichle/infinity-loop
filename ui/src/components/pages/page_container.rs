@@ -42,9 +42,9 @@ pub fn page_container() -> Html {
                 match &*screen {
                     Screen::Title => {
                         html! {
-                            <>
+                            <div id="start-menu">
                                 <button onclick={to_preview}>
-                                    {"-Preview Levels-"}
+                                    {"-Play-"}
                                 </button>
                                 <button onclick={to_editor}>
                                     {"-Level Editor-"}
@@ -52,7 +52,7 @@ pub fn page_container() -> Html {
                                 <button onclick={to_visualizer}>
                                     {"-Generation Visualizer-"}
                                 </button>
-                            </>
+                            </div>
                         }
                     },
                     Screen::Overview => {
@@ -79,8 +79,7 @@ pub fn page_container() -> Html {
                     },
                     Screen::Visualizer => {
                         html!{
-                            // <WfcBoardComponent screen={screen.clone()} />
-                            <WfcBoardComponent />
+                            <WfcBoardComponent screen={screen.clone()} />
                         }
                     }
                 }

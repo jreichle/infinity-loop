@@ -63,6 +63,14 @@ pub fn level_preview_component(props: &LevelPreviewComponentProps) -> Html {
         })
     };
 
+    let back: Callback<MouseEvent> = {
+        let screen = props.screen.clone();
+        Callback::from(move |_| {
+            log::info!("[Button click] Editor");
+            screen.set(Screen::Title);
+        })
+    };
+
     html! {
         <>
             <div id="preview-container">
@@ -90,6 +98,10 @@ pub fn level_preview_component(props: &LevelPreviewComponentProps) -> Html {
                 <button
                     onclick={create_own_level}>
                     {"-create your own-"}
+                </button>
+                <button
+                    onclick={back}>
+                    {"-back-"}
                 </button>
             </div>
         </>
