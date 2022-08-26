@@ -1,21 +1,19 @@
 use game::model::gameboard::GameBoard;
-use std::rc::Rc;
 use rand::Rng;
+use std::rc::Rc;
 use yew::prelude::*;
-use yew::{html, Callback, Html, Properties};
 
 use game::model::coordinate::Coordinate;
 use game::model::grid::Grid;
 use game::model::tile::{Square, Tile};
 
-use game::model::fastgen;
 use game::generator::wfc::WfcGenerator;
+use game::model::fastgen;
 
 #[derive(Clone, Debug, PartialEq)]
-pub struct EditorState
-{
+pub struct EditorState {
     pub grid_size: Coordinate<usize>,
-    pub grid: Grid<Tile<Square>>
+    pub grid: Grid<Tile<Square>>,
 }
 
 // reducer's action
@@ -25,14 +23,14 @@ pub enum EditorAction {
     ChangeSize(Coordinate<usize>),
     GenerateFastGen,
     GenerateWFC,
-    ShuffleTileRotations
+    ShuffleTileRotations,
 }
 
 impl Default for EditorState {
     fn default() -> Self {
         Self {
             grid_size: Coordinate { row: 5, column: 5 },
-            grid: fastgen::generate(Coordinate { row: 5, column: 5 }, 1)
+            grid: fastgen::generate(Coordinate { row: 5, column: 5 }, 1),
         }
     }
 }
@@ -52,7 +50,8 @@ impl Reducible for EditorState {
                 new_grid = new_grid.change_tile_shape(index).unwrap();
             }
             EditorAction::ChangeSize(size) => {
-                new_grid.resize(size);
+                let mut rng = rand::thread_rng();
+                new_grid = fastgen::generate(size, rng.gen_range(0..10000));
             }
             EditorAction::GenerateFastGen => {
                 let mut rng = rand::thread_rng();
@@ -60,11 +59,13 @@ impl Reducible for EditorState {
                 log::info!("Generated grid\n{}", new_grid.to_string());
             }
             EditorAction::GenerateWFC => {
-                let wfc = WfcGenerator::new(self.grid_size.column,
-                    self.grid_size.row, 
-                    Tile::ALL_CONNECTIONS.0, 
-                    40000, 
-                    1000);
+                let wfc = WfcGenerator::new(
+                    self.grid_size.column,
+                    self.grid_size.row,
+                    Tile::ALL_CONNECTIONS.0,
+                    40000,
+                    1000,
+                );
 
                 let mut generation_result = wfc.generate();
                 while let Err(_) = generation_result {
@@ -78,7 +79,15 @@ impl Reducible for EditorState {
                 let mut rng = rand::thread_rng();
                 for c in 0..new_grid.dimensions().column {
                     for r in 0..new_grid.dimensions().row {
-                        new_grid = new_grid.rotate_clockwise_n_times(Coordinate { row: r as isize, column: c as isize }, rng.gen_range(0..4)).unwrap();
+                        new_grid = new_grid
+                            .rotate_clockwise_n_times(
+                                Coordinate {
+                                    row: r as isize,
+                                    column: c as isize,
+                                },
+                                rng.gen_range(0..4),
+                            )
+                            .unwrap();
                     }
                 }
                 log::info!("Tile rotations shuffled\n{}", new_grid.to_string());
@@ -87,7 +96,7 @@ impl Reducible for EditorState {
 
         Self {
             grid_size: new_grid.dimensions(),
-            grid: new_grid
+            grid: new_grid,
         }
         .into()
     }
@@ -97,7 +106,7 @@ impl EditorState {
     pub fn set(grid: Grid<Tile<Square>>) -> impl Fn() -> EditorState {
         move || EditorState {
             grid_size: grid.dimensions(),
-            grid: grid.clone()
+            grid: grid.clone(),
         }
     }
 }

@@ -54,14 +54,6 @@ pub fn board_component(props: &BoardComponentProps) -> Html {
         })
     };
 
-    let editor_onclick: Callback<MouseEvent> = {
-        let screen = props.screen.clone();
-        Callback::from(move |_| {
-            log::info!("[Button click] Editor");
-            screen.set(Screen::Editor)
-        })
-    };
-
     let to_preview: Callback<MouseEvent> = {
         let screen = props.screen.clone();
         Callback::from(move |_| {
@@ -100,13 +92,8 @@ pub fn board_component(props: &BoardComponentProps) -> Html {
                     // <img src="icons/next.svg" alt="Next level" />
                 </button>
                 <button
-                    onclick={editor_onclick}
-                    style="margin-top:20px">
-                    {"-editor-"}
-                </button>
-                <button
                     onclick={to_preview}>
-                    {"-preview-"}
+                    {"-back-"}
                 </button>
             </div>
         </>

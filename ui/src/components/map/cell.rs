@@ -31,7 +31,7 @@ pub fn cell_component(props: &CellComponentProps) -> Html {
     ];
 
     let board = board_state.clone();
-    let onclick = Callback::from(move |e: MouseEvent| {
+    let onclick = Callback::from(move |_| {
         log::info!(
             "Tile {} with coordinate ({}, {}) has been clicked.",
             cell_symbol,

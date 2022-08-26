@@ -1,9 +1,10 @@
+#![allow(dead_code)]
+
 use std::ops::Add;
 use std::rc::Rc;
 use yew::prelude::*;
 
 use wasm_bindgen::{prelude::*, JsCast};
-
 use crate::helper::level_randomizer::randomize_level;
 
 use game::model::{
