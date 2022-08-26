@@ -82,6 +82,17 @@ impl WfcGenerator {
         }
     }
 
+    pub fn default(width: usize, height: usize) -> WfcGenerator {
+        let available_tiles = EnumSet::<Tile<Square>>::FULL;
+        WfcGenerator {
+            width,
+            height,
+            available_tiles,
+            prop_limit: 40000,
+            pass_limit: 1000,
+        }
+    }
+
     fn update_weights(board: &Sentinel<Square>, weights: &mut EnumMap<Tile<Square>, usize>) {
         weights.clear();
 
