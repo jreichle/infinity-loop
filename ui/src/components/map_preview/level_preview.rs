@@ -53,12 +53,12 @@ pub fn level_preview_component(props: &LevelPreviewComponentProps) -> Html {
     };
 
     let create_own_level: Callback<MouseEvent> = {
-        let level_count = level_count.clone();
+        // let level_count = level_count.clone();
         let screen = props.screen.clone();
-        let reducer = reducer.clone();
+        // let reducer = reducer.clone();
         Callback::from(move |_| {
             log::info!("picking random level");
-            let num = rand::thread_rng().gen_range(0..*level_count);
+            // let num = rand::thread_rng().gen_range(0..*level_count);
             screen.set(Screen::Editor);
         })
     };

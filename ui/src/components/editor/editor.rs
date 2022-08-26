@@ -31,7 +31,7 @@ pub fn editor_component(props: &EditorComponentProps) -> Html {
         })
     };
 
-    let generate_WFC_onclick: Callback<MouseEvent> = {
+    let generate_wfc_onclick: Callback<MouseEvent> = {
         let editor = editor.clone();
         Callback::from(move |_| {
             log::info!("[Button click] Generate WFC.");
@@ -39,7 +39,7 @@ pub fn editor_component(props: &EditorComponentProps) -> Html {
         })
     };
 
-    let check_CPS_onclick: Callback<MouseEvent> = {
+    let check_cps_onclick: Callback<MouseEvent> = {
         Callback::from(move |_| {
             log::info!("[Button click] Check with CPS.");
             log::info!("Current grid\n{}", map_grid.to_string());
@@ -53,7 +53,7 @@ pub fn editor_component(props: &EditorComponentProps) -> Html {
         })
     };
 
-    let check_SAT_onclick: Callback<MouseEvent> = {
+    let check_sat_onclick: Callback<MouseEvent> = {
         Callback::from(move |_| {
             log::info!("[Button click] Check with SAT.");
             log::info!("Not implemented yet");
@@ -192,13 +192,13 @@ pub fn editor_component(props: &EditorComponentProps) -> Html {
                     onclick={generate_fast_gen_onclick}
                     >{"-Generate with FastGen-"}</button>
                 <button
-                    onclick={generate_WFC_onclick}
+                    onclick={generate_wfc_onclick}
                     >{"-Generate with WFC-"}</button>
                 <button
-                    onclick={check_CPS_onclick}
+                    onclick={check_cps_onclick}
                     >{"-Check validity with Constraint Propagation Solver-"}</button>
                 <button
-                    onclick={check_SAT_onclick}
+                    onclick={check_sat_onclick}
                     >{"-Check validity with SAT Solver-"}</button>
                 <button
                     onclick={check_solved_onclick}
