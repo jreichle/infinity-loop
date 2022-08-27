@@ -23,6 +23,14 @@ pub fn editor_component(props: &EditorComponentProps) -> Html {
 
     let map_grid = editor.grid.clone();
 
+    let clear_onclick: Callback<MouseEvent> = {
+        let editor = editor.clone();
+        Callback::from(move |_| {
+            log::info!("[Button click] Generate FastGen.");
+            editor.dispatch(EditorAction::ClearGrid);
+        })
+    };
+
     let generate_fast_gen_onclick: Callback<MouseEvent> = {
         let editor = editor.clone();
         Callback::from(move |_| {
@@ -228,6 +236,9 @@ pub fn editor_component(props: &EditorComponentProps) -> Html {
             </section>
             <GridComponent editor_state={editor.clone()} />
             <div id="controller">
+                <button
+                    onclick={clear_onclick}
+                    >{"-Clear grid-"}</button>
                 <button
                     onclick={generate_fast_gen_onclick}
                     >{"-Generate with FastGen-"}</button>

@@ -25,7 +25,8 @@ pub enum EditorAction {
     GenerateFastGen,
     GenerateWFC,
     ShuffleTileRotations,
-    ShowMessage(String)
+    ShowMessage(String),
+    ClearGrid
 }
 
 impl Default for EditorState {
@@ -96,7 +97,8 @@ impl Reducible for EditorState {
                 }
                 log::info!("Tile rotations shuffled\n{}", new_grid.to_string());
             }
-            EditorAction::ShowMessage(msg) => new_message = msg
+            EditorAction::ShowMessage(msg) => new_message = msg,
+            EditorAction::ClearGrid => new_grid = Grid::new(new_grid.dimensions(), vec![Tile::NO_CONNECTIONS; new_grid.elements().len()]),
         };
 
         Self {

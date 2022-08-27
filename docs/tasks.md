@@ -42,7 +42,7 @@
 - [x] Create user-, not console-messages
 - [x] Shuffle current grid tile rotations
 - [x] Adjust editor to level previews
-- [ ] Clear grid
+- [x] Clear grid
 
 
 - [x] Save grid in local storage (optional)
