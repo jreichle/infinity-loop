@@ -3,6 +3,7 @@ use game::model::fastgen::generate;
 use yew::prelude::*;
 use yew::{html, Callback};
 use game::model::gameboard::GameBoard;
+use web_sys::Storage;
 
 use crate::components::editor::editor_reducer::{EditorAction, EditorState};
 
@@ -167,6 +168,19 @@ pub fn editor_component(props: &EditorComponentProps) -> Html {
         })
     };
 
+    let save_onclick: Callback<MouseEvent> = {
+        let editor = editor.clone();
+        Callback::from(move |_| {
+            log::info!("[Button click] Save level.");
+
+            let local_storage = web_sys::window().unwrap().local_storage().unwrap().unwrap();
+            let key = format!("Own level {}", (local_storage.length().unwrap() + 1));
+            local_storage.set_item(key.as_str(), editor.grid.to_string().as_str()).unwrap();
+
+            editor.dispatch(EditorAction::ShowMessage(format!("Level saved as \"{}\"", key)));
+         })
+    };
+
     let preview_onclick: Callback<MouseEvent> = {
         let screen = props.screen.clone();
         Callback::from(move |_| {
@@ -204,6 +218,12 @@ pub fn editor_component(props: &EditorComponentProps) -> Html {
                         onclick={resize_height_plus_one_onclick}
                         style="width:80px;height:50px;margin-left:65px;margin-right:20px"
                         >{"+"}</button></li>
+                    <li>
+                        <button
+                            onclick={save_onclick}
+                            style="margin-left:65px;margin-right:20px, margin-top=20px"
+                            >{"-Save-"}</button>
+                    </li>
                 </ul>
             </section>
             <GridComponent editor_state={editor.clone()} />

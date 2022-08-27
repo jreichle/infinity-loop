@@ -3,10 +3,6 @@ use rand::Rng;
 use std::rc::Rc;
 use yew::prelude::*;
 
-use std::thread::sleep;
-use std::time::Duration;
-
-
 use game::model::coordinate::Coordinate;
 use game::model::grid::Grid;
 use game::model::tile::{Square, Tile};
