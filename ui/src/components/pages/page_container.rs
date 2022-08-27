@@ -5,8 +5,7 @@ use yew::prelude::*;
 use crate::components::editor::editor::EditorComponent;
 use crate::components::map::board::BoardComponent;
 use crate::components::map_preview::level_preview::LevelPreviewComponent;
-use crate::components::pages::credit_page::CreditPage;
-use crate::components::pages::help_page::HelpPage;
+use crate::components::pages::text_page::TextPage;
 use crate::components::wfc_visualizer::wfc_board::WfcBoardComponent;
 use crate::helper::screen::Screen;
 
@@ -15,7 +14,6 @@ use game::model::coordinate::Coordinate;
 #[function_component(PageContainer)]
 pub fn page_container() -> Html {
     let head_message = use_state_eq(|| "".to_string());
-
     let dimension = use_state(|| Coordinate::new(5 as usize, 5 as usize));
     let level_number = use_state(|| 0);
     let screen = use_state(|| Screen::Title);
@@ -62,6 +60,8 @@ pub fn page_container() -> Html {
         })
     };
 
+    // use effect to let message disappear after 1.5 seconds
+    // depends on message change
     {
         let head_message = head_message.clone();
         use_effect_with_deps(
@@ -72,7 +72,6 @@ pub fn page_container() -> Html {
                     let document = window.document().unwrap();
                     let msg_element = document.get_element_by_id("head-message").unwrap();
                     msg_element.remove_attribute("hidden").ok();
-                    log::info!("-> current message is: {}", message_string);
                     
                     let hide_action = 
                     {
@@ -85,7 +84,7 @@ pub fn page_container() -> Html {
                     };
                 
                     window
-                        .set_timeout_with_callback_and_timeout_and_arguments_0(hide_action.as_ref().unchecked_ref(), 3000)
+                        .set_timeout_with_callback_and_timeout_and_arguments_0(hide_action.as_ref().unchecked_ref(), 1500)
                         .ok();
     
                     hide_action.forget();
@@ -159,12 +158,12 @@ pub fn page_container() -> Html {
                         },
                         Screen::Help => {
                             html!{
-                            <HelpPage screen={screen.clone()} />
+                                <TextPage screen={screen.clone()} title={"help"} content={"This is the help page."}/>
                             }
                         },
                         Screen::Credit => {
                             html!{
-                                <CreditPage screen={screen.clone()} />
+                                <TextPage screen={screen.clone()} title={"credit"} content={"This is the credit page."}/>
                             }
                         }
                     }

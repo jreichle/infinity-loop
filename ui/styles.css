@@ -15,9 +15,10 @@ body {
 }
 
 body {
+  position: relative;
   font: 14px "Helvetica Neue", Helvetica, Arial, sans-serif;
   line-height: 1.4em;
-  color: #4d4d4d;
+  color: #FFF;
   margin: 0 auto;
   font-weight: 300;
   background-color: #111;
@@ -59,11 +60,15 @@ body::-webkit-scrollbar-thumb {
 }
 
 #head-message {
-  background-color: aliceblue;
-  opacity: 0.6;
+  position: absolute;
+  top: 10vh;
+  left: 50%;
+  transform: translate(-50%, 0);
+  background-color: #e0e0ff;
+  opacity: 0.9;
   width: 50%;
-  margin: 3vh auto 0 auto;
   padding: 20px;
+  z-index: 999;
 }
 
 #start-menu {
@@ -317,5 +322,14 @@ input[type="range"]:focus::-webkit-slider-runnable-track {
   font-size: 1vw;
   color: #fff;
   transform: translate(5px, 1px);
-  /* padding: 3px; */
+}
+
+.page-title {
+  font-size: 3vh;
+  line-height: 1;
+}
+
+.page-content {
+  line-height: 1;
+  margin: 2vh 0 0 0;
 }
