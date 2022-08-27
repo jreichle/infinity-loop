@@ -1,8 +1,8 @@
 use game::model::coordinate::Coordinate;
 use game::model::fastgen::generate;
+use game::model::gameboard::GameBoard;
 use yew::prelude::*;
 use yew::{html, Callback};
-use game::model::gameboard::GameBoard;
 
 use crate::components::editor::editor_reducer::{EditorAction, EditorState};
 use crate::components::editor::grid::GridComponent;
@@ -53,11 +53,13 @@ pub fn editor_component(props: &EditorComponentProps) -> Html {
             log::info!("Current grid\n{}", map_grid.to_string());
 
             let solution_num = map_grid.solve().count();
-            log::info!("Is valid grid? {}",
-            match solution_num {
-                0 => "No".to_string(),
-                n => format!("Yes, and it has {} possible solutions", n),
-            });
+            log::info!(
+                "Is valid grid? {}",
+                match solution_num {
+                    0 => "No".to_string(),
+                    n => format!("Yes, and it has {} possible solutions", n),
+                }
+            );
 
             let msg = match solution_num {
                 0 => String::from("The level is not valid"),
@@ -86,7 +88,7 @@ pub fn editor_component(props: &EditorComponentProps) -> Html {
 
             let msg = match is_solved {
                 true => String::from("The level is solved"),
-                false => String::from("The level is not solved")
+                false => String::from("The level is not solved"),
             };
             message.set(msg);
         })
@@ -186,11 +188,13 @@ pub fn editor_component(props: &EditorComponentProps) -> Html {
 
             let local_storage = web_sys::window().unwrap().local_storage().unwrap().unwrap();
             let key = format!("Own level {}", (local_storage.length().unwrap() + 1));
-            local_storage.set_item(key.as_str(), editor.grid.to_string().as_str()).unwrap();
+            local_storage
+                .set_item(key.as_str(), editor.grid.to_string().as_str())
+                .unwrap();
 
-             let msg = format!("Level saved as \"{}\"", key);
-             message.set(msg);
-         })
+            let msg = format!("Level saved as \"{}\"", key);
+            message.set(msg);
+        })
     };
 
     let preview_onclick: Callback<MouseEvent> = {
