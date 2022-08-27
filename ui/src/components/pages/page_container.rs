@@ -1,5 +1,5 @@
-use wasm_bindgen::JsCast;
 use wasm_bindgen::prelude::Closure;
+use wasm_bindgen::JsCast;
 use yew::prelude::*;
 
 use crate::components::editor::editor::EditorComponent;
@@ -72,28 +72,29 @@ pub fn page_container() -> Html {
                     let document = window.document().unwrap();
                     let msg_element = document.get_element_by_id("head-message").unwrap();
                     msg_element.remove_attribute("hidden").ok();
-                    
-                    let hide_action = 
-                    {
+
+                    let hide_action = {
                         let message = message.clone();
                         let msg_element = msg_element.clone();
                         Closure::<dyn Fn()>::new(move || {
                             msg_element.set_attribute("hidden", "true").ok();
-                            message.set("".to_string());   
+                            message.set("".to_string());
                         })
                     };
-                
+
                     window
-                        .set_timeout_with_callback_and_timeout_and_arguments_0(hide_action.as_ref().unchecked_ref(), 1500)
+                        .set_timeout_with_callback_and_timeout_and_arguments_0(
+                            hide_action.as_ref().unchecked_ref(),
+                            1500,
+                        )
                         .ok();
-    
+
                     hide_action.forget();
-                    
                 }
 
-            || ()
-        }, 
-        head_message
+                || ()
+            },
+            head_message,
         )
     }
 
@@ -112,10 +113,10 @@ pub fn page_container() -> Html {
                                         {"-play-"}
                                     </button>
                                     <button onclick={to_editor}>
-                                    {"-editor-"}
+                                        {"-editor-"}
                                     </button>
                                     <button onclick={to_visualizer}>
-                                    {"-viz-"}
+                                        {"-viz-"}
                                     </button>
                                     <button onclick={to_help}>
                                         {"-help-"}
@@ -134,20 +135,22 @@ pub fn page_container() -> Html {
                                 <LevelPreviewComponent
                                     screen={screen.clone()}
                                     dimension={dimension}
-                                    level_number={level_number}
-                                />
+                                    level_number={level_number}/>
                             }
                         },
                         Screen::Editor => {
                             html! {
-                                    <EditorComponent screen={screen.clone()} message={head_message.clone()}/>
+                                <EditorComponent
+                                    screen={screen.clone()}
+                                    message={head_message.clone()}/>
                             }
                         },
                         Screen::Level(user_grid) => {
                             html! {
                                 <BoardComponent
                                     level_grid={user_grid.clone()}
-                                    screen={screen.clone()}/>
+                                    screen={screen.clone()}
+                                    message={head_message.clone()}/>
 
                             }
                         },
@@ -158,7 +161,10 @@ pub fn page_container() -> Html {
                         },
                         Screen::Help => {
                             html!{
-                                <TextPage screen={screen.clone()} title={"help"} content={"This is the help page."}/>
+                                <TextPage
+                                    screen={screen.clone()}
+                                    title={"help"}
+                                    content={"This is the help page."}/>
                             }
                         },
                         Screen::Credit => {

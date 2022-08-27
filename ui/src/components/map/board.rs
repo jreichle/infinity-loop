@@ -2,6 +2,7 @@ use crate::helper::screen::Screen;
 use yew::prelude::*;
 use yew::{html, Callback};
 
+use game::model::gameboard::GameBoard;
 use game::model::{
     grid::Grid,
     tile::{Square, Tile},
@@ -16,6 +17,7 @@ use crate::components::map::{
 pub struct BoardComponentProps {
     pub level_grid: Grid<Tile<Square>>,
     pub screen: UseStateHandle<Screen>,
+    pub message: UseStateHandle<String>,
 }
 
 #[function_component(BoardComponent)]
@@ -24,9 +26,14 @@ pub fn board_component(props: &BoardComponentProps) -> Html {
 
     let check_onclick: Callback<MouseEvent> = {
         let level_grid = board.level_grid.clone();
+        let message = props.message.clone();
         Callback::from(move |_| {
-            log::info!("LEVEL\n{}", level_grid.to_string());
             log::info!("[Button click] Check.");
+            let msg = match level_grid.is_solved() {
+                true => String::from("The level is solved"),
+                false => String::from("The level is not solved"),
+            };
+            message.set(msg);
         })
     };
 

@@ -64,7 +64,7 @@ body::-webkit-scrollbar-thumb {
   top: 10vh;
   left: 50%;
   transform: translate(-50%, 0);
-  background-color: #e0e0ff;
+  background-color: #3b3b59;
   opacity: 0.9;
   width: 50%;
   padding: 20px;
