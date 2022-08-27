@@ -51,7 +51,7 @@ pub fn editor_component(props: &EditorComponentProps) -> Html {
                 n => format!("Yes, and it has {} possible solutions", n),
             });
 
-            editor.dispatch(EditorAction::ChangeMessage(match solution_num {
+            editor.dispatch(EditorAction::ShowMessage(match solution_num {
                 0 => String::from("The level is not valid"),
                 n => format!("The level is valid and has {} possible solutions", n),
             }));
@@ -74,7 +74,7 @@ pub fn editor_component(props: &EditorComponentProps) -> Html {
             let is_solved = editor.grid.is_solved();
             log::info!("Is solved? {}", is_solved);
 
-            editor.dispatch(EditorAction::ChangeMessage(match is_solved {
+            editor.dispatch(EditorAction::ShowMessage(match is_solved {
                 true => String::from("The level is solved"),
                 false => String::from("The level is not solved")
             }));

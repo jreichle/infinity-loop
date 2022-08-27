@@ -3,6 +3,10 @@ use rand::Rng;
 use std::rc::Rc;
 use yew::prelude::*;
 
+use std::thread::sleep;
+use std::time::Duration;
+
+
 use game::model::coordinate::Coordinate;
 use game::model::grid::Grid;
 use game::model::tile::{Square, Tile};
@@ -25,7 +29,7 @@ pub enum EditorAction {
     GenerateFastGen,
     GenerateWFC,
     ShuffleTileRotations,
-    ChangeMessage(String)
+    ShowMessage(String)
 }
 
 impl Default for EditorState {
@@ -43,7 +47,7 @@ impl Reducible for EditorState {
 
     fn reduce(self: Rc<Self>, action: Self::Action) -> Rc<Self> {
         let mut new_grid = self.grid.clone();
-        let mut new_message = self.message.clone();
+        let mut new_message = String::from("");
 
         match action {
             EditorAction::TurnCell(index) => {
@@ -96,7 +100,7 @@ impl Reducible for EditorState {
                 }
                 log::info!("Tile rotations shuffled\n{}", new_grid.to_string());
             }
-            EditorAction::ChangeMessage(msg) => new_message = msg,
+            EditorAction::ShowMessage(msg) => new_message = msg
         };
 
         Self {
