@@ -3,17 +3,15 @@ use game::model::fastgen::generate;
 use yew::prelude::*;
 use yew::{html, Callback};
 use game::model::gameboard::GameBoard;
-use web_sys::Storage;
 
 use crate::components::editor::editor_reducer::{EditorAction, EditorState};
-
 use crate::components::editor::grid::GridComponent;
-
 use crate::helper::screen::Screen;
 
 #[derive(Properties, PartialEq, Clone)]
 pub struct EditorComponentProps {
     pub screen: UseStateHandle<Screen>,
+    pub message: UseStateHandle<String>,
 }
 
 #[function_component(EditorComponent)]
@@ -49,6 +47,7 @@ pub fn editor_component(props: &EditorComponentProps) -> Html {
 
     let check_cps_onclick: Callback<MouseEvent> = {
         let editor = editor.clone();
+        let message = props.message.clone();
         Callback::from(move |_| {
             log::info!("[Button click] Check with CPS.");
             log::info!("Current grid\n{}", map_grid.to_string());
@@ -60,10 +59,11 @@ pub fn editor_component(props: &EditorComponentProps) -> Html {
                 n => format!("Yes, and it has {} possible solutions", n),
             });
 
-            editor.dispatch(EditorAction::ShowMessage(match solution_num {
+            let msg = match solution_num {
                 0 => String::from("The level is not valid"),
                 n => format!("The level is valid and has {} possible solutions", n),
-            }));
+            };
+            message.set(msg);
         })
     };
 
@@ -76,6 +76,7 @@ pub fn editor_component(props: &EditorComponentProps) -> Html {
 
     let check_solved_onclick: Callback<MouseEvent> = {
         let editor = editor.clone();
+        let message = props.message.clone();
         Callback::from(move |_| {
             log::info!("[Button click] Check is solved.");
             log::info!("Current grid\n{}", editor.grid.to_string());
@@ -83,10 +84,11 @@ pub fn editor_component(props: &EditorComponentProps) -> Html {
             let is_solved = editor.grid.is_solved();
             log::info!("Is solved? {}", is_solved);
 
-            editor.dispatch(EditorAction::ShowMessage(match is_solved {
+            let msg = match is_solved {
                 true => String::from("The level is solved"),
                 false => String::from("The level is not solved")
-            }));
+            };
+            message.set(msg);
         })
     };
 
@@ -178,6 +180,7 @@ pub fn editor_component(props: &EditorComponentProps) -> Html {
 
     let save_onclick: Callback<MouseEvent> = {
         let editor = editor.clone();
+        let message = props.message.clone();
         Callback::from(move |_| {
             log::info!("[Button click] Save level.");
 
@@ -185,7 +188,8 @@ pub fn editor_component(props: &EditorComponentProps) -> Html {
             let key = format!("Own level {}", (local_storage.length().unwrap() + 1));
             local_storage.set_item(key.as_str(), editor.grid.to_string().as_str()).unwrap();
 
-            editor.dispatch(EditorAction::ShowMessage(format!("Level saved as \"{}\"", key)));
+             let msg = format!("Level saved as \"{}\"", key);
+             message.set(msg);
          })
     };
 
@@ -266,7 +270,6 @@ pub fn editor_component(props: &EditorComponentProps) -> Html {
                 <button  onclick={back_onclick}>
                     {"-back-"}
                 </button>
-                <p>{editor.message.clone()}</p>
             </div>
         </>
     }

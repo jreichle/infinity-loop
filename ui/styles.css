@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Fira+Code&display=swap');
+@import url("https://fonts.googleapis.com/css2?family=Fira+Code&display=swap");
 
 * {
   box-sizing: border-box;
@@ -28,7 +28,7 @@ body {
 /* Custom scrollbar - Start */
 html {
   --scrollbar_bg: #555;
-  --thumb_bg: #AAA;
+  --thumb_bg: #aaa;
 }
 body::-webkit-scrollbar {
   width: 11px;
@@ -41,7 +41,7 @@ body::-webkit-scrollbar-track {
   background: var(--scrollbar_bg);
 }
 body::-webkit-scrollbar-thumb {
-  background-color: var(--thumb_bg) ;
+  background-color: var(--thumb_bg);
   border-radius: 6px;
   border: 3px solid var(--scrollbar_bg);
 }
@@ -58,9 +58,19 @@ body::-webkit-scrollbar-thumb {
   left: 3px;
 }
 
+#head-message {
+  background-color: aliceblue;
+  opacity: 0.6;
+  width: 50%;
+  margin: 3vh auto 0 auto;
+  padding: 20px;
+}
+
 #start-menu {
   display: flex;
   flex-direction: column;
+  border: 1px solid aliceblue;
+  margin: 10vh 0 10vh 0;
 }
 
 #container {
@@ -73,9 +83,9 @@ body::-webkit-scrollbar-thumb {
 }
 
 #container button {
-  font-size: 2vmin;
-  font-family: 'Fira Code', monospace;
-  color:rgba(255, 255, 255, 0.7);
+  font-size: 3.5vmin;
+  font-family: "Fira Code", monospace;
+  color: rgba(255, 255, 255, 0.7);
   text-align: center;
   background-color: transparent;
   border: 0;
@@ -84,12 +94,12 @@ body::-webkit-scrollbar-thumb {
 }
 
 #container button:hover {
-  color: #FFF;
+  color: #fff;
   background-color: rgba(85, 90, 141, 0.4);
 }
 
 #controller {
-  font-family: 'Fira Code', monospace;
+  font-family: "Fira Code", monospace;
   margin-left: 15px;
   display: flex;
   flex-direction: column;
@@ -97,7 +107,7 @@ body::-webkit-scrollbar-thumb {
 
 #controller button {
   font-size: 1.5vw;
-  color:rgba(255, 255, 255, 0.7);
+  color: rgba(255, 255, 255, 0.7);
   text-align: center;
   background-color: transparent;
   border: 0;
@@ -106,7 +116,7 @@ body::-webkit-scrollbar-thumb {
 }
 
 #controller button:hover {
-  color: #FFF;
+  color: #fff;
   background-color: rgba(85, 90, 141, 0.4);
 }
 
@@ -180,7 +190,8 @@ body::-webkit-scrollbar-thumb {
   flex-direction: row;
 }
 
-.cell, .cell img,
+.cell,
+.cell img,
 .preview-cell img {
   width: 100%;
   height: 100%;
@@ -225,14 +236,15 @@ a:hover {
   height: 1.5vw;
 }
 
-#grid-size-lable, #grid-size-input {
+#grid-size-lable,
+#grid-size-input {
   display: flex;
   flex-direction: row;
   justify-content: space-around;
 }
 
 #grid-size-input input {
-  color: #AAA;
+  color: #aaa;
   font-size: 3vw;
   width: 10vw;
   text-align: center;
@@ -243,20 +255,20 @@ a:hover {
 
 /* slider - start */
 
-input[type=range]{
+input[type="range"] {
   -webkit-appearance: none;
   background-color: transparent;
 }
 
-input[type=range]::-webkit-slider-runnable-track {
+input[type="range"]::-webkit-slider-runnable-track {
   /* width: 300px; */
   height: 0.3vw;
-  background: #BBB;
+  background: #bbb;
   border: none;
   border-radius: 3px;
 }
 
-input[type=range]::-webkit-slider-thumb {
+input[type="range"]::-webkit-slider-thumb {
   -webkit-appearance: none;
   border: none;
   height: 0.8vw;
@@ -267,11 +279,11 @@ input[type=range]::-webkit-slider-thumb {
   /* margin-top: -4px; */
 }
 
-input[type=range]:focus {
+input[type="range"]:focus {
   outline: none;
 }
 
-input[type=range]:focus::-webkit-slider-runnable-track {
+input[type="range"]:focus::-webkit-slider-runnable-track {
   background: #ccc;
 }
 
@@ -297,13 +309,13 @@ input[type=range]:focus::-webkit-slider-runnable-track {
   /* display:block; */
   /* line-height: 2; */
   font-size: 0.8vw;
-  color: #AAA;
+  color: #aaa;
   margin-right: 3px;
 }
 
 .slider-value {
   font-size: 1vw;
-  color: #FFF;
+  color: #fff;
   transform: translate(5px, 1px);
   /* padding: 3px; */
 }
