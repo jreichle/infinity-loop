@@ -14,6 +14,7 @@ use game::model::fastgen;
 pub struct EditorState {
     pub grid_size: Coordinate<usize>,
     pub grid: Grid<Tile<Square>>,
+    pub message: String
 }
 
 // reducer's action
@@ -24,6 +25,7 @@ pub enum EditorAction {
     GenerateFastGen,
     GenerateWFC,
     ShuffleTileRotations,
+    ChangeMessage(String)
 }
 
 impl Default for EditorState {
@@ -31,6 +33,7 @@ impl Default for EditorState {
         Self {
             grid_size: Coordinate { row: 5, column: 5 },
             grid: fastgen::generate(Coordinate { row: 5, column: 5 }, 1),
+            message: String::from("")
         }
     }
 }
@@ -40,6 +43,7 @@ impl Reducible for EditorState {
 
     fn reduce(self: Rc<Self>, action: Self::Action) -> Rc<Self> {
         let mut new_grid = self.grid.clone();
+        let mut new_message = self.message.clone();
 
         match action {
             EditorAction::TurnCell(index) => {
@@ -92,11 +96,13 @@ impl Reducible for EditorState {
                 }
                 log::info!("Tile rotations shuffled\n{}", new_grid.to_string());
             }
+            EditorAction::ChangeMessage(msg) => new_message = msg,
         };
 
         Self {
             grid_size: new_grid.dimensions(),
             grid: new_grid,
+            message: new_message
         }
         .into()
     }
@@ -107,6 +113,7 @@ impl EditorState {
         move || EditorState {
             grid_size: grid.dimensions(),
             grid: grid.clone(),
+            message: String::from("")
         }
     }
 }

@@ -2,7 +2,6 @@ use game::model::coordinate::Coordinate;
 use game::model::fastgen::generate;
 use yew::prelude::*;
 use yew::{html, Callback};
-
 use game::model::gameboard::GameBoard;
 
 use crate::components::editor::editor_reducer::{EditorAction, EditorState};
@@ -40,32 +39,45 @@ pub fn editor_component(props: &EditorComponentProps) -> Html {
     };
 
     let check_cps_onclick: Callback<MouseEvent> = {
+        let editor = editor.clone();
         Callback::from(move |_| {
             log::info!("[Button click] Check with CPS.");
             log::info!("Current grid\n{}", map_grid.to_string());
-            log::info!(
-                "Is valid grid? {}",
-                match map_grid.solve().count() {
-                    0 => "No".to_string(),
-                    n => format!("Yes, and it has {} possible solutions", n),
-                }
-            );
+
+            let solution_num = map_grid.solve().count();
+            log::info!("Is valid grid? {}",
+            match solution_num {
+                0 => "No".to_string(),
+                n => format!("Yes, and it has {} possible solutions", n),
+            });
+
+            editor.dispatch(EditorAction::ChangeMessage(match solution_num {
+                0 => String::from("The level is not valid"),
+                n => format!("The level is valid and has {} possible solutions", n),
+            }));
         })
     };
 
-    let check_sat_onclick: Callback<MouseEvent> = {
-        Callback::from(move |_| {
-            log::info!("[Button click] Check with SAT.");
-            log::info!("Not implemented yet");
-        })
-    };
+    // let check_sat_onclick: Callback<MouseEvent> = {
+    //     Callback::from(move |_| {
+    //         log::info!("[Button click] Check with SAT.");
+    //         log::info!("Not implemented yet");
+    //     })
+    // };
 
     let check_solved_onclick: Callback<MouseEvent> = {
-        let g = editor.grid.clone();
+        let editor = editor.clone();
         Callback::from(move |_| {
             log::info!("[Button click] Check is solved.");
-            log::info!("Current grid\n{}", g.to_string());
-            log::info!("Is solved? {}", g.is_solved());
+            log::info!("Current grid\n{}", editor.grid.to_string());
+
+            let is_solved = editor.grid.is_solved();
+            log::info!("Is solved? {}", is_solved);
+
+            editor.dispatch(EditorAction::ChangeMessage(match is_solved {
+                true => String::from("The level is solved"),
+                false => String::from("The level is not solved")
+            }));
         })
     };
 
@@ -194,7 +206,7 @@ pub fn editor_component(props: &EditorComponentProps) -> Html {
                         >{"+"}</button></li>
                 </ul>
             </section>
-            <GridComponent editor_state={editor} />
+            <GridComponent editor_state={editor.clone()} />
             <div id="controller">
                 <button
                     onclick={generate_fast_gen_onclick}
@@ -204,10 +216,10 @@ pub fn editor_component(props: &EditorComponentProps) -> Html {
                     >{"-Generate with WFC-"}</button>
                 <button
                     onclick={check_cps_onclick}
-                    >{"-Check validity with Constraint Propagation Solver-"}</button>
-                <button
-                    onclick={check_sat_onclick}
-                    >{"-Check validity with SAT Solver-"}</button>
+                    >{"-Check validity-"}</button>
+                // <button
+                //     onclick={check_sat_onclick}
+                //     >{"-Check validity with SAT Solver-"}</button>
                 <button
                     onclick={check_solved_onclick}
                     >{"-Check if solved-"}</button>
@@ -223,6 +235,7 @@ pub fn editor_component(props: &EditorComponentProps) -> Html {
                 <button  onclick={back_onclick}>
                     {"-back-"}
                 </button>
+                <p>{editor.message.clone()}</p>
             </div>
         </>
     }
