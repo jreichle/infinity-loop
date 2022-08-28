@@ -74,6 +74,9 @@ pub fn wfc_board_component(props: &WfcBoardComponentProps) -> Html {
         })
     };
 
+    // TODO:
+    // MOVE the setInterval outside of the Callback
+
     let next_onclick: Callback<MouseEvent> = {
         let wfc_generator = wfc_generator.clone();
         let level_grid = level_grid.clone();
@@ -91,6 +94,8 @@ pub fn wfc_board_component(props: &WfcBoardComponentProps) -> Html {
             weights.set(new_weights.clone());
         })
     };
+
+    
 
     let play_onclick: Callback<MouseEvent> = {
         let interval_id = interval_id.clone();
@@ -166,7 +171,7 @@ pub fn wfc_board_component(props: &WfcBoardComponentProps) -> Html {
     };
 
     html! {
-        <div id="container">
+        <>
             <LevelComponent level_grid={(*level_grid).clone()} />
             <div id="controller">
                 <div class="flex-col margin-bot-4vh">
@@ -204,6 +209,6 @@ pub fn wfc_board_component(props: &WfcBoardComponentProps) -> Html {
                 </div>
 
             </div>
-        </div>
+        </>
     }
 }
