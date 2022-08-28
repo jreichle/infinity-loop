@@ -25,9 +25,11 @@ pub fn Text_page(props: &TextPageProps) -> html {
                 <div class="page-title">{format!("#{}", props.title.clone())}</div>
                 <div class="page-content">{props.content.clone()}</div>
             </div>
-            <button  onclick={back_onclick}>
-                {"-back-"}
-            </button>
+            <div id="controller">
+                <button  onclick={back_onclick}>
+                    {"-back-"}
+                </button>
+            </div>
         </>
     }
 }
