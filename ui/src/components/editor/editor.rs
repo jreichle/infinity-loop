@@ -46,7 +46,7 @@ pub fn editor_component(props: &EditorComponentProps) -> Html {
     };
 
     let check_cps_onclick: Callback<MouseEvent> = {
-        let editor = editor.clone();
+        // let editor = editor.clone();
         let message = props.message.clone();
         Callback::from(move |_| {
             log::info!("[Button click] Check with CPS.");
@@ -214,8 +214,8 @@ pub fn editor_component(props: &EditorComponentProps) -> Html {
     };
 
     html! {
-        <>
-            <section id="controller">
+        <div class="container">
+            <section class="controller">
                 <ul style="list-style-type: none">
                     <li><button
                         onclick={resize_height_minus_one_onclick}
@@ -243,7 +243,7 @@ pub fn editor_component(props: &EditorComponentProps) -> Html {
                 </ul>
             </section>
             <GridComponent editor_state={editor.clone()} />
-            <div id="controller">
+            <div class="controller">
                 <button
                     onclick={clear_onclick}
                     >{"-Clear grid-"}</button>
@@ -275,6 +275,6 @@ pub fn editor_component(props: &EditorComponentProps) -> Html {
                     {"-back-"}
                 </button>
             </div>
-        </>
+        </div>
     }
 }
