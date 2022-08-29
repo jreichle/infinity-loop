@@ -5,10 +5,13 @@ use yew::{html, Callback};
 use game::model::gameboard::GameBoard;
 use game::model::{
     grid::Grid,
+    coordinate::Coordinate,
     tile::{Square, Tile},
 };
 
 use crate::components::map::{
+    row::RowComponent,
+    cell::CellComponent,
     board_reducer::{BoardAction, BoardState},
     grid::GridComponent,
 };
@@ -69,34 +72,65 @@ pub fn board_component(props: &BoardComponentProps) -> Html {
         })
     };
 
+
+    fn get_turn_callback(board: UseReducerHandle<BoardState>, index: Coordinate<isize>) -> Callback<MouseEvent> {
+        Callback::from(move |_| {
+            log::info!(
+                "Tile with coordinate ({:?}) has been clicked.",
+                index.to_tuple()
+            );
+            board.dispatch(BoardAction::TurnCell(index));
+        })
+    }
+
+    let (height, width) = board.level_grid.dimensions().to_tuple();
+    let (height, width) = (height as isize, width as isize);
+
     html! {
         <>
-            <GridComponent board_state={board} />
+            <GridComponent> 
+                {
+                    (0..height).into_iter().map(| row | {
+                        html!{
+                            <RowComponent key={row}>
+                                {
+                                    (0..width).into_iter().map(| column | {
+                                        let index = Coordinate { row, column };
+                                        let tile = board.level_grid.get(index).unwrap().clone();
+                                        html!{
+                                            <CellComponent
+                                                key={column}
+                                                tile={tile}
+                                                row_number={row}
+                                                column_number={column}
+                                                on_click={get_turn_callback(board.clone(), index)}
+                                            ></CellComponent>
+                                        }
+                                    }).collect::<Html>()
+                                }
+                            </RowComponent>
+                        }
+                    }).collect::<Html>()
+                }
+            </GridComponent>
+
             <div id="controller">
                 <button
                     onclick={check_onclick}>
                     {"-check-"}
-                    // {"🔍"}
-                    // <img src="icons/magnifying-glass.svg" alt="Check if solved" />
                 </button>
                 <button
                     onclick={hint_onclick}>
                     {"-hint-"}
-                    // {"💡"}
-                    // <div class="light-bulb"></div>
-                    // <img src="icons/light-bulb.svg" alt="Get hint" />
+
                 </button>
                 <button
                     onclick={solve_onclick}>
                     {"-solve-"}
-                    // {"🔮"}
-                    // <img src="icons/magic.svg" alt="Solve level" />
                 </button>
                 <button
                     onclick={next_onclick}>
                     {"-next-"}
-                    // {"⏭️"}
-                    // <img src="icons/next.svg" alt="Next level" />
                 </button>
                 <button
                     onclick={to_preview}>
