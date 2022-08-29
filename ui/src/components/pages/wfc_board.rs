@@ -11,8 +11,9 @@ use game::model::{
 };
 
 // use std::collections::HashMap;
-use super::level::LevelComponent;
-use super::slider::SliderComponent;
+// use super::level::LevelComponent;
+use crate::components::utils::slider::SliderComponent;
+use crate::components::map::level::StatelessLevelComponent;
 use crate::helper::screen::Screen;
 
 #[derive(Properties, PartialEq, Clone)]
@@ -171,9 +172,9 @@ pub fn wfc_board_component(props: &WfcBoardComponentProps) -> Html {
     };
 
     html! {
-        <>
-            <LevelComponent level_grid={(*level_grid).clone()} />
-            <div id="controller">
+        <div class="container">
+            <StatelessLevelComponent level_grid={(*level_grid).clone()} />
+            <div class="controller">
                 <div class="flex-col margin-bot-4vh">
                     <SliderComponent id="slider-height" label="#row" value={height_value.clone()} />
                     <SliderComponent id="slider-width" label="#col"  value={width_value.clone()} />
@@ -209,6 +210,6 @@ pub fn wfc_board_component(props: &WfcBoardComponentProps) -> Html {
                 </div>
 
             </div>
-        </>
+        </div>
     }
 }

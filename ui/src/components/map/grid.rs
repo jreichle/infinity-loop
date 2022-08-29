@@ -1,8 +1,5 @@
 use yew::prelude::*;
-use yew::{html, Html, Children};
-
-use crate::components::map::board_reducer::BoardState;
-use crate::components::map::row::RowComponent;
+use yew::{html, Children};
 
 #[derive(Properties, PartialEq, Clone)]
 pub struct GridComponentProps {

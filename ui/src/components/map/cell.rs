@@ -1,10 +1,7 @@
 use yew::prelude::*;
 use yew::{html, Callback, Properties};
 
-use crate::components::map::board_reducer::{BoardAction, BoardState};
-
 use game::model::{
-    coordinate::Coordinate,
     tile::{Tile, Square}
 };
 
@@ -13,16 +10,17 @@ pub struct CellComponentProps {
     pub tile: Tile<Square>,
     pub row_number: isize,
     pub column_number: isize,
+    #[prop_or_default]
     pub on_click: Callback<MouseEvent>,
+    #[prop_or_default]
+    pub on_wheel: Callback<WheelEvent>,
 }
 
 #[function_component(CellComponent)]
 pub fn cell_component(props: &CellComponentProps) -> Html {
     let (row, column) = (props.row_number.clone(), props.column_number.clone());
-    let index = Coordinate { row, column };
-
     let cell_tile = props.tile.clone();
-    // let cell_tile = board_state.level_grid.get(index.clone()).unwrap();
+
     let cell_symbol = cell_tile.to_string().chars().next().unwrap();
     let cell_img = get_index(cell_symbol.clone());
 
@@ -41,6 +39,7 @@ pub fn cell_component(props: &CellComponentProps) -> Html {
             class={format!("cell row-{} col-{}", row, column)}>
             <img src={img_path[cell_img]}
                 onclick={props.on_click.clone()}
+                onwheel={props.on_wheel.clone()}
                 style={format!("{}{}{}",
                     "transform:rotate(",
                     get_angle(cell_symbol),

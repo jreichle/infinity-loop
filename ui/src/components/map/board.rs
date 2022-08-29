@@ -5,15 +5,12 @@ use yew::{html, Callback};
 use game::model::gameboard::GameBoard;
 use game::model::{
     grid::Grid,
-    coordinate::Coordinate,
     tile::{Square, Tile},
 };
 
 use crate::components::map::{
-    row::RowComponent,
-    cell::CellComponent,
+    level::LevelComponent,
     board_reducer::{BoardAction, BoardState},
-    grid::GridComponent,
 };
 
 #[derive(Properties, PartialEq, Clone)]
@@ -72,49 +69,10 @@ pub fn board_component(props: &BoardComponentProps) -> Html {
         })
     };
 
-
-    fn get_turn_callback(board: UseReducerHandle<BoardState>, index: Coordinate<isize>) -> Callback<MouseEvent> {
-        Callback::from(move |_| {
-            log::info!(
-                "Tile with coordinate ({:?}) has been clicked.",
-                index.to_tuple()
-            );
-            board.dispatch(BoardAction::TurnCell(index));
-        })
-    }
-
-    let (height, width) = board.level_grid.dimensions().to_tuple();
-    let (height, width) = (height as isize, width as isize);
-
     html! {
-        <>
-            <GridComponent> 
-                {
-                    (0..height).into_iter().map(| row | {
-                        html!{
-                            <RowComponent key={row}>
-                                {
-                                    (0..width).into_iter().map(| column | {
-                                        let index = Coordinate { row, column };
-                                        let tile = board.level_grid.get(index).unwrap().clone();
-                                        html!{
-                                            <CellComponent
-                                                key={column}
-                                                tile={tile}
-                                                row_number={row}
-                                                column_number={column}
-                                                on_click={get_turn_callback(board.clone(), index)}
-                                            ></CellComponent>
-                                        }
-                                    }).collect::<Html>()
-                                }
-                            </RowComponent>
-                        }
-                    }).collect::<Html>()
-                }
-            </GridComponent>
-
-            <div id="controller">
+        <div class="container">
+            <LevelComponent board={board.clone()} can_turn=true can_change=false />
+            <div class="controller">
                 <button
                     onclick={check_onclick}>
                     {"-check-"}
@@ -137,6 +95,6 @@ pub fn board_component(props: &BoardComponentProps) -> Html {
                     {"-back-"}
                 </button>
             </div>
-        </>
+        </div>
     }
 }
