@@ -4,3 +4,4 @@ pub mod text_page;
 
 pub mod board;
 pub mod wfc_board;
+pub mod editor;

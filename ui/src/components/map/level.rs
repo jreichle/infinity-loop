@@ -54,32 +54,34 @@ pub fn level_component(props: &LevelProps) -> html {
     let (height, width) = (height as isize, width as isize);
 
     html!{
+        <div class="game-board">
             <GridComponent> 
-            {
-                (0..height).into_iter().map(| row | {
-                    html!{
-                        <RowComponent key={row}>
-                            {
-                                (0..width).into_iter().map(| column | {
-                                    let index = Coordinate { row, column };
-                                    let tile = level_grid.get(index).unwrap().clone();
-                                    html!{
-                                        <CellComponent
-                                            key={column}
-                                            tile={tile}
-                                            row_number={row}
-                                            column_number={column}
-                                            on_click={ if props.can_turn { dispatch_turn_cell(board.clone(), index) } else { Callback::from(|_|{}) } }
-                                            on_wheel={ if props.can_change { dispatch_change_cell(board.clone(), index) } else { Callback::from(|_|{}) } }
-                                        ></CellComponent>
-                                    }
-                                }).collect::<Html>()
-                            }
-                        </RowComponent>
-                    }
-                }).collect::<Html>()
-            }
-        </GridComponent>
+                {
+                    (0..height).into_iter().map(| row | {
+                        html!{
+                            <RowComponent key={row}>
+                                {
+                                    (0..width).into_iter().map(| column | {
+                                        let index = Coordinate { row, column };
+                                        let tile = level_grid.get(index).unwrap().clone();
+                                        html!{
+                                            <CellComponent
+                                                key={column}
+                                                tile={tile}
+                                                row_number={row}
+                                                column_number={column}
+                                                on_click={ if props.can_turn { dispatch_turn_cell(board.clone(), index) } else { Callback::from(|_|{}) } }
+                                                on_wheel={ if props.can_change { dispatch_change_cell(board.clone(), index) } else { Callback::from(|_|{}) } }
+                                            ></CellComponent>
+                                        }
+                                    }).collect::<Html>()
+                                }
+                            </RowComponent>
+                        }
+                    }).collect::<Html>()
+                }
+            </GridComponent>
+        </div>
     }
 }
 

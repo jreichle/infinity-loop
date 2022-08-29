@@ -1,14 +1,9 @@
 use yew::prelude::*;
-use yew::{html, Html};
+use yew::html;
 
 use crate::components::reducers::preview_reducer::PreviewState;
-use crate::components::map::cell::{get_angle, get_index};
-
 use crate::components::map::level::StatelessLevelComponent;
-
 use crate::helper::screen::Screen;
-
-use game::model::coordinate::Coordinate;
 
 #[derive(Properties, PartialEq, Clone)]
 pub struct LevelComponentProps {
@@ -20,7 +15,6 @@ pub struct LevelComponentProps {
 #[function_component(LevelComponent)]
 pub fn level_preview_component(props: &LevelComponentProps) -> Html {
     let level_grid = props.preview_state.extracted_levels[props.level_index].clone();
-    let (height, width) = level_grid.dimensions().to_tuple();
 
     let to_level: Callback<MouseEvent> = {
         let screen = props.screen.clone();
