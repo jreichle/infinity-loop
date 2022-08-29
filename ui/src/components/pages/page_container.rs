@@ -4,9 +4,9 @@ use yew::prelude::*;
 
 use crate::components::pages::start_page::StartPage;
 use crate::components::pages::wfc_board::WfcBoardComponent;
+use crate::components::pages::board::BoardComponent;
 
 use crate::components::editor::editor::EditorComponent;
-use crate::components::map::board::BoardComponent;
 use crate::components::map_preview::level_preview::LevelPreviewComponent;
 use crate::components::pages::text_page::TextPage;
 

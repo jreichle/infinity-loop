@@ -7,12 +7,13 @@ use game::model::{
     tile::{Square, Tile},
 };
 
+use crate::components::reducers::board_reducer::{BoardAction, BoardState};
 use crate::components::map::{
     row::RowComponent,
     cell::CellComponent,
-    board_reducer::{BoardAction, BoardState},
     grid::GridComponent,
 };
+
 
 
 #[derive(Properties, PartialEq, Clone)]

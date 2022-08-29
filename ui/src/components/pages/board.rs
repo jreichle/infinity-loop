@@ -8,10 +8,8 @@ use game::model::{
     tile::{Square, Tile},
 };
 
-use crate::components::map::{
-    level::LevelComponent,
-    board_reducer::{BoardAction, BoardState},
-};
+use crate::components::map::level::LevelComponent;
+use crate::components::reducers::board_reducer::{BoardAction, BoardState};
 
 #[derive(Properties, PartialEq, Clone)]
 pub struct BoardComponentProps {
