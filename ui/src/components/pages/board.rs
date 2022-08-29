@@ -69,7 +69,11 @@ pub fn board_component(props: &BoardComponentProps) -> Html {
 
     html! {
         <div class="container">
-            <LevelComponent board={board.clone()} can_turn=true can_change=false />
+
+            <div class="game-board">
+                <LevelComponent board={board.clone()} can_turn=true can_change=false />
+            </div>
+            
             <div class="controller">
                 <button
                     onclick={check_onclick}>

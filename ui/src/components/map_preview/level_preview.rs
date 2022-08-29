@@ -4,7 +4,8 @@ use yew::{html, Callback};
 use rand::Rng;
 
 use super::level::LevelComponent;
-use super::preview_reducer::{PreviewAction, PreviewState};
+use crate::components::reducers::preview_reducer::{PreviewAction, PreviewState};
+
 
 use crate::helper::screen::Screen;
 

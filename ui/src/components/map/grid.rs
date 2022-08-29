@@ -11,9 +11,7 @@ pub struct GridComponentProps {
 pub fn grid_component(props: &GridComponentProps) -> Html {
     html! {
         <>
-            <div class="game-board">
                 { for props.children.iter() }
-            </div>
         </>
     }
 }
