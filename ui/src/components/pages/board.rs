@@ -11,6 +11,8 @@ use game::model::{
 use crate::components::map::level::LevelComponent;
 use crate::components::reducers::board_reducer::{BoardAction, BoardState};
 
+use crate::helper::local_storage::change_screen;
+
 #[derive(Properties, PartialEq, Clone)]
 pub struct BoardComponentProps {
     pub level_grid: Grid<Tile<Square>>,
@@ -63,7 +65,7 @@ pub fn board_component(props: &BoardComponentProps) -> Html {
         let screen = props.screen.clone();
         Callback::from(move |_| {
             log::info!("[Button click] Editor");
-            screen.set(Screen::Overview);
+            change_screen(screen.clone(), Screen::Overview);
         })
     };
 

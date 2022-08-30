@@ -2,14 +2,14 @@ use wasm_bindgen::prelude::Closure;
 use wasm_bindgen::JsCast;
 use yew::prelude::*;
 
-use crate::components::pages::start_page::StartPage;
-use crate::components::pages::wfc_board::WfcBoardComponent;
+use crate::components::map_preview::level_preview::LevelPreviewComponent;
 use crate::components::pages::board::BoardComponent;
 use crate::components::pages::editor::EditorComponent;
-
-use crate::components::map_preview::level_preview::LevelPreviewComponent;
+use crate::components::pages::start_page::StartPage;
 use crate::components::pages::text_page::TextPage;
+use crate::components::pages::wfc_board::WfcBoardComponent;
 
+use crate::helper::local_storage::retrieve_screen;
 use crate::helper::screen::Screen;
 
 use game::model::coordinate::Coordinate;
@@ -21,8 +21,8 @@ pub fn page_container() -> Html {
 
     let dimension = use_state(|| Coordinate::new(5 as usize, 5 as usize));
     let level_number = use_state(|| 0);
-    let screen = use_state(|| Screen::Title);
 
+    let screen = use_state(|| retrieve_screen());
 
     // use effect to let message disappear after 1.5 seconds
     // depends on message change
@@ -57,8 +57,9 @@ pub fn page_container() -> Html {
                             hide_action.as_ref().unchecked_ref(),
                             2000,
                         )
-                        .ok().unwrap();
-            
+                        .ok()
+                        .unwrap();
+
                     timeout_id.set(id);
                     hide_action.forget();
                 }
@@ -109,7 +110,8 @@ pub fn page_container() -> Html {
                         },
                         Screen::Visualizer => {
                             html!{
-                                <WfcBoardComponent screen={screen.clone()} />
+                                <WfcBoardComponent
+                                    screen={screen.clone()}/>
                             }
                         },
                         Screen::Help => {
@@ -122,7 +124,10 @@ pub fn page_container() -> Html {
                         },
                         Screen::Credit => {
                             html!{
-                                <TextPage screen={screen.clone()} title={"credit"} content={"This is the credit page."}/>
+                                <TextPage
+                                    screen={screen.clone()}
+                                    title={"credit"}
+                                    content={"This is the credit page."}/>
                             }
                         }
                     }

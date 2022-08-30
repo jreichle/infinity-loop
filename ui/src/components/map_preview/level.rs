@@ -1,8 +1,9 @@
-use yew::prelude::*;
 use yew::html;
+use yew::prelude::*;
 
-use crate::components::reducers::preview_reducer::PreviewState;
 use crate::components::map::level::StatelessLevelComponent;
+use crate::components::reducers::preview_reducer::PreviewState;
+use crate::helper::local_storage::change_screen;
 use crate::helper::screen::Screen;
 
 #[derive(Properties, PartialEq, Clone)]
@@ -20,7 +21,7 @@ pub fn level_preview_component(props: &LevelComponentProps) -> Html {
         let screen = props.screen.clone();
         let level = level_grid.clone();
         Callback::from(move |_| {
-            screen.set(Screen::Level(level.clone()));
+            change_screen(screen.clone(), Screen::Level(level.clone()));
         })
     };
 

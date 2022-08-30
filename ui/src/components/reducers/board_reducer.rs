@@ -5,8 +5,9 @@ use std::rc::Rc;
 use rand::Rng;
 use yew::prelude::*;
 
-use wasm_bindgen::{prelude::*, JsCast};
 use crate::helper::level_randomizer::randomize_level;
+use crate::helper::local_storage::save_level;
+use wasm_bindgen::{prelude::*, JsCast};
 
 use game::generator::wfc::WfcGenerator;
 use game::model::{
@@ -92,6 +93,7 @@ impl Reducible for BoardState {
                     self.level_grid.dimensions().add(1),
                     new_level_number as u64,
                 ));
+                save_level(&new_level_grid);
             }
             BoardAction::GetHint => {
                 log::info!("Get hint.");
