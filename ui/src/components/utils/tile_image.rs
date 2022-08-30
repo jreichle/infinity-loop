@@ -1,26 +1,34 @@
+use core::str;
 
-use yew::prelude::*;
 use yew::html;
+use yew::prelude::*;
 
 use game::model::{
     tile::{Tile, Square}
 };
 
-pub fn get_img_from_tile(tile: &Tile<Square>) -> Html {
-    let img_path = vec![
-        "data/tiles/0.svg",
-        "data/tiles/1.svg",
-        "data/tiles/2.svg",
-        "data/tiles/3.svg",
-        "data/tiles/4.svg",
-        "data/tiles/5.svg",
-    ];
+const IMG_PATH: [&str; 6] = [
+    "data/tiles/0.svg",
+    "data/tiles/1.svg",
+    "data/tiles/2.svg",
+    "data/tiles/3.svg",
+    "data/tiles/4.svg",
+    "data/tiles/5.svg",
+];
 
+#[derive(Properties, PartialEq, Clone)]
+pub struct TileImageProps {
+    pub tile: Tile<Square>,
+}
+
+#[function_component(TileImageComponent)]
+pub fn tile_image(props: &TileImageProps) -> Html {
+    let tile = props.tile.clone();
     let cell_symbol = tile.to_string().chars().next().unwrap();
     let cell_img = get_index(cell_symbol.clone());
 
     html!{
-        <img src={img_path[cell_img]}
+        <img src={IMG_PATH[cell_img]}
             style={format!("{}{}{}",
                 "transform:rotate(",
                 get_angle(cell_symbol),

@@ -5,7 +5,7 @@ use game::model::{
     tile::{Tile, Square}
 };
 
-use crate::components::utils::tile_image::get_img_from_tile;
+use crate::components::utils::tile_image::TileImageComponent;
 
 #[derive(Properties, PartialEq, Clone)]
 pub struct CellComponentProps {
@@ -30,7 +30,7 @@ pub fn cell_component(props: &CellComponentProps) -> Html {
             onclick={props.on_click.clone()}
             onwheel={props.on_wheel.clone()}
             >
-            { get_img_from_tile(&cell_tile) }
+            <TileImageComponent tile={cell_tile} />
         </div>
     }
 }
