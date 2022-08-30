@@ -15,8 +15,8 @@ use crate::helper::screen::Screen;
 
 use game::model::coordinate::Coordinate;
 
-#[function_component(PageContainer)]
-pub fn page_container() -> Html {
+#[function_component(PageRouter)]
+pub fn page_router() -> Html {
     let head_message = use_state_eq(|| "".to_string());
     let head_message_timeout_id = use_state(|| -1_i32);
 
