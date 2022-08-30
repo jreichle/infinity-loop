@@ -11,11 +11,9 @@ pub fn randomize_level(mut level: Grid<Tile<Square>>) -> Grid<Tile<Square>> {
         for row in 0..dimension.row {
             for col in 0..dimension.column {
                 let num = rand::thread_rng().gen_range(0..3);
-                for _ in 0..num {
-                    level = level
-                        .rotate_clockwise(Coordinate::new(row as isize, col as isize))
-                        .unwrap();
-                }
+                level = level
+                    .rotate_clockwise_n_times(Coordinate::new(row as isize, col as isize), num)
+                    .unwrap();
             }
         }
     }

@@ -106,10 +106,18 @@ pub fn editor_component(props: &EditorComponentProps) -> Html {
     let play_onclick: Callback<MouseEvent> = {
         let screen = props.screen.clone();
         let grid = board.level_grid.clone();
+        let message = props.message.clone();
         Callback::from(move |_| {
             log::info!("[Button click] Play custom grid.");
             log::info!("Current grid\n{}", grid.to_string());
-            change_screen(screen.clone(), Screen::Level(grid.clone()));
+            // TODO: only allowed if valid
+            if grid.solve().count() != 0 {
+                change_screen(screen.clone(), Screen::Level(grid.clone()));
+            } else {
+                message.set(String::from(
+                    "The level is not valid and thus not playable.",
+                ));
+            }
         })
     };
 
