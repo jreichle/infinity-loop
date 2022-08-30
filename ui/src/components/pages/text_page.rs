@@ -11,7 +11,7 @@ pub struct TextPageProps {
 }
 
 #[function_component(TextPage)]
-pub fn Text_page(props: &TextPageProps) -> html {
+pub fn text_page(props: &TextPageProps) -> html {
     let back_onclick: Callback<MouseEvent> = {
         let screen = props.screen.clone();
         Callback::from(move |_| {
@@ -19,15 +19,17 @@ pub fn Text_page(props: &TextPageProps) -> html {
         })
     };
 
-    html! {
-        <>
+    html!{
+        <div class="container">
             <div id={format!("{}{}", props.title.clone(),"-page")} class="page-container">
                 <div class="page-title">{format!("#{}", props.title.clone())}</div>
                 <div class="page-content">{props.content.clone()}</div>
             </div>
-            <button  onclick={back_onclick}>
-                {"-back-"}
-            </button>
-        </>
+            <div class="controller">
+                <button  onclick={back_onclick}>
+                    {"-back-"}
+                </button>
+            </div>
+        </div>
     }
 }

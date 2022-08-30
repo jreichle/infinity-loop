@@ -8,10 +8,8 @@ use game::model::{
     tile::{Square, Tile},
 };
 
-use crate::components::map::{
-    board_reducer::{BoardAction, BoardState},
-    grid::GridComponent,
-};
+use crate::components::map::level::LevelComponent;
+use crate::components::reducers::board_reducer::{BoardAction, BoardState};
 
 use crate::helper::local_storage::change_screen;
 
@@ -72,39 +70,31 @@ pub fn board_component(props: &BoardComponentProps) -> Html {
     };
 
     html! {
-        <>
-            <GridComponent board_state={board} />
-            <div id="controller">
+        <div class="container">
+            <LevelComponent board={board.clone()} can_turn=true can_change=false />
+            <div class="controller">
                 <button
                     onclick={check_onclick}>
                     {"-check-"}
-                    // {"🔍"}
-                    // <img src="icons/magnifying-glass.svg" alt="Check if solved" />
                 </button>
                 <button
                     onclick={hint_onclick}>
                     {"-hint-"}
-                    // {"💡"}
-                    // <div class="light-bulb"></div>
-                    // <img src="icons/light-bulb.svg" alt="Get hint" />
+
                 </button>
                 <button
                     onclick={solve_onclick}>
                     {"-solve-"}
-                    // {"🔮"}
-                    // <img src="icons/magic.svg" alt="Solve level" />
                 </button>
                 <button
                     onclick={next_onclick}>
                     {"-next-"}
-                    // {"⏭️"}
-                    // <img src="icons/next.svg" alt="Next level" />
                 </button>
                 <button
                     onclick={to_preview}>
                     {"-back-"}
                 </button>
             </div>
-        </>
+        </div>
     }
 }

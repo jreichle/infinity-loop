@@ -1,79 +1,36 @@
 use yew::prelude::*;
 use yew::{html, Callback, Properties};
 
-use crate::components::map::board_reducer::{BoardAction, BoardState};
-use game::model::coordinate::Coordinate;
+use game::model::{
+    tile::{Tile, Square}
+};
+
+use crate::components::utils::tile_image::TileImageComponent;
 
 #[derive(Properties, PartialEq, Clone)]
 pub struct CellComponentProps {
-    pub board_state: UseReducerHandle<BoardState>,
+    pub tile: Tile<Square>,
     pub row_number: isize,
     pub column_number: isize,
+    #[prop_or_default]
+    pub on_click: Callback<MouseEvent>,
+    #[prop_or_default]
+    pub on_wheel: Callback<WheelEvent>,
 }
 
 #[function_component(CellComponent)]
 pub fn cell_component(props: &CellComponentProps) -> Html {
     let (row, column) = (props.row_number.clone(), props.column_number.clone());
-    let index = Coordinate { row, column };
-
-    let board_state = props.board_state.clone();
-    let cell_tile = board_state.level_grid.get(index.clone()).unwrap();
-    let cell_symbol = cell_tile.to_string().chars().next().unwrap();
-    let cell_img = get_index(cell_symbol.clone());
-
-    let img_path = vec![
-        "data/tiles/0.svg",
-        "data/tiles/1.svg",
-        "data/tiles/2.svg",
-        "data/tiles/3.svg",
-        "data/tiles/4.svg",
-        "data/tiles/5.svg",
-    ];
-
-    let board = board_state.clone();
-    let onclick = Callback::from(move |_| {
-        log::info!(
-            "Tile {} with coordinate ({}, {}) has been clicked.",
-            cell_symbol,
-            row,
-            column
-        );
-        board.dispatch(BoardAction::TurnCell(index));
-    });
+    let cell_tile = props.tile.clone();
 
     html! {
         <div
             id={format!("cell-r-{}-c-{}", row, column)}
-            class={format!("cell row-{} col-{}", row, column)}>
-            <img src={img_path[cell_img]}
-                onclick={onclick}
-                style={format!("{}{}{}",
-                    "transform:rotate(",
-                    get_angle(cell_symbol),
-                    "deg);")}
-            />
+            class={format!("cell row-{} col-{}", row, column)}
+            onclick={props.on_click.clone()}
+            onwheel={props.on_wheel.clone()}
+            >
+            <TileImageComponent tile={cell_tile} />
         </div>
-    }
-}
-
-pub fn get_angle(cell_symbol: char) -> usize {
-    match cell_symbol {
-        ' ' | '╋' | '╹' | '┗' | '┣' => 0,
-        '╺' | '━' | '┏' | '┳' => 90,
-        '╻' | '┓' | '┫' => 180,
-        '╸' | '┛' | '┻' => 270,
-        _ => 0,
-    }
-}
-
-pub fn get_index(cell_symbol: char) -> usize {
-    match cell_symbol {
-        ' ' => 0,
-        '╹' | '╺' | '╻' | '╸' => 1,
-        '┃' | '━' => 2,
-        '┗' | '┏' | '┛' | '┓' => 3,
-        '┣' | '┻' | '┫' | '┳' => 4,
-        '╋' => 5,
-        _ => 0,
     }
 }

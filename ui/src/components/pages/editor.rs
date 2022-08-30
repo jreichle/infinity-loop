@@ -4,8 +4,8 @@ use game::model::gameboard::GameBoard;
 use yew::prelude::*;
 use yew::{html, Callback};
 
-use crate::components::editor::editor_reducer::{EditorAction, EditorState};
-use crate::components::editor::grid::GridComponent;
+use crate::components::map::level::LevelComponent;
+use crate::components::reducers::board_reducer::{BoardAction, BoardState};
 use crate::helper::local_storage::change_screen;
 use crate::helper::screen::Screen;
 
@@ -18,41 +18,42 @@ pub struct EditorComponentProps {
 #[function_component(EditorComponent)]
 pub fn editor_component(props: &EditorComponentProps) -> Html {
     let new_grid = generate(Coordinate { row: 5, column: 5 }, 99);
-    let editor = use_reducer_eq(EditorState::set(new_grid));
+    let board = use_reducer_eq(BoardState::set_grid(new_grid));
 
-    let map_grid = editor.grid.clone();
+    let level_grid = board.level_grid.clone();
 
     let clear_onclick: Callback<MouseEvent> = {
-        let editor = editor.clone();
+        let board = board.clone();
         Callback::from(move |_| {
             log::info!("[Button click] Generate FastGen.");
-            editor.dispatch(EditorAction::ClearGrid);
+            board.dispatch(BoardAction::ClearGrid);
         })
     };
 
     let generate_fast_gen_onclick: Callback<MouseEvent> = {
-        let editor = editor.clone();
+        let board = board.clone();
         Callback::from(move |_| {
             log::info!("[Button click] Generate FastGen.");
-            editor.dispatch(EditorAction::GenerateFastGen);
+            board.dispatch(BoardAction::GenerateFastGen);
         })
     };
 
     let generate_wfc_onclick: Callback<MouseEvent> = {
-        let editor = editor.clone();
+        let board = board.clone();
         Callback::from(move |_| {
             log::info!("[Button click] Generate WFC.");
-            editor.dispatch(EditorAction::GenerateWFC);
+            board.dispatch(BoardAction::GenerateWFC);
         })
     };
 
     let check_cps_onclick: Callback<MouseEvent> = {
+        // let board = board.clone();
         let message = props.message.clone();
         Callback::from(move |_| {
             log::info!("[Button click] Check with CPS.");
-            log::info!("Current grid\n{}", map_grid.to_string());
+            log::info!("Current grid\n{}", level_grid.to_string());
 
-            let solution_num = map_grid.solve().count();
+            let solution_num = level_grid.solve().count();
             log::info!(
                 "Is valid grid? {}",
                 match solution_num {
@@ -77,13 +78,13 @@ pub fn editor_component(props: &EditorComponentProps) -> Html {
     // };
 
     let check_solved_onclick: Callback<MouseEvent> = {
-        let editor = editor.clone();
+        let board = board.clone();
         let message = props.message.clone();
         Callback::from(move |_| {
             log::info!("[Button click] Check is solved.");
-            log::info!("Current grid\n{}", editor.grid.to_string());
+            log::info!("Current grid\n{}", board.level_grid.to_string());
 
-            let is_solved = editor.grid.is_solved();
+            let is_solved = board.level_grid.is_solved();
             log::info!("Is solved? {}", is_solved);
 
             let msg = match is_solved {
@@ -95,93 +96,93 @@ pub fn editor_component(props: &EditorComponentProps) -> Html {
     };
 
     let shuffle_tile_rotations_onclick: Callback<MouseEvent> = {
-        let editor = editor.clone();
+        let board = board.clone();
         Callback::from(move |_| {
             log::info!("[Button click] Shuffle tile rotations.");
-            editor.dispatch(EditorAction::ShuffleTileRotations);
+            board.dispatch(BoardAction::ShuffleTileRotations);
         })
     };
 
     let play_onclick: Callback<MouseEvent> = {
         let screen = props.screen.clone();
-        let g = editor.grid.clone();
+        let grid = board.level_grid.clone();
         Callback::from(move |_| {
             log::info!("[Button click] Play custom grid.");
-            log::info!("Current grid\n{}", g.to_string());
-            change_screen(screen.clone(), Screen::Level(g.clone()));
+            log::info!("Current grid\n{}", grid.to_string());
+            change_screen(screen.clone(), Screen::Level(grid.clone()));
         })
     };
 
     let resize_width_plus_one_onclick: Callback<MouseEvent> = {
-        let editor = editor.clone();
+        let board = board.clone();
         Callback::from(move |_| {
             log::info!("[Button click] Resize width +1.");
             log::info!(
                 "[Button click] Resize width +1.{} {}",
-                editor.grid_size.column + 1,
-                editor.grid_size.row
+                board.level_grid.dimensions().column + 1,
+                board.level_grid.dimensions().row
             );
-            editor.dispatch(EditorAction::ChangeSize(Coordinate {
-                column: editor.grid_size.column + 1,
-                row: editor.grid_size.row,
+            board.dispatch(BoardAction::ChangeSize(Coordinate {
+                column: board.level_grid.dimensions().column + 1,
+                row: board.level_grid.dimensions().row,
             }));
         })
     };
 
     let resize_width_minus_one_onclick: Callback<MouseEvent> = {
-        let editor = editor.clone();
+        let board = board.clone();
         Callback::from(move |_| {
             log::info!("[Button click] Resize width -1.");
-            if editor.grid_size.column > 1 {
+            if board.level_grid.dimensions().column > 1 {
                 log::info!(
                     "[Button click] Resize width +1.{} {}",
-                    editor.grid_size.column - 1,
-                    editor.grid_size.row
+                    board.level_grid.dimensions().column - 1,
+                    board.level_grid.dimensions().row
                 );
-                editor.dispatch(EditorAction::ChangeSize(Coordinate {
-                    column: editor.grid_size.column - 1,
-                    row: editor.grid_size.row,
+                board.dispatch(BoardAction::ChangeSize(Coordinate {
+                    column: board.level_grid.dimensions().column - 1,
+                    row: board.level_grid.dimensions().row,
                 }));
             }
         })
     };
 
     let resize_height_plus_one_onclick: Callback<MouseEvent> = {
-        let editor = editor.clone();
+        let board = board.clone();
         Callback::from(move |_| {
             log::info!("[Button click] Resize height +1.");
             log::info!(
                 "[Button click] Resize width +1.{} {}",
-                editor.grid_size.column,
-                editor.grid_size.row + 1
+                board.level_grid.dimensions().column,
+                board.level_grid.dimensions().row + 1
             );
-            editor.dispatch(EditorAction::ChangeSize(Coordinate {
-                column: editor.grid_size.column,
-                row: editor.grid_size.row + 1,
+            board.dispatch(BoardAction::ChangeSize(Coordinate {
+                column: board.level_grid.dimensions().column,
+                row: board.level_grid.dimensions().row + 1,
             }));
         })
     };
 
     let resize_height_minus_one_onclick: Callback<MouseEvent> = {
-        let editor = editor.clone();
+        let board = board.clone();
         Callback::from(move |_| {
             log::info!("[Button click] Resize height -1.");
-            if editor.grid_size.row > 1 {
+            if board.level_grid.dimensions().row > 1 {
                 log::info!(
                     "[Button click] Resize width +1.{} {}",
-                    editor.grid_size.column,
-                    editor.grid_size.row - 1
+                    board.level_grid.dimensions().column,
+                    board.level_grid.dimensions().row - 1
                 );
-                editor.dispatch(EditorAction::ChangeSize(Coordinate {
-                    column: editor.grid_size.column,
-                    row: editor.grid_size.row - 1,
+                board.dispatch(BoardAction::ChangeSize(Coordinate {
+                    column: board.level_grid.dimensions().column,
+                    row: board.level_grid.dimensions().row - 1,
                 }));
             }
         })
     };
 
     let save_onclick: Callback<MouseEvent> = {
-        let editor = editor.clone();
+        let board = board.clone();
         let message = props.message.clone();
         Callback::from(move |_| {
             log::info!("[Button click] Save level.");
@@ -189,7 +190,7 @@ pub fn editor_component(props: &EditorComponentProps) -> Html {
             let local_storage = web_sys::window().unwrap().local_storage().unwrap().unwrap();
             let key = format!("Own level {}", (local_storage.length().unwrap() + 1));
             local_storage
-                .set_item(key.as_str(), editor.grid.to_string().as_str())
+                .set_item(key.as_str(), board.level_grid.to_string().as_str())
                 .unwrap();
 
             let msg = format!("Level saved as \"{}\"", key);
@@ -214,8 +215,8 @@ pub fn editor_component(props: &EditorComponentProps) -> Html {
     };
 
     html! {
-        <>
-            <section id="controller">
+        <div class="container">
+            <section class="controller">
                 <ul style="list-style-type: none">
                     <li><button
                         onclick={resize_height_minus_one_onclick}
@@ -242,8 +243,10 @@ pub fn editor_component(props: &EditorComponentProps) -> Html {
                     </li>
                 </ul>
             </section>
-            <GridComponent editor_state={editor.clone()} />
-            <div id="controller">
+
+            <LevelComponent board={board.clone()} can_turn=true can_change=true />
+
+            <div class="controller">
                 <button
                     onclick={clear_onclick}
                     >{"-Clear grid-"}</button>
@@ -275,6 +278,6 @@ pub fn editor_component(props: &EditorComponentProps) -> Html {
                     {"-back-"}
                 </button>
             </div>
-        </>
+        </div>
     }
 }

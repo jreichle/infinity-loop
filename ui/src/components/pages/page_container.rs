@@ -2,12 +2,14 @@ use wasm_bindgen::prelude::Closure;
 use wasm_bindgen::JsCast;
 use yew::prelude::*;
 
-use crate::components::editor::editor::EditorComponent;
-use crate::components::map::board::BoardComponent;
 use crate::components::map_preview::level_preview::LevelPreviewComponent;
+use crate::components::pages::board::BoardComponent;
+use crate::components::pages::editor::EditorComponent;
+use crate::components::pages::start_page::StartPage;
 use crate::components::pages::text_page::TextPage;
-use crate::components::wfc_visualizer::wfc_board::WfcBoardComponent;
-use crate::helper::local_storage::{change_screen, retrieve_screen, CURRENT_SCREEN};
+use crate::components::pages::wfc_board::WfcBoardComponent;
+
+use crate::helper::local_storage::retrieve_screen;
 use crate::helper::screen::Screen;
 
 use game::model::coordinate::Coordinate;
@@ -15,62 +17,26 @@ use game::model::coordinate::Coordinate;
 #[function_component(PageContainer)]
 pub fn page_container() -> Html {
     let head_message = use_state_eq(|| "".to_string());
+    let head_message_timeout_id = use_state(|| -1_i32);
+
     let dimension = use_state(|| Coordinate::new(5 as usize, 5 as usize));
     let level_number = use_state(|| 0);
 
     let screen = use_state(|| retrieve_screen());
 
-    let to_preview: Callback<MouseEvent> = {
-        let screen = screen.clone();
-        Callback::from(move |_| {
-            change_screen(screen.clone(), Screen::Overview);
-        })
-    };
-
-    let to_editor: Callback<MouseEvent> = {
-        let screen = screen.clone();
-        Callback::from(move |_| {
-            change_screen(screen.clone(), Screen::Editor);
-        })
-    };
-
-    let to_visualizer: Callback<MouseEvent> = {
-        let screen = screen.clone();
-        Callback::from(move |_| {
-            change_screen(screen.clone(), Screen::Visualizer);
-        })
-    };
-
-    let to_help: Callback<MouseEvent> = {
-        let screen = screen.clone();
-        Callback::from(move |_| {
-            change_screen(screen.clone(), Screen::Help);
-        })
-    };
-
-    let to_credit: Callback<MouseEvent> = {
-        let screen = screen.clone();
-        Callback::from(move |_| {
-            change_screen(screen.clone(), Screen::Credit);
-        })
-    };
-
-    let on_exit: Callback<MouseEvent> = {
-        let head_message = head_message.clone();
-        Callback::from(move |_| {
-            head_message.set("There is no way out of an infinite loop!".to_string());
-        })
-    };
-
     // use effect to let message disappear after 1.5 seconds
     // depends on message change
     {
         let head_message = head_message.clone();
+        let timeout_id = head_message_timeout_id.clone();
         use_effect_with_deps(
             move |message| {
+                let window = web_sys::window().unwrap();
                 let message_string = (*message.clone()).clone();
                 if message_string != "".to_string() {
-                    let window = web_sys::window().unwrap();
+                    if *timeout_id != -1 {
+                        window.clear_timeout_with_handle(*timeout_id);
+                    }
                     let document = window.document().unwrap();
                     let msg_element = document.get_element_by_id("head-message").unwrap();
                     msg_element.remove_attribute("hidden").ok();
@@ -78,23 +44,27 @@ pub fn page_container() -> Html {
                     let hide_action = {
                         let message = message.clone();
                         let msg_element = msg_element.clone();
+                        let timeout_id = timeout_id.clone();
                         Closure::<dyn Fn()>::new(move || {
                             msg_element.set_attribute("hidden", "true").ok();
                             message.set("".to_string());
+                            timeout_id.set(-1);
                         })
                     };
 
-                    window
+                    let id = window
                         .set_timeout_with_callback_and_timeout_and_arguments_0(
                             hide_action.as_ref().unchecked_ref(),
-                            1500,
+                            2000,
                         )
-                        .ok();
+                        .ok()
+                        .unwrap();
 
+                    timeout_id.set(id);
                     hide_action.forget();
                 }
 
-                || ()
+                || {}
             },
             head_message,
         )
@@ -105,31 +75,13 @@ pub fn page_container() -> Html {
             <div id="head-message" hidden=true>
                 {(*head_message).clone()}
             </div>
-            <div id="container">
                 {
                     match &*screen {
                         Screen::Title => {
                             html! {
-                                <div id="start-menu">
-                                    <button onclick={to_preview}>
-                                        {"-play-"}
-                                    </button>
-                                    <button onclick={to_editor}>
-                                        {"-editor-"}
-                                    </button>
-                                    <button onclick={to_visualizer}>
-                                        {"-viz-"}
-                                    </button>
-                                    <button onclick={to_help}>
-                                        {"-help-"}
-                                    </button>
-                                    <button onclick={to_credit}>
-                                        {"-credit-"}
-                                    </button>
-                                    <button onclick={on_exit}>
-                                        {"-exit-"}
-                                    </button>
-                                </div>
+                                <StartPage
+                                    screen={screen.clone()}
+                                    message={head_message.clone()} />
                             }
                         },
                         Screen::Overview => {
@@ -180,7 +132,6 @@ pub fn page_container() -> Html {
                         }
                     }
                 }
-            </div>
         </>
     }
 }

@@ -1,5 +1,4 @@
 use wasm_bindgen::{prelude::*, JsCast};
-use web_sys::HtmlInputElement;
 use yew::prelude::*;
 use yew::{html, Callback};
 
@@ -11,11 +10,15 @@ use game::model::{
     tile::{Square, Tile},
 };
 
-// use std::collections::HashMap;
-use super::level::LevelComponent;
-use super::slider::SliderComponent;
+use crate::components::map::level::StatelessLevelComponent;
+use crate::components::utils::slider::SliderComponent;
 use crate::helper::local_storage::change_screen;
 use crate::helper::screen::Screen;
+
+const LOG_PREFIX: &str = "#viz";
+const DEFAULT_WIDTH: isize = 10;
+const DEFAULT_HEIGHT: isize = 10;
+const DEFAULT_SPEED: isize = 80;
 
 #[derive(Properties, PartialEq, Clone)]
 pub struct WfcBoardComponentProps {
@@ -24,11 +27,15 @@ pub struct WfcBoardComponentProps {
 
 #[function_component(WfcBoardComponent)]
 pub fn wfc_board_component(props: &WfcBoardComponentProps) -> Html {
-    let (width_ref, height_ref) = (use_node_ref(), use_node_ref());
+    let (width_value, height_value, speed_value) = (
+        use_state(|| DEFAULT_WIDTH),
+        use_state(|| DEFAULT_HEIGHT),
+        use_state(|| DEFAULT_SPEED),
+    );
     let playing = use_state(|| false);
     let interval_id = use_state(|| 0);
 
-    let wfc_generator = WfcGenerator::default(14, 14);
+    let wfc_generator = WfcGenerator::default(DEFAULT_WIDTH as usize, DEFAULT_HEIGHT as usize);
     let (sentinel_grid, weights) = wfc_generator.init_board();
     let (sentinel_grid, weights) = wfc_generator.iteration_step(sentinel_grid, weights);
 
@@ -57,28 +64,26 @@ pub fn wfc_board_component(props: &WfcBoardComponentProps) -> Html {
         let level_grid = level_grid.clone();
         let sentinel_grid = sentinel_grid.clone();
         let weights = weights.clone();
-        let width_input_ref = width_ref.clone();
-        let height_input_ref = height_ref.clone();
+        let (width_value, height_value) = (width_value.clone(), height_value.clone());
+        let (width, height) = (*width_value as usize, *height_value as usize);
         Callback::from(move |_| {
-            if let (Some(width_input), Some(height_input)) = (
-                width_input_ref.cast::<HtmlInputElement>(),
-                height_input_ref.cast::<HtmlInputElement>(),
-            ) {
-                let (width, height) = (
-                    width_input.value_as_number() as usize,
-                    height_input.value_as_number() as usize,
-                );
-                log::info!("new grid size: ({}, {})", width, height);
-                let new_generator = WfcGenerator::default(width, height);
-                let (mut new_grid, mut new_weights) = new_generator.init_board();
-                (new_grid, new_weights) = new_generator.iteration_step(new_grid, new_weights);
-                level_grid.set(WfcGenerator::extract_grid(&new_grid));
-                wfc_generator.set(new_generator);
-                sentinel_grid.set(new_grid);
-                weights.set(new_weights);
-            }
+            log::debug!(
+                "{LOG_PREFIX} [Button click] new: new grid generated with dimension: ({}, {})",
+                width,
+                height
+            );
+            let new_generator = WfcGenerator::default(width, height);
+            let (mut new_grid, mut new_weights) = new_generator.init_board();
+            (new_grid, new_weights) = new_generator.iteration_step(new_grid, new_weights);
+            level_grid.set(WfcGenerator::extract_grid(&new_grid));
+            wfc_generator.set(new_generator);
+            sentinel_grid.set(new_grid);
+            weights.set(new_weights);
         })
     };
+
+    // TODO:
+    // MOVE the setInterval outside of the Callback
 
     let next_onclick: Callback<MouseEvent> = {
         let wfc_generator = wfc_generator.clone();
@@ -86,7 +91,7 @@ pub fn wfc_board_component(props: &WfcBoardComponentProps) -> Html {
         let sentinel_grid = sentinel_grid.clone();
         let weights = weights.clone();
         Callback::from(move |_| {
-            log::info!("[Button click] Next.");
+            log::debug!("{LOG_PREFIX} [Button click] next");
             let (new_grid, new_weights) = go_to_next_step(
                 (*wfc_generator).clone(),
                 (*sentinel_grid).clone(),
@@ -106,10 +111,16 @@ pub fn wfc_board_component(props: &WfcBoardComponentProps) -> Html {
         let weights = weights.clone();
 
         let playing = playing.clone();
+        let speed_value = speed_value.clone();
         Callback::from(move |_| {
-            log::info!("[Button click] Play.");
-            if !(*playing) {
-                log::info!("Start playing...");
+            if *playing {
+                log::debug!("{LOG_PREFIX} [Button click] pause: interval has been cleared");
+                playing.set(false);
+                web_sys::window()
+                    .unwrap()
+                    .clear_interval_with_handle(*interval_id);
+            } else {
+                log::debug!("{LOG_PREFIX} [Button click] play: interval started");
                 playing.set(true);
 
                 let (new_grid, new_weights) = go_to_next_step(
@@ -137,11 +148,12 @@ pub fn wfc_board_component(props: &WfcBoardComponentProps) -> Html {
                         weights.set(new_weights.clone());
                     });
 
+                    let speed = 3 * (100 - *speed_value as i32);
                     let window = web_sys::window().unwrap();
                     let id = window
                         .set_interval_with_callback_and_timeout_and_arguments_0(
                             iteration_closure.as_ref().unchecked_ref(),
-                            5,
+                            speed,
                         )
                         .ok()
                         .unwrap();
@@ -149,25 +161,6 @@ pub fn wfc_board_component(props: &WfcBoardComponentProps) -> Html {
                     interval_id.set(id);
                     iteration_closure.forget();
                 }
-            } else {
-                log::info!("Already playing...");
-            }
-        })
-    };
-
-    let stop_onclick: Callback<MouseEvent> = {
-        let interval_id = interval_id.clone();
-        let playing = playing.clone();
-        Callback::from(move |_| {
-            log::info!("[Button click] Stop.");
-            if *playing {
-                log::info!("Stop playing...");
-                playing.set(false);
-                web_sys::window()
-                    .unwrap()
-                    .clear_interval_with_handle(*interval_id);
-            } else {
-                log::info!("not playing...");
             }
         })
     };
@@ -175,44 +168,50 @@ pub fn wfc_board_component(props: &WfcBoardComponentProps) -> Html {
     let back_onclick: Callback<MouseEvent> = {
         let screen = props.screen.clone();
         Callback::from(move |_| {
-            log::info!("[Button click] Editor");
+            log::debug!("{LOG_PREFIX} [Button click] back - go back to Menu page");
             change_screen(screen.clone(), Screen::Title);
         })
     };
 
     html! {
-        <div id="container">
-            <LevelComponent level_grid={(*level_grid).clone()} />
-            <div id="controller">
-                <SliderComponent id="slider-height" label="#row" node_ref={height_ref} />
-                <SliderComponent id="slider-width" label="#col"  node_ref={width_ref} />
+        <div class="container">
+            <div class="game-board">
+            <StatelessLevelComponent level_grid={(*level_grid).clone()} />
+            </div>
+            <div class="controller">
+                <div class="flex-col margin-bot-4vh">
+                    <SliderComponent id="slider-height" label="#row" value={height_value.clone()} />
+                    <SliderComponent id="slider-width" label="#col"  value={width_value.clone()} />
+                    <button
+                        onclick={new_onclick}
+                    >
+                        {"-resize-"}
+                    </button>
+                </div>
 
-                <button
-                    onclick={new_onclick}
-                >
-                    {"-new-"}
-                </button>
-                <button
-                    onclick={next_onclick}
-                >
-                    {"-next-"}
-                </button>
-                <button
-                    onclick={play_onclick}
-                >
-                {"-play-"}
-                </button>
-                <button
-                    onclick={stop_onclick}
-                >
-                {"-stop-"}
-                </button>
-                <button
-                    onclick={back_onclick}
-                >
-                {"-back-"}
-                </button>
+                <div class="flex-col margin-bot-4vh">
+                    <SliderComponent id="slider-speed" label="#speed" value={speed_value.clone()} max=100 min=1 />
+                    <button
+                        onclick={play_onclick}
+                    >
+                    {
+                        if *playing {"-pause-"} else {"-play-"}
+                    }
+                    </button>
+                    <button
+                        onclick={next_onclick}
+                    >
+                        {"-next-"}
+                    </button>
+                </div>
 
+                <div class="flex-col margin-bot-4vh">
+                    <button
+                        onclick={back_onclick}
+                    >
+                    {"-back-"}
+                    </button>
+                </div>
 
             </div>
         </div>
