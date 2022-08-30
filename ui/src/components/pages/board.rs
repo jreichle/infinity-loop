@@ -8,7 +8,7 @@ use game::model::{
     tile::{Square, Tile},
 };
 
-use crate::components::map::level::LevelComponent;
+use crate::components::board::level::LevelComponent;
 use crate::components::reducers::board_reducer::{BoardAction, BoardState};
 
 use crate::helper::local_storage::change_screen;

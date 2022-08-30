@@ -4,7 +4,7 @@ use game::model::gameboard::GameBoard;
 use yew::prelude::*;
 use yew::{html, Callback};
 
-use crate::components::map::level::LevelComponent;
+use crate::components::board::level::LevelComponent;
 use crate::components::reducers::board_reducer::{BoardAction, BoardState};
 use crate::helper::local_storage::change_screen;
 use crate::helper::screen::Screen;

@@ -10,7 +10,7 @@ use game::model::{
     tile::{Square, Tile},
 };
 
-use crate::components::map::level::StatelessLevelComponent;
+use crate::components::board::level::StatelessLevelComponent;
 use crate::components::utils::slider::SliderComponent;
 use crate::helper::local_storage::change_screen;
 use crate::helper::screen::Screen;

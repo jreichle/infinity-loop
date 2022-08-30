@@ -4,7 +4,7 @@ pub mod helper;
 use yew::html;
 use yew::prelude::*;
 
-use crate::components::pages::page_container::PageContainer;
+use crate::components::pages::page_router::PageContainer;
 
 #[function_component(App)]
 fn app() -> Html {

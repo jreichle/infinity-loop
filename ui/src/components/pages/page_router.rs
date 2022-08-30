@@ -2,12 +2,13 @@ use wasm_bindgen::prelude::Closure;
 use wasm_bindgen::JsCast;
 use yew::prelude::*;
 
-use crate::components::map_preview::level_preview::LevelPreviewComponent;
+
 use crate::components::pages::board::BoardComponent;
 use crate::components::pages::editor::EditorComponent;
 use crate::components::pages::start_page::StartPage;
 use crate::components::pages::text_page::TextPage;
 use crate::components::pages::wfc_board::WfcBoardComponent;
+use crate::components::pages::level_preview::LevelPreviewComponent;
 
 use crate::helper::local_storage::retrieve_screen;
 use crate::helper::screen::Screen;
