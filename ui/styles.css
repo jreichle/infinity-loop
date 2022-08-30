@@ -94,20 +94,20 @@ body::-webkit-scrollbar-thumb {
   z-index: 999;
 }
 
-#start-menu {
-  display: flex;
-  flex-direction: column;
-  border: 1px solid var(--white);
-  margin: 10vh 0 10vh 0;
-}
-
-#container {
+.container {
   position: relative;
   display: flex;
   align-items: center;
   justify-content: center;
   line-height: 0;
   margin: 13vh 0 5vh 0;
+}
+
+#start-menu {
+  display: flex;
+  flex-direction: column;
+  border: 1px solid var(--white);
+  margin: 10vh 0 10vh 0;
 }
 
 #start-menu button {
@@ -126,13 +126,13 @@ body::-webkit-scrollbar-thumb {
   background-color: rgba(85, 90, 141, 0.4);
 }
 
-#controller {
+.controller {
   margin-left: 15px;
   display: flex;
   flex-direction: column;
 }
 
-#controller button {
+.controller button {
   font-size: 1.5vw;
   font-family: "Fira Code", monospace;
   color: var(--white);
@@ -143,7 +143,7 @@ body::-webkit-scrollbar-thumb {
   margin: 10px 0 0 3px;
 }
 
-#controller button:hover {
+.controller button:hover {
   color: #fff;
   background-color: rgba(85, 90, 141, 0.4);
 }

@@ -10,10 +10,14 @@ use game::model::{
     tile::{Square, Tile},
 };
 
-// use std::collections::HashMap;
-use super::level::LevelComponent;
-use super::slider::SliderComponent;
+use crate::components::utils::slider::SliderComponent;
+use crate::components::map::level::StatelessLevelComponent;
 use crate::helper::screen::Screen;
+
+const LOG_PREFIX: &str = "#viz";
+const DEFAULT_WIDTH: isize = 10;
+const DEFAULT_HEIGHT: isize = 10;
+const DEFAULT_SPEED: isize = 80;
 
 #[derive(Properties, PartialEq, Clone)]
 pub struct WfcBoardComponentProps {
@@ -23,14 +27,14 @@ pub struct WfcBoardComponentProps {
 #[function_component(WfcBoardComponent)]
 pub fn wfc_board_component(props: &WfcBoardComponentProps) -> Html {
     let (width_value, height_value, speed_value) = (
-        use_state(|| 14_isize),
-        use_state(|| 14_isize),
-        use_state(|| 80_isize),
+        use_state(|| DEFAULT_WIDTH),
+        use_state(|| DEFAULT_HEIGHT),
+        use_state(|| DEFAULT_SPEED),
     );
     let playing = use_state(|| false);
     let interval_id = use_state(|| 0);
 
-    let wfc_generator = WfcGenerator::default(14, 14);
+    let wfc_generator = WfcGenerator::default(DEFAULT_WIDTH as usize, DEFAULT_HEIGHT as usize);
     let (sentinel_grid, weights) = wfc_generator.init_board();
     let (sentinel_grid, weights) = wfc_generator.iteration_step(sentinel_grid, weights);
 
@@ -59,11 +63,10 @@ pub fn wfc_board_component(props: &WfcBoardComponentProps) -> Html {
         let level_grid = level_grid.clone();
         let sentinel_grid = sentinel_grid.clone();
         let weights = weights.clone();
-        let width_value = width_value.clone();
-        let height_value = height_value.clone();
+        let (width_value, height_value) = (width_value.clone(), height_value.clone());
+        let (width, height) = (*width_value as usize, *height_value as usize);
         Callback::from(move |_| {
-            let (width, height) = (*width_value as usize, *height_value as usize);
-            log::info!("new grid size: ({}, {})", width, height);
+            log::debug!("{LOG_PREFIX} [Button click] new: new grid generated with dimension: ({}, {})", width, height);
             let new_generator = WfcGenerator::default(width, height);
             let (mut new_grid, mut new_weights) = new_generator.init_board();
             (new_grid, new_weights) = new_generator.iteration_step(new_grid, new_weights);
@@ -83,7 +86,7 @@ pub fn wfc_board_component(props: &WfcBoardComponentProps) -> Html {
         let sentinel_grid = sentinel_grid.clone();
         let weights = weights.clone();
         Callback::from(move |_| {
-            log::info!("[Button click] Next.");
+            log::debug!("{LOG_PREFIX} [Button click] next");
             let (new_grid, new_weights) = go_to_next_step(
                 (*wfc_generator).clone(),
                 (*sentinel_grid).clone(),
@@ -107,15 +110,14 @@ pub fn wfc_board_component(props: &WfcBoardComponentProps) -> Html {
         let playing = playing.clone();
         let speed_value = speed_value.clone();
         Callback::from(move |_| {
-            log::info!("[Button click] Play.");
             if *playing {
-                log::info!("Stop playing...");
+                log::debug!("{LOG_PREFIX} [Button click] pause: interval has been cleared");
                 playing.set(false);
                 web_sys::window()
                     .unwrap()
                     .clear_interval_with_handle(*interval_id);
             } else {
-                log::info!("Start playing...");
+                log::debug!("{LOG_PREFIX} [Button click] play: interval started");
                 playing.set(true);
 
                 let (new_grid, new_weights) = go_to_next_step(
@@ -142,8 +144,8 @@ pub fn wfc_board_component(props: &WfcBoardComponentProps) -> Html {
                         sentinel_grid.set(new_grid.clone());
                         weights.set(new_weights.clone());
                     });
-
-                    let speed = 10 * (100 - *speed_value as i32);
+                    
+                    let speed = 3 * (100 - *speed_value as i32);
                     let window = web_sys::window().unwrap();    
                     let id = window
                         .set_interval_with_callback_and_timeout_and_arguments_0(
@@ -165,15 +167,17 @@ pub fn wfc_board_component(props: &WfcBoardComponentProps) -> Html {
     let back_onclick: Callback<MouseEvent> = {
         let screen = props.screen.clone();
         Callback::from(move |_| {
-            log::info!("[Button click] Editor");
+            log::debug!("{LOG_PREFIX} [Button click] back - go back to Menu page");
             screen.set(Screen::Title);
         })
     };
 
     html! {
-        <>
-            <LevelComponent level_grid={(*level_grid).clone()} />
-            <div id="controller">
+        <div class="container">
+            <div class="game-board">
+            <StatelessLevelComponent level_grid={(*level_grid).clone()} />
+            </div>
+            <div class="controller">
                 <div class="flex-col margin-bot-4vh">
                     <SliderComponent id="slider-height" label="#row" value={height_value.clone()} />
                     <SliderComponent id="slider-width" label="#col"  value={width_value.clone()} />
@@ -209,6 +213,6 @@ pub fn wfc_board_component(props: &WfcBoardComponentProps) -> Html {
                 </div>
 
             </div>
-        </>
+        </div>
     }
 }

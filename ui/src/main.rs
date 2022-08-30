@@ -6,9 +6,6 @@ use yew::prelude::*;
 
 use crate::components::pages::page_container::PageContainer;
 
-// mod helper;
-
-
 #[function_component(App)]
 fn app() -> Html {
     html! {
@@ -26,6 +23,6 @@ fn app() -> Html {
 }
 
 fn main() {
-    wasm_logger::init(wasm_logger::Config::default());
+    wasm_logger::init(wasm_logger::Config::new(log::Level::Info));
     yew::start_app::<App>();
 }

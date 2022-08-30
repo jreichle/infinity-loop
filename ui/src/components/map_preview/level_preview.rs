@@ -4,7 +4,8 @@ use yew::{html, Callback};
 use rand::Rng;
 
 use super::level::LevelComponent;
-use super::preview_reducer::{PreviewAction, PreviewState};
+use crate::components::reducers::preview_reducer::{PreviewAction, PreviewState};
+
 
 use crate::helper::screen::Screen;
 
@@ -95,7 +96,7 @@ pub fn level_preview_component(props: &LevelPreviewComponentProps) -> Html {
     };
 
     html! {
-        <>
+        <div class="container">
             <div id="preview-container">
                 {
                     (0..*level_count).into_iter().map( | level_index | {
@@ -109,7 +110,7 @@ pub fn level_preview_component(props: &LevelPreviewComponentProps) -> Html {
                     }).collect::<Html>()
                 }
             </div>
-            <div id="controller">
+            <div class="controller">
                 <button
                     onclick={load_more_levels}>
                     {"-load more-"}
@@ -127,6 +128,6 @@ pub fn level_preview_component(props: &LevelPreviewComponentProps) -> Html {
                     {"-back-"}
                 </button>
             </div>
-        </>
+        </div>
     }
 }

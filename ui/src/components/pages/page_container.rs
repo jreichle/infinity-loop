@@ -2,11 +2,14 @@ use wasm_bindgen::prelude::Closure;
 use wasm_bindgen::JsCast;
 use yew::prelude::*;
 
-use crate::components::editor::editor::EditorComponent;
-use crate::components::map::board::BoardComponent;
+use crate::components::pages::start_page::StartPage;
+use crate::components::pages::wfc_board::WfcBoardComponent;
+use crate::components::pages::board::BoardComponent;
+use crate::components::pages::editor::EditorComponent;
+
 use crate::components::map_preview::level_preview::LevelPreviewComponent;
 use crate::components::pages::text_page::TextPage;
-use crate::components::wfc_visualizer::wfc_board::WfcBoardComponent;
+
 use crate::helper::screen::Screen;
 
 use game::model::coordinate::Coordinate;
@@ -20,47 +23,6 @@ pub fn page_container() -> Html {
     let level_number = use_state(|| 0);
     let screen = use_state(|| Screen::Title);
 
-    let to_preview: Callback<MouseEvent> = {
-        let screen = screen.clone();
-        Callback::from(move |_| {
-            screen.clone().set(Screen::Overview);
-        })
-    };
-
-    let to_editor: Callback<MouseEvent> = {
-        let screen = screen.clone();
-        Callback::from(move |_| {
-            screen.clone().set(Screen::Editor);
-        })
-    };
-
-    let to_visualizer: Callback<MouseEvent> = {
-        let screen = screen.clone();
-        Callback::from(move |_| {
-            screen.clone().set(Screen::Visualizer);
-        })
-    };
-
-    let to_help: Callback<MouseEvent> = {
-        let screen = screen.clone();
-        Callback::from(move |_| {
-            screen.clone().set(Screen::Help);
-        })
-    };
-
-    let to_credit: Callback<MouseEvent> = {
-        let screen = screen.clone();
-        Callback::from(move |_| {
-            screen.clone().set(Screen::Credit);
-        })
-    };
-
-    let on_exit: Callback<MouseEvent> = {
-        let head_message = head_message.clone();
-        Callback::from(move |_| {
-            head_message.set("There is no way out of an infinite loop!".to_string());
-        })
-    };
 
     // use effect to let message disappear after 1.5 seconds
     // depends on message change
@@ -112,31 +74,13 @@ pub fn page_container() -> Html {
             <div id="head-message" hidden=true>
                 {(*head_message).clone()}
             </div>
-            <div id="container">
                 {
                     match &*screen {
                         Screen::Title => {
                             html! {
-                                <div id="start-menu">
-                                    <button onclick={to_preview}>
-                                        {"-play-"}
-                                    </button>
-                                    <button onclick={to_editor}>
-                                        {"-editor-"}
-                                    </button>
-                                    <button onclick={to_visualizer}>
-                                        {"-viz-"}
-                                    </button>
-                                    <button onclick={to_help}>
-                                        {"-help-"}
-                                    </button>
-                                    <button onclick={to_credit}>
-                                        {"-credit-"}
-                                    </button>
-                                    <button onclick={on_exit}>
-                                        {"-exit-"}
-                                    </button>
-                                </div>
+                                <StartPage
+                                    screen={screen.clone()}
+                                    message={head_message.clone()} />
                             }
                         },
                         Screen::Overview => {
@@ -183,7 +127,6 @@ pub fn page_container() -> Html {
                         }
                     }
                 }
-            </div>
         </>
     }
 }
