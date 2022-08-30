@@ -1,5 +1,3 @@
-use core::str;
-
 use yew::html;
 use yew::prelude::*;
 
