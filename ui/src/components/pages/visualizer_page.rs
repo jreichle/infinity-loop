@@ -21,12 +21,12 @@ const DEFAULT_HEIGHT: isize = 10;
 const DEFAULT_SPEED: isize = 80;
 
 #[derive(Properties, PartialEq, Clone)]
-pub struct WfcBoardComponentProps {
+pub struct VisualizerPageProps {
     pub screen: UseStateHandle<Screen>,
 }
 
-#[function_component(WfcBoardComponent)]
-pub fn wfc_board_component(props: &WfcBoardComponentProps) -> Html {
+#[function_component(VisualizerPage)]
+pub fn wfc_board_component(props: &VisualizerPageProps) -> Html {
     let (width_value, height_value, speed_value) = (
         use_state(|| DEFAULT_WIDTH),
         use_state(|| DEFAULT_HEIGHT),

@@ -15,14 +15,14 @@ use game::model::grid::Grid;
 use game::model::tile::{Square, Tile};
 
 #[derive(Properties, PartialEq, Clone)]
-pub struct LevelPreviewComponentProps {
+pub struct LevelPreviewPageProps {
     pub screen: UseStateHandle<Screen>,
     pub dimension: UseStateHandle<Coordinate<usize>>,
     pub level_number: UseStateHandle<usize>,
 }
 
-#[function_component(LevelPreviewComponent)]
-pub fn level_preview_component(props: &LevelPreviewComponentProps) -> Html {
+#[function_component(LevelPreviewPage)]
+pub fn level_preview_page_component(props: &LevelPreviewPageProps) -> Html {
     let generate_nr = 20;
     let generated_levels = (0..generate_nr)
         .into_iter()
