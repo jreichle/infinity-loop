@@ -133,6 +133,8 @@ pub fn wfc_board_component(props: &WfcBoardComponentProps) -> Html {
                     let mut new_grid = new_grid.clone();
                     let mut new_weights = new_weights.clone();
 
+                    let cell_count = level_grid.dimensions().product() as i32;
+
                     let iteration_closure = Closure::<dyn FnMut()>::new(move || {
                         (new_grid, new_weights) = go_to_next_step(
                             (*wfc_generator).clone(),
@@ -143,8 +145,8 @@ pub fn wfc_board_component(props: &WfcBoardComponentProps) -> Html {
                         sentinel_grid.set(new_grid.clone());
                         weights.set(new_weights.clone());
                     });
-
-                    let speed = 10 * (100 - *speed_value as i32);
+                    
+                    let speed = 3 * (100 - *speed_value as i32) / cell_count;
                     let window = web_sys::window().unwrap();    
                     let id = window
                         .set_interval_with_callback_and_timeout_and_arguments_0(
@@ -173,7 +175,9 @@ pub fn wfc_board_component(props: &WfcBoardComponentProps) -> Html {
 
     html! {
         <div class="container">
+            <div class="game-board">
             <StatelessLevelComponent level_grid={(*level_grid).clone()} />
+            </div>
             <div class="controller">
                 <div class="flex-col margin-bot-4vh">
                     <SliderComponent id="slider-height" label="#row" value={height_value.clone()} />

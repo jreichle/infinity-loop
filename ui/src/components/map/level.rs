@@ -98,29 +98,31 @@ pub fn stateless_level_component(props: &StatelessLevelProps) -> html {
     let (height, width) = (height as isize, width as isize);
 
     html!{
+        <div class="flex-col">
             <GridComponent> 
-            {
-                (0..height).into_iter().map(| row | {
-                    html!{
-                        <RowComponent key={row}>
-                            {
-                                (0..width).into_iter().map(| column | {
-                                    let index = Coordinate { row, column };
-                                    let tile = level_grid.get(index).unwrap().clone();
-                                    html!{
-                                        <CellComponent
-                                            key={column}
-                                            tile={tile}
-                                            row_number={row}
-                                            column_number={column}
-                                        ></CellComponent>
-                                    }
-                                }).collect::<Html>()
-                            }
-                        </RowComponent>
-                    }
-                }).collect::<Html>()
-            }
-        </GridComponent>
+                {
+                    (0..height).into_iter().map(| row | {
+                        html!{
+                            <RowComponent key={row}>
+                                {
+                                    (0..width).into_iter().map(| column | {
+                                        let index = Coordinate { row, column };
+                                        let tile = level_grid.get(index).unwrap().clone();
+                                        html!{
+                                            <CellComponent
+                                                key={column}
+                                                tile={tile}
+                                                row_number={row}
+                                                column_number={column}
+                                            ></CellComponent>
+                                        }
+                                    }).collect::<Html>()
+                                }
+                            </RowComponent>
+                        }
+                    }).collect::<Html>()
+                }
+            </GridComponent>
+        </div>
     }
 }
