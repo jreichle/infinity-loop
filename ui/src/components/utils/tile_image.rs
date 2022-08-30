@@ -19,19 +19,21 @@ pub struct TileImageProps {
     pub tile: Tile<Square>,
 }
 
-#[function_component(TileImageComponent)]
-pub fn tile_image(props: &TileImageProps) -> Html {
+#[function_component(TileImage)]
+pub fn tile_image_component(props: &TileImageProps) -> Html {
     let tile = props.tile.clone();
     let cell_symbol = tile.to_string().chars().next().unwrap();
     let cell_img = get_index(cell_symbol.clone());
 
     html!{
-        <img src={IMG_PATH[cell_img]}
-            style={format!("{}{}{}",
-                "transform:rotate(",
-                get_angle(cell_symbol),
-                "deg);")}
-        />
+        <div class="tile">
+            <img src={IMG_PATH[cell_img]}
+                style={format!("{}{}{}",
+                    "transform:rotate(",
+                    get_angle(cell_symbol),
+                    "deg);")}
+            />
+        </div>
     }
 
 }

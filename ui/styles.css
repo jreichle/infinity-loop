@@ -218,14 +218,18 @@ body::-webkit-scrollbar-thumb {
   flex-direction: row;
 }
 
-.cell,
-.cell img,
+/* .tile img {
+  pointer-events: none;
+} */
+
+.tile,
+.tile img,
 .preview-cell img {
   width: 100%;
   height: 100%;
 }
 
-.cell:hover {
+.tile:hover {
   background-color: var(--light-blue);
 }
 
