@@ -1,6 +1,7 @@
 use yew::prelude::*;
 use yew::{html, Callback};
 
+use crate::helper::local_storage::change_screen;
 use crate::helper::screen::Screen;
 
 #[derive(Properties, PartialEq, Clone)]
@@ -16,35 +17,35 @@ pub fn start_page(props: &StartPageProps) -> html {
     let to_preview: Callback<MouseEvent> = {
         let screen = screen.clone();
         Callback::from(move |_| {
-            screen.clone().set(Screen::Overview);
+            change_screen(screen.clone(), Screen::Overview);
         })
     };
 
     let to_editor: Callback<MouseEvent> = {
         let screen = screen.clone();
         Callback::from(move |_| {
-            screen.clone().set(Screen::Editor);
+            change_screen(screen.clone(), Screen::Editor);
         })
     };
 
     let to_visualizer: Callback<MouseEvent> = {
         let screen = screen.clone();
         Callback::from(move |_| {
-            screen.clone().set(Screen::Visualizer);
+            change_screen(screen.clone(), Screen::Visualizer);
         })
     };
 
     let to_help: Callback<MouseEvent> = {
         let screen = screen.clone();
         Callback::from(move |_| {
-            screen.clone().set(Screen::Help);
+            change_screen(screen.clone(), Screen::Help);
         })
     };
 
     let to_credit: Callback<MouseEvent> = {
         let screen = screen.clone();
         Callback::from(move |_| {
-            screen.clone().set(Screen::Credit);
+            change_screen(screen.clone(), Screen::Credit);
         })
     };
 

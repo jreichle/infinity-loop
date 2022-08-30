@@ -4,14 +4,14 @@ pub mod helper;
 use yew::html;
 use yew::prelude::*;
 
-use crate::components::pages::page_container::PageContainer;
+use crate::components::pages::page_router::PageRouter;
 
 #[function_component(App)]
 fn app() -> Html {
     html! {
         <>
             <div id="title">{"Rusty infinity loop!"}</div>
-            <PageContainer />
+            <PageRouter />
             <div id="footer">
                 <a href={"https://uni2work.ifi.lmu.de/course/S22/IfI/Rust"}>
                     {"High level languages: Rust"}

@@ -10,8 +10,9 @@ use game::model::{
     tile::{Square, Tile},
 };
 
+use crate::components::board::level::StatelessLevelComponent;
 use crate::components::utils::slider::SliderComponent;
-use crate::components::map::level::StatelessLevelComponent;
+use crate::helper::local_storage::change_screen;
 use crate::helper::screen::Screen;
 
 const LOG_PREFIX: &str = "#viz";
@@ -20,12 +21,12 @@ const DEFAULT_HEIGHT: isize = 10;
 const DEFAULT_SPEED: isize = 80;
 
 #[derive(Properties, PartialEq, Clone)]
-pub struct WfcBoardComponentProps {
+pub struct VisualizerPageProps {
     pub screen: UseStateHandle<Screen>,
 }
 
-#[function_component(WfcBoardComponent)]
-pub fn wfc_board_component(props: &WfcBoardComponentProps) -> Html {
+#[function_component(VisualizerPage)]
+pub fn wfc_board_component(props: &VisualizerPageProps) -> Html {
     let (width_value, height_value, speed_value) = (
         use_state(|| DEFAULT_WIDTH),
         use_state(|| DEFAULT_HEIGHT),
@@ -66,7 +67,11 @@ pub fn wfc_board_component(props: &WfcBoardComponentProps) -> Html {
         let (width_value, height_value) = (width_value.clone(), height_value.clone());
         let (width, height) = (*width_value as usize, *height_value as usize);
         Callback::from(move |_| {
-            log::debug!("{LOG_PREFIX} [Button click] new: new grid generated with dimension: ({}, {})", width, height);
+            log::debug!(
+                "{LOG_PREFIX} [Button click] new: new grid generated with dimension: ({}, {})",
+                width,
+                height
+            );
             let new_generator = WfcGenerator::default(width, height);
             let (mut new_grid, mut new_weights) = new_generator.init_board();
             (new_grid, new_weights) = new_generator.iteration_step(new_grid, new_weights);
@@ -97,8 +102,6 @@ pub fn wfc_board_component(props: &WfcBoardComponentProps) -> Html {
             weights.set(new_weights.clone());
         })
     };
-
-    
 
     let play_onclick: Callback<MouseEvent> = {
         let interval_id = interval_id.clone();
@@ -144,9 +147,9 @@ pub fn wfc_board_component(props: &WfcBoardComponentProps) -> Html {
                         sentinel_grid.set(new_grid.clone());
                         weights.set(new_weights.clone());
                     });
-                    
+
                     let speed = 3 * (100 - *speed_value as i32);
-                    let window = web_sys::window().unwrap();    
+                    let window = web_sys::window().unwrap();
                     let id = window
                         .set_interval_with_callback_and_timeout_and_arguments_0(
                             iteration_closure.as_ref().unchecked_ref(),
@@ -154,8 +157,6 @@ pub fn wfc_board_component(props: &WfcBoardComponentProps) -> Html {
                         )
                         .ok()
                         .unwrap();
-
-                
 
                     interval_id.set(id);
                     iteration_closure.forget();
@@ -168,7 +169,7 @@ pub fn wfc_board_component(props: &WfcBoardComponentProps) -> Html {
         let screen = props.screen.clone();
         Callback::from(move |_| {
             log::debug!("{LOG_PREFIX} [Button click] back - go back to Menu page");
-            screen.set(Screen::Title);
+            change_screen(screen.clone(), Screen::Title);
         })
     };
 
@@ -201,8 +202,8 @@ pub fn wfc_board_component(props: &WfcBoardComponentProps) -> Html {
                         onclick={next_onclick}
                     >
                         {"-next-"}
-                    </button>           
-                </div>     
+                    </button>
+                </div>
 
                 <div class="flex-col margin-bot-4vh">
                     <button
