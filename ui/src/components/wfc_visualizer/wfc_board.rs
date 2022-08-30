@@ -14,6 +14,7 @@ use game::model::{
 // use std::collections::HashMap;
 use super::level::LevelComponent;
 use super::slider::SliderComponent;
+use crate::helper::local_storage::change_screen;
 use crate::helper::screen::Screen;
 
 #[derive(Properties, PartialEq, Clone)]
@@ -175,7 +176,7 @@ pub fn wfc_board_component(props: &WfcBoardComponentProps) -> Html {
         let screen = props.screen.clone();
         Callback::from(move |_| {
             log::info!("[Button click] Editor");
-            screen.set(Screen::Title);
+            change_screen(screen.clone(), Screen::Title);
         })
     };
 
@@ -211,7 +212,7 @@ pub fn wfc_board_component(props: &WfcBoardComponentProps) -> Html {
                 >
                 {"-back-"}
                 </button>
-                
+
 
             </div>
         </div>

@@ -3,6 +3,7 @@ use yew::{html, Html};
 
 use super::preview_reducer::PreviewState;
 use crate::components::map::cell::{get_angle, get_index};
+use crate::helper::local_storage::change_screen;
 use crate::helper::screen::Screen;
 
 use game::model::coordinate::Coordinate;
@@ -23,7 +24,7 @@ pub fn level_preview_component(props: &LevelComponentProps) -> Html {
         let screen = props.screen.clone();
         let level = level_grid.clone();
         Callback::from(move |_| {
-            screen.set(Screen::Level(level.clone()));
+            change_screen(screen.clone(), Screen::Level(level.clone()));
         })
     };
 

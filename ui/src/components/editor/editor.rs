@@ -6,6 +6,7 @@ use yew::{html, Callback};
 
 use crate::components::editor::editor_reducer::{EditorAction, EditorState};
 use crate::components::editor::grid::GridComponent;
+use crate::helper::local_storage::change_screen;
 use crate::helper::screen::Screen;
 
 #[derive(Properties, PartialEq, Clone)]
@@ -46,7 +47,6 @@ pub fn editor_component(props: &EditorComponentProps) -> Html {
     };
 
     let check_cps_onclick: Callback<MouseEvent> = {
-        let editor = editor.clone();
         let message = props.message.clone();
         Callback::from(move |_| {
             log::info!("[Button click] Check with CPS.");
@@ -103,12 +103,12 @@ pub fn editor_component(props: &EditorComponentProps) -> Html {
     };
 
     let play_onclick: Callback<MouseEvent> = {
-        let s = props.screen.clone();
+        let screen = props.screen.clone();
         let g = editor.grid.clone();
         Callback::from(move |_| {
             log::info!("[Button click] Play custom grid.");
             log::info!("Current grid\n{}", g.to_string());
-            s.set(Screen::Level(g.clone()))
+            change_screen(screen.clone(), Screen::Level(g.clone()));
         })
     };
 
@@ -201,7 +201,7 @@ pub fn editor_component(props: &EditorComponentProps) -> Html {
         let screen = props.screen.clone();
         Callback::from(move |_| {
             log::info!("To Preview");
-            screen.set(Screen::Overview);
+            change_screen(screen.clone(), Screen::Overview)
         })
     };
 
@@ -209,7 +209,7 @@ pub fn editor_component(props: &EditorComponentProps) -> Html {
         let screen = props.screen.clone();
         Callback::from(move |_| {
             log::info!("[Button click] Editor");
-            screen.set(Screen::Title);
+            change_screen(screen.clone(), Screen::Title);
         })
     };
 

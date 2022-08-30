@@ -7,6 +7,7 @@ use crate::components::map::board::BoardComponent;
 use crate::components::map_preview::level_preview::LevelPreviewComponent;
 use crate::components::pages::text_page::TextPage;
 use crate::components::wfc_visualizer::wfc_board::WfcBoardComponent;
+use crate::helper::local_storage::{change_screen, retrieve_screen, CURRENT_SCREEN};
 use crate::helper::screen::Screen;
 
 use game::model::coordinate::Coordinate;
@@ -16,40 +17,41 @@ pub fn page_container() -> Html {
     let head_message = use_state_eq(|| "".to_string());
     let dimension = use_state(|| Coordinate::new(5 as usize, 5 as usize));
     let level_number = use_state(|| 0);
-    let screen = use_state(|| Screen::Title);
+
+    let screen = use_state(|| retrieve_screen());
 
     let to_preview: Callback<MouseEvent> = {
         let screen = screen.clone();
         Callback::from(move |_| {
-            screen.clone().set(Screen::Overview);
+            change_screen(screen.clone(), Screen::Overview);
         })
     };
 
     let to_editor: Callback<MouseEvent> = {
         let screen = screen.clone();
         Callback::from(move |_| {
-            screen.clone().set(Screen::Editor);
+            change_screen(screen.clone(), Screen::Editor);
         })
     };
 
     let to_visualizer: Callback<MouseEvent> = {
         let screen = screen.clone();
         Callback::from(move |_| {
-            screen.clone().set(Screen::Visualizer);
+            change_screen(screen.clone(), Screen::Visualizer);
         })
     };
 
     let to_help: Callback<MouseEvent> = {
         let screen = screen.clone();
         Callback::from(move |_| {
-            screen.clone().set(Screen::Help);
+            change_screen(screen.clone(), Screen::Help);
         })
     };
 
     let to_credit: Callback<MouseEvent> = {
         let screen = screen.clone();
         Callback::from(move |_| {
-            screen.clone().set(Screen::Credit);
+            change_screen(screen.clone(), Screen::Credit);
         })
     };
 
@@ -156,7 +158,8 @@ pub fn page_container() -> Html {
                         },
                         Screen::Visualizer => {
                             html!{
-                                <WfcBoardComponent screen={screen.clone()} />
+                                <WfcBoardComponent
+                                    screen={screen.clone()}/>
                             }
                         },
                         Screen::Help => {
@@ -169,7 +172,10 @@ pub fn page_container() -> Html {
                         },
                         Screen::Credit => {
                             html!{
-                                <TextPage screen={screen.clone()} title={"credit"} content={"This is the credit page."}/>
+                                <TextPage
+                                    screen={screen.clone()}
+                                    title={"credit"}
+                                    content={"This is the credit page."}/>
                             }
                         }
                     }

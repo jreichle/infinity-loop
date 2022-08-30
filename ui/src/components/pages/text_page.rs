@@ -19,7 +19,7 @@ pub fn Text_page(props: &TextPageProps) -> html {
         })
     };
 
-    html!{
+    html! {
         <>
             <div id={format!("{}{}", props.title.clone(),"-page")} class="page-container">
                 <div class="page-title">{format!("#{}", props.title.clone())}</div>

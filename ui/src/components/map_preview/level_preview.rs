@@ -6,6 +6,7 @@ use rand::Rng;
 use super::level::LevelComponent;
 use super::preview_reducer::{PreviewAction, PreviewState};
 
+use crate::helper::local_storage::change_screen;
 use crate::helper::screen::Screen;
 
 use game::model::coordinate::Coordinate;
@@ -29,6 +30,7 @@ pub fn level_preview_component(props: &LevelPreviewComponentProps) -> Html {
         .map(|index| generate(*props.dimension, index as u64))
         .collect::<Vec<Grid<Tile<Square>>>>();
 
+    /*
     let local_storage = web_sys::window().unwrap().local_storage().unwrap().unwrap();
     let nr_saved_levels = local_storage.length().unwrap();
 
@@ -51,6 +53,9 @@ pub fn level_preview_component(props: &LevelPreviewComponentProps) -> Html {
     let level_count = use_state(|| generate_nr + saved_levels.len());
     log::info!("lvls: {}", *level_count);
     generated_levels.append(&mut saved_levels);
+    */
+
+    let level_count = use_state(|| generate_nr);
     let reducer = use_reducer(PreviewState::set(generated_levels));
 
     let load_more_levels: Callback<MouseEvent> = {
@@ -71,18 +76,17 @@ pub fn level_preview_component(props: &LevelPreviewComponentProps) -> Html {
         Callback::from(move |_| {
             log::info!("picking random level");
             let num = rand::thread_rng().gen_range(0..*level_count);
-            screen.set(Screen::Level(reducer.extracted_levels[num].clone()));
+            let level = reducer.extracted_levels[num].clone();
+            change_screen(screen.clone(), Screen::Level(level));
+            //screen.set(Screen::Level(reducer.extracted_levels[num].clone()));
         })
     };
 
     let create_own_level: Callback<MouseEvent> = {
-        // let level_count = level_count.clone();
         let screen = props.screen.clone();
-        // let reducer = reducer.clone();
         Callback::from(move |_| {
             log::info!("picking random level");
-            // let num = rand::thread_rng().gen_range(0..*level_count);
-            screen.set(Screen::Editor);
+            change_screen(screen.clone(), Screen::Editor);
         })
     };
 
@@ -90,7 +94,7 @@ pub fn level_preview_component(props: &LevelPreviewComponentProps) -> Html {
         let screen = props.screen.clone();
         Callback::from(move |_| {
             log::info!("[Button click] Editor");
-            screen.set(Screen::Title);
+            change_screen(screen.clone(), Screen::Title);
         })
     };
 
