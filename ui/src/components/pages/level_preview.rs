@@ -3,8 +3,8 @@ use yew::{html, Callback};
 
 use rand::Rng;
 
-use super::level::LevelComponent;
 use crate::components::reducers::preview_reducer::{PreviewAction, PreviewState};
+use crate::components::board::level::StatelessLevelComponent;
 
 use crate::helper::local_storage::change_screen;
 use crate::helper::screen::Screen;
@@ -15,16 +15,16 @@ use game::model::grid::Grid;
 use game::model::tile::{Square, Tile};
 
 #[derive(Properties, PartialEq, Clone)]
-pub struct LevelPreviewComponentProps {
+pub struct LevelPreviewPageProps {
     pub screen: UseStateHandle<Screen>,
     pub dimension: UseStateHandle<Coordinate<usize>>,
     pub level_number: UseStateHandle<usize>,
 }
 
-#[function_component(LevelPreviewComponent)]
-pub fn level_preview_component(props: &LevelPreviewComponentProps) -> Html {
+#[function_component(LevelPreviewPage)]
+pub fn level_preview_page_component(props: &LevelPreviewPageProps) -> Html {
     let generate_nr = 20;
-    let mut generated_levels = (0..generate_nr)
+    let generated_levels = (0..generate_nr)
         .into_iter()
         .map(|index| generate(*props.dimension, index as u64))
         .collect::<Vec<Grid<Tile<Square>>>>();
@@ -97,17 +97,23 @@ pub fn level_preview_component(props: &LevelPreviewComponentProps) -> Html {
         })
     };
 
+    fn to_level_action(level_grid: Grid<Tile<Square>>, screen: UseStateHandle<Screen>) -> Callback<MouseEvent> {
+        Callback::from(move |_| {
+            change_screen(screen.clone(), Screen::Level(level_grid.clone()));
+        })
+    }
+
     html! {
         <div class="container">
             <div id="preview-container">
                 {
                     (0..*level_count).into_iter().map( | level_index | {
+                        let level_grid = reducer.extracted_levels[level_index].clone();
                         html!{
-                            <LevelComponent
-                                preview_state={reducer.clone()}
-                                screen={props.screen.clone()}
-                                level_index={level_index}
-                            />
+                            <div class="level-container" onclick={to_level_action(level_grid.clone(), props.screen.clone())}>
+                                <StatelessLevelComponent level_grid={level_grid.clone()} />
+                                <div class="level-title">{format!("#{}", level_index + 1)}</div>
+                            </div>
                         }
                     }).collect::<Html>()
                 }

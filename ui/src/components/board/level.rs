@@ -8,7 +8,7 @@ use game::model::{
 };
 
 use crate::components::reducers::board_reducer::{BoardAction, BoardState};
-use crate::components::map::{
+use crate::components::board::{
     row::RowComponent,
     cell::CellComponent,
     grid::GridComponent,

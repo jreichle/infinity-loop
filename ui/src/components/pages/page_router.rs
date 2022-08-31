@@ -2,20 +2,21 @@ use wasm_bindgen::prelude::Closure;
 use wasm_bindgen::JsCast;
 use yew::prelude::*;
 
-use crate::components::map_preview::level_preview::LevelPreviewComponent;
-use crate::components::pages::board::BoardComponent;
-use crate::components::pages::editor::EditorComponent;
+
+use crate::components::pages::board_page::BoardPage;
+use crate::components::pages::editor_page::EditorPage;
 use crate::components::pages::start_page::StartPage;
 use crate::components::pages::text_page::TextPage;
-use crate::components::pages::wfc_board::WfcBoardComponent;
+use crate::components::pages::visualizer_page::VisualizerPage;
+use crate::components::pages::level_preview::LevelPreviewPage;
 
 use crate::helper::local_storage::retrieve_screen;
 use crate::helper::screen::Screen;
 
 use game::model::coordinate::Coordinate;
 
-#[function_component(PageContainer)]
-pub fn page_container() -> Html {
+#[function_component(PageRouter)]
+pub fn page_router() -> Html {
     let head_message = use_state_eq(|| "".to_string());
     let head_message_timeout_id = use_state(|| -1_i32);
 
@@ -86,7 +87,7 @@ pub fn page_container() -> Html {
                         },
                         Screen::Overview => {
                             html! {
-                                <LevelPreviewComponent
+                                <LevelPreviewPage
                                     screen={screen.clone()}
                                     dimension={dimension}
                                     level_number={level_number}/>
@@ -94,14 +95,14 @@ pub fn page_container() -> Html {
                         },
                         Screen::Editor => {
                             html! {
-                                <EditorComponent
+                                <EditorPage
                                     screen={screen.clone()}
                                     message={head_message.clone()}/>
                             }
                         },
                         Screen::Level(user_grid) => {
                             html! {
-                                <BoardComponent
+                                <BoardPage
                                     level_grid={user_grid.clone()}
                                     screen={screen.clone()}
                                     message={head_message.clone()}/>
@@ -110,7 +111,7 @@ pub fn page_container() -> Html {
                         },
                         Screen::Visualizer => {
                             html!{
-                                <WfcBoardComponent
+                                <VisualizerPage
                                     screen={screen.clone()}/>
                             }
                         },

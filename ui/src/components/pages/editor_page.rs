@@ -4,19 +4,19 @@ use game::model::gameboard::GameBoard;
 use yew::prelude::*;
 use yew::{html, Callback};
 
-use crate::components::map::level::LevelComponent;
+use crate::components::board::level::LevelComponent;
 use crate::components::reducers::board_reducer::{BoardAction, BoardState};
 use crate::helper::local_storage::change_screen;
 use crate::helper::screen::Screen;
 
 #[derive(Properties, PartialEq, Clone)]
-pub struct EditorComponentProps {
+pub struct EditorPageProps {
     pub screen: UseStateHandle<Screen>,
     pub message: UseStateHandle<String>,
 }
 
-#[function_component(EditorComponent)]
-pub fn editor_component(props: &EditorComponentProps) -> Html {
+#[function_component(EditorPage)]
+pub fn editor_page_component(props: &EditorPageProps) -> Html {
     let new_grid = generate(Coordinate { row: 5, column: 5 }, 99);
     let board = use_reducer_eq(BoardState::set_grid(new_grid));
 
