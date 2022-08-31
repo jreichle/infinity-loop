@@ -26,9 +26,17 @@ pub fn board_page_component(props: &BoardPageProps) -> Html {
 
     let hint_onclick: Callback<MouseEvent> = {
         let board = board.clone();
+        let message = props.message.clone();
         Callback::from(move |_| {
             log::info!("[Button click] Hint.");
-            board.dispatch(BoardAction::GetHint);
+            if board.level_grid.solve().count() == 1 {
+                board.dispatch(BoardAction::GetHint);
+            } else {
+                // hinting only works for one solution thus far!
+                message.set(String::from(
+                    "Hint can unfortunately not be generated for this level",
+                ));
+            }
         })
     };
 

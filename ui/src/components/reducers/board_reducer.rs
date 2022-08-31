@@ -10,6 +10,7 @@ use crate::helper::local_storage::save_level;
 use wasm_bindgen::{prelude::*, JsCast};
 
 use game::generator::wfc::WfcGenerator;
+use game::model::hint::generate_hint;
 use game::model::{
     coordinate::Coordinate,
     fastgen::generate,
@@ -95,8 +96,13 @@ impl Reducible for BoardState {
                 save_level(&new_level_grid);
             }
             BoardAction::GetHint => {
-                log::info!("Get hint.");
-                highlight_cells(3, 3);
+                if let Ok(coordinate) = generate_hint(&new_level_grid) {
+                    highlight_cells(
+                        coordinate.row.try_into().unwrap(),
+                        coordinate.column.try_into().unwrap(),
+                    );
+                    log::info!("Highlighting: {}", coordinate);
+                }
             }
             BoardAction::SolveLevel => {
                 let mut solved_versions = new_level_grid.solve();
