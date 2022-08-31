@@ -23,11 +23,9 @@ enum Status {
 // 1. solve level with a trace of the collapsed superpositions in order
 // 2. return first trace entry which is unequal to current configuration
 /// **note:** currently only work fully for levels with a unique solution
-fn generate_hint(grid: Grid<Tile<Square>>) -> Result<Coordinate<isize>, String> {
+pub fn generate_hint(grid: Grid<Tile<Square>>) -> Result<Coordinate<isize>, String> {
     // generate trace
-    let sentinel = grid
-        .with_sentinels(Tile::NO_CONNECTIONS)
-        .superimpose();
+    let sentinel = grid.with_sentinels(Tile::NO_CONNECTIONS).superimpose();
 
     let mut trace = vec![];
     iter_fix(
