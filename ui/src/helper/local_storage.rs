@@ -8,6 +8,24 @@ use yew::prelude::*;
 pub const CURRENT_SCREEN: &str = "screen";
 pub const CURRENT_LEVEL: &str = "level";
 
+pub const SAVED_LEVEL: &str = "saved level";
+
+pub fn save_editor_level(grid: &Grid<Tile<Square>>) {
+    let local_storage = web_sys::window().unwrap().local_storage().unwrap().unwrap();
+    local_storage
+        .set_item(SAVED_LEVEL, grid.to_string().as_str())
+        .unwrap();
+}
+
+pub fn retrieve_editor_level() -> Grid<Tile<Square>> {
+    let local_storage = web_sys::window().unwrap().local_storage().unwrap().unwrap();
+    if let Ok(Some(level)) = local_storage.get_item(SAVED_LEVEL) {
+        parse_level(&level.as_str(), unicode_to_tile).unwrap()
+    } else {
+        Grid::EMPTY
+    }
+}
+
 pub fn save_level(grid: &Grid<Tile<Square>>) {
     let local_storage = web_sys::window().unwrap().local_storage().unwrap().unwrap();
     local_storage
