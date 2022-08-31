@@ -1,13 +1,13 @@
 use yew::html;
 use yew::prelude::*;
 
-use crate::helper::screen::Screen;
 use crate::components::editor::editor::EditorComponent;
 use crate::components::map::board::BoardComponent;
 use crate::components::map_preview::level_preview::LevelPreviewComponent;
-use crate::components::wfc_visualizer::wfc_board::WfcBoardComponent;
-use crate::components::pages::help_page::HelpPage;
 use crate::components::pages::credit_page::CreditPage;
+use crate::components::pages::help_page::HelpPage;
+use crate::components::wfc_visualizer::wfc_board::WfcBoardComponent;
+use crate::helper::screen::Screen;
 
 use game::model::coordinate::Coordinate;
 
@@ -54,7 +54,10 @@ pub fn page_container() -> Html {
 
     let on_exit: Callback<MouseEvent> = {
         Callback::from(move |_| {
-            web_sys::window().unwrap().alert_with_message("There is no way out of an infinite loop!").ok();
+            web_sys::window()
+                .unwrap()
+                .alert_with_message("There is no way out of an infinite loop!")
+                .ok();
         })
     };
 
@@ -115,7 +118,7 @@ pub fn page_container() -> Html {
                     },
                     Screen::Help => {
                         html!{
-                           <HelpPage screen={screen.clone()} /> 
+                           <HelpPage screen={screen.clone()} />
                         }
                     },
                     Screen::Credit => {

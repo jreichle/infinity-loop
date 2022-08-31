@@ -17,7 +17,7 @@ pub fn credit_page(props: &CreditPageProps) -> html {
         })
     };
 
-    html!{
+    html! {
         <>
             <h1>{"HELP PAGE"}</h1>
             <button  onclick={back_onclick}>

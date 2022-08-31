@@ -1,14 +1,13 @@
 use yew::prelude::*;
 use yew::{html, Html};
 
-use crate::components::map::cell::{get_index, get_angle};
+use crate::components::map::cell::{get_angle, get_index};
 
 use game::model::{
     coordinate::Coordinate,
     grid::Grid,
-    tile::{Tile, Square},
+    tile::{Square, Tile},
 };
-
 
 #[derive(Properties, PartialEq, Clone)]
 pub struct LevelComponentProps {
@@ -16,8 +15,7 @@ pub struct LevelComponentProps {
 }
 
 #[function_component(LevelComponent)]
-pub fn level_preview_component(props: &LevelComponentProps) -> Html { 
-    
+pub fn level_preview_component(props: &LevelComponentProps) -> Html {
     let level_grid = props.level_grid.clone();
     let (height, width) = level_grid.dimensions().to_tuple();
 
@@ -42,7 +40,7 @@ pub fn level_preview_component(props: &LevelComponentProps) -> Html {
                                     let cell_symbol = level_grid.get(Coordinate { row: row.try_into().unwrap(), column: column.try_into().unwrap() })
                                         .unwrap().to_string()
                                         .chars().next().unwrap();
-                                    html!{ 
+                                    html!{
                                         <div class="preview-cell">
                                             <img src={img_path[get_index(cell_symbol)]}
                                             style={format!("{}{}{}","transform:rotate(", get_angle(cell_symbol), "deg);")}

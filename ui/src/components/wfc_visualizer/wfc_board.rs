@@ -211,7 +211,7 @@ pub fn wfc_board_component(props: &WfcBoardComponentProps) -> Html {
                 >
                 {"-back-"}
                 </button>
-                
+
 
             </div>
         </div>

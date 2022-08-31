@@ -1,10 +1,7 @@
 use yew::prelude::*;
 use yew::{html, Properties};
 
-use crate::components::map::{
-    cell::CellComponent,
-    board_reducer::BoardState,
-};
+use crate::components::map::{board_reducer::BoardState, cell::CellComponent};
 
 #[derive(Properties, PartialEq, Clone)]
 pub struct RowComponentProps {

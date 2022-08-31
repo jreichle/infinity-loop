@@ -1,5 +1,5 @@
-pub mod pages;
+pub mod editor;
 pub mod map;
 pub mod map_preview;
-pub mod editor;
+pub mod pages;
 pub mod wfc_visualizer;

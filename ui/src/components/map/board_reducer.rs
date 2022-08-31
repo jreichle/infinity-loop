@@ -4,8 +4,8 @@ use std::ops::Add;
 use std::rc::Rc;
 use yew::prelude::*;
 
-use wasm_bindgen::{prelude::*, JsCast};
 use crate::helper::level_randomizer::randomize_level;
+use wasm_bindgen::{prelude::*, JsCast};
 
 use game::model::{
     coordinate::Coordinate,

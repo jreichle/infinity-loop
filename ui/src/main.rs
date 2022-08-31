@@ -8,11 +8,8 @@ use crate::components::pages::page_container::PageContainer;
 
 // mod helper;
 
-
 #[function_component(App)]
 fn app() -> Html {
-
-
     html! {
         <>
             <div id="title">{"Rusty infinity loop!"}</div>
