@@ -96,7 +96,7 @@ impl Reducible for BoardState {
                 save_level(&new_level_grid);
             }
             BoardAction::GetHint => {
-                if let Ok(coordinate) = generate_hint(new_level_grid.clone()) {
+                if let Ok(coordinate) = generate_hint(&new_level_grid) {
                     highlight_cells(
                         coordinate.row.try_into().unwrap(),
                         coordinate.column.try_into().unwrap(),

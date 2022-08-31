@@ -7,7 +7,6 @@ use yew::prelude::*;
 
 pub const CURRENT_SCREEN: &str = "screen";
 pub const CURRENT_LEVEL: &str = "level";
-
 pub const SAVED_LEVEL: &str = "saved level";
 
 pub fn save_editor_level(grid: &Grid<Tile<Square>>) {
