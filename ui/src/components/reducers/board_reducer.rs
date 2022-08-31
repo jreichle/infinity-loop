@@ -2,11 +2,14 @@
 
 use std::ops::Add;
 use std::rc::Rc;
+use rand::Rng;
 use yew::prelude::*;
 
 use crate::helper::level_randomizer::randomize_level;
+use crate::helper::local_storage::save_level;
 use wasm_bindgen::{prelude::*, JsCast};
 
+use game::generator::wfc::WfcGenerator;
 use game::model::{
     coordinate::Coordinate,
     fastgen::generate,
@@ -15,6 +18,7 @@ use game::model::{
     tile::{Square, Tile},
 };
 
+
 // reducer's action
 pub enum BoardAction {
     TurnCell(Coordinate<isize>),
@@ -22,6 +26,14 @@ pub enum BoardAction {
     NextLevel,
     GetHint,
     SolveLevel,
+
+    // Editor actions
+    ChangeTileShape(Coordinate<isize>),
+    ChangeSize(Coordinate<usize>),
+    GenerateFastGen,
+    GenerateWFC,
+    ShuffleTileRotations,
+    ClearGrid
 }
 
 // reducer's state
@@ -81,6 +93,7 @@ impl Reducible for BoardState {
                     self.level_grid.dimensions().add(1),
                     new_level_number as u64,
                 ));
+                save_level(&new_level_grid);
             }
             BoardAction::GetHint => {
                 log::info!("Get hint.");
@@ -93,6 +106,58 @@ impl Reducible for BoardState {
                     new_level_grid = solved_level;
                 }
             }
+
+            // Editor actions
+            BoardAction::ChangeTileShape(index) => {
+                log::info!("Change tile shape");
+                new_level_grid = new_level_grid.change_tile_shape(index).unwrap();
+            }
+            BoardAction::ChangeSize(size) => {
+                let mut rng = rand::thread_rng();
+                new_level_grid = generate(size, rng.gen_range(0..10000));
+            }
+            BoardAction::GenerateFastGen => {
+                let mut rng = rand::thread_rng();
+                new_level_grid = generate(self.level_grid.dimensions(), rng.gen_range(0..10000));
+                log::info!("Generated grid\n{}", new_level_grid.to_string());
+            }
+            BoardAction::GenerateWFC => {
+                let (height, width) = self.level_grid.dimensions().to_tuple();
+                let wfc = WfcGenerator::new(
+                    width as usize,
+                    height as usize,
+                    Tile::ALL_CONNECTIONS.0,
+                    40000,
+                    1000,
+                );
+
+                let mut generation_result = wfc.generate();
+                while let Err(_) = generation_result {
+                    generation_result = wfc.generate();
+                }
+
+                new_level_grid = generation_result.unwrap();
+                log::info!("Generated grid\n{}", new_level_grid.to_string());
+            }
+            BoardAction::ShuffleTileRotations => {
+                let mut rng = rand::thread_rng();
+                for c in 0..new_level_grid.dimensions().column {
+                    for r in 0..new_level_grid.dimensions().row {
+                        new_level_grid = new_level_grid
+                            .rotate_clockwise_n_times(
+                                Coordinate {
+                                    row: r as isize,
+                                    column: c as isize,
+                                },
+                                rng.gen_range(0..4),
+                            )
+                            .unwrap();
+                    }
+                }
+                log::info!("Tile rotations shuffled\n{}", new_level_grid.to_string());
+            }
+            BoardAction::ClearGrid => new_level_grid = Grid::new(new_level_grid.dimensions(), vec![Tile::NO_CONNECTIONS; new_level_grid.elements().len()]),
+
         };
 
         Self {

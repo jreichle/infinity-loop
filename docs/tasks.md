@@ -39,13 +39,14 @@
 - [x] Generate with WFC
 - [x] Change size
 - [x] Play custom grid
-- [ ] Create user-, not console-messages
+- [x] Create user-, not console-messages
 - [x] Shuffle current grid tile rotations
-- [ ] Adjust editor to level previews
+- [x] Adjust editor to level previews
+- [x] Clear grid
 
 
-- [ ] Save Grid (optional)
-- [ ] Load Grid (optional)
+- [x] Save grid in local storage (optional)
+- [ ] Load grid in local storage (optional)
 
 ## Further Extensions
 

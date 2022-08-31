@@ -11,16 +11,14 @@ pub struct SliderComponentProps {
     pub max: isize,
     #[prop_or(3)]
     pub min: isize,
-    #[prop_or(14)]
-    pub default: isize,
-    #[prop_or(use_node_ref())]
-    pub node_ref: NodeRef,
+    #[prop_or(use_state(|| 14))]
+    pub value: UseStateHandle<isize>,
 }
 
 #[function_component(SliderComponent)]
 pub fn slider_component(props: &SliderComponentProps) -> Html {
-    let slider_input_ref = props.node_ref.clone();
-    let slider_value = use_state(|| props.default);
+    let slider_input_ref = use_node_ref();
+    let slider_value = props.value.clone();
 
     let slider_oninput = {
         let slider_input_ref = slider_input_ref.clone();

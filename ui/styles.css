@@ -1,4 +1,11 @@
-@import url('https://fonts.googleapis.com/css2?family=Fira+Code&display=swap');
+@import url("https://fonts.googleapis.com/css2?family=Fira+Code&display=swap");
+
+:root {
+  --white: rgba(255, 255, 255, 0.7);
+  --hightlight-bg: var(--light-blue);
+  --light-blue: #e0e0ff;
+  --dark-blue: rgb(85, 90, 141);
+}
 
 * {
   box-sizing: border-box;
@@ -8,6 +15,9 @@
 
 html,
 body {
+  font-size: 14px;
+  font-family:  "Fira Code", monospace;
+  color: var(--white);
   height: 100%;
   width: 100%;
   margin: 0;
@@ -15,9 +25,8 @@ body {
 }
 
 body {
-  font: 14px "Helvetica Neue", Helvetica, Arial, sans-serif;
+  position: relative;
   line-height: 1.4em;
-  color: #4d4d4d;
   margin: 0 auto;
   font-weight: 300;
   background-color: #111;
@@ -28,7 +37,7 @@ body {
 /* Custom scrollbar - Start */
 html {
   --scrollbar_bg: #555;
-  --thumb_bg: #AAA;
+  --thumb_bg: #aaa;
 }
 body::-webkit-scrollbar {
   width: 11px;
@@ -41,14 +50,29 @@ body::-webkit-scrollbar-track {
   background: var(--scrollbar_bg);
 }
 body::-webkit-scrollbar-thumb {
-  background-color: var(--thumb_bg) ;
+  background-color: var(--thumb_bg);
   border-radius: 6px;
   border: 3px solid var(--scrollbar_bg);
 }
 /* Custom scrollbar - End */
 
+.flex-box {	
+  display: flex;	
+}	
+.flex-col {	
+  display: flex;	
+  flex-direction: column;	
+}	
+.flex-row {	
+  display: flex;	
+  flex-direction: row;	
+}	
+.margin-bot-4vh {	
+  margin-bottom: 4vh;	
+}
+
 #title {
-  color: #fff;
+  color: var(--white);
   font-size: 6vmin;
   font-family: "Franklin Gothic Medium", "Arial Narrow", Arial, sans-serif;
   /* font-family: 'Fira Code', monospace; */
@@ -58,24 +82,38 @@ body::-webkit-scrollbar-thumb {
   left: 3px;
 }
 
-#start-menu {
-  display: flex;
-  flex-direction: column;
+#head-message {
+  position: absolute;
+  top: 10vh;
+  left: 50%;
+  transform: translate(-50%, 0);
+  background-color: #3b3b59;
+  opacity: 0.9;
+  width: 50%;
+  padding: 20px;
+  z-index: 999;
 }
 
-#container {
+.container {
   position: relative;
   display: flex;
   align-items: center;
   justify-content: center;
   line-height: 0;
-  margin: 3vh 0 5vh 0;
+  margin: 13vh 0 5vh 0;
 }
 
-#container button {
-  font-size: 2vmin;
-  font-family: 'Fira Code', monospace;
-  color:rgba(255, 255, 255, 0.7);
+#start-menu {
+  display: flex;
+  flex-direction: column;
+  border: 1px solid var(--white);
+  margin: 10vh 0 10vh 0;
+}
+
+#start-menu button {
+  font-size: 3.5vmin;
+  font-family: "Fira Code", monospace;
+  color: var(--white);
   text-align: center;
   background-color: transparent;
   border: 0;
@@ -83,21 +121,21 @@ body::-webkit-scrollbar-thumb {
   margin: 10px;
 }
 
-#container button:hover {
-  color: #FFF;
+#start-menu button:hover {
+  color: var(--white);
   background-color: rgba(85, 90, 141, 0.4);
 }
 
-#controller {
-  font-family: 'Fira Code', monospace;
+.controller {
   margin-left: 15px;
   display: flex;
   flex-direction: column;
 }
 
-#controller button {
+.controller button {
   font-size: 1.5vw;
-  color:rgba(255, 255, 255, 0.7);
+  font-family: "Fira Code", monospace;
+  color: var(--white);
   text-align: center;
   background-color: transparent;
   border: 0;
@@ -105,8 +143,8 @@ body::-webkit-scrollbar-thumb {
   margin: 10px 0 0 3px;
 }
 
-#controller button:hover {
-  color: #FFF;
+.controller button:hover {
+  color: #fff;
   background-color: rgba(85, 90, 141, 0.4);
 }
 
@@ -135,11 +173,11 @@ body::-webkit-scrollbar-thumb {
 }
 
 .level-container:hover {
-  background-color: #e0e0ff;
+  background-color: var(--light-blue);
 }
 
 .level-container:hover .level-title {
-  color: rgb(85, 90, 141);
+  color: var(--dark-blue);
 }
 
 .level {
@@ -180,14 +218,15 @@ body::-webkit-scrollbar-thumb {
   flex-direction: row;
 }
 
-.cell, .cell img,
+.cell,
+.cell img,
 .preview-cell img {
   width: 100%;
   height: 100%;
 }
 
 .cell:hover {
-  background-color: #e0e0ff;
+  background-color: var(--light-blue);
 }
 
 .cell-hint-highlight {
@@ -195,6 +234,7 @@ body::-webkit-scrollbar-thumb {
 }
 
 #footer {
+  font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
   position: fixed;
   left: 0;
   bottom: 0;
@@ -220,43 +260,21 @@ a:hover {
   }
 }
 
-#grid-size-lable {
-  font-size: 1.5vw;
-  height: 1.5vw;
-}
-
-#grid-size-lable, #grid-size-input {
-  display: flex;
-  flex-direction: row;
-  justify-content: space-around;
-}
-
-#grid-size-input input {
-  color: #AAA;
-  font-size: 3vw;
-  width: 10vw;
-  text-align: center;
-  padding: 5px 0 5px 0;
-  border: 0;
-  background-color: #4d4d4d;
-}
-
 /* slider - start */
 
-input[type=range]{
+input[type="range"] {
   -webkit-appearance: none;
   background-color: transparent;
 }
 
-input[type=range]::-webkit-slider-runnable-track {
-  /* width: 300px; */
+input[type="range"]::-webkit-slider-runnable-track {
   height: 0.3vw;
-  background: #BBB;
+  background: #bbb;
   border: none;
   border-radius: 3px;
 }
 
-input[type=range]::-webkit-slider-thumb {
+input[type="range"]::-webkit-slider-thumb {
   -webkit-appearance: none;
   border: none;
   height: 0.8vw;
@@ -264,14 +282,13 @@ input[type=range]::-webkit-slider-thumb {
   border-radius: 50%;
   background: rgb(85, 90, 141);
   transform: translate(0, -25%);
-  /* margin-top: -4px; */
 }
 
-input[type=range]:focus {
+input[type="range"]:focus {
   outline: none;
 }
 
-input[type=range]:focus::-webkit-slider-runnable-track {
+input[type="range"]:focus::-webkit-slider-runnable-track {
   background: #ccc;
 }
 
@@ -289,21 +306,28 @@ input[type=range]:focus::-webkit-slider-runnable-track {
 }
 
 .slider {
-  width: 5vw;
+  width: 100%;
   height: 30px;
 }
 
 .slider-label {
-  /* display:block; */
-  /* line-height: 2; */
   font-size: 0.8vw;
-  color: #AAA;
+  color: var(--white);
   margin-right: 3px;
 }
 
 .slider-value {
   font-size: 1vw;
-  color: #FFF;
+  color: var(--white);
   transform: translate(5px, 1px);
-  /* padding: 3px; */
+}
+
+.page-title {
+  font-size: 3vh;
+  line-height: 1;
+}
+
+.page-content {
+  line-height: 1;
+  margin: 2vh 0 0 0;
 }
