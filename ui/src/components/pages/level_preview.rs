@@ -3,10 +3,10 @@ use yew::{html, Callback};
 
 use rand::Rng;
 
-use crate::components::reducers::preview_reducer::{PreviewAction, PreviewState};
 use crate::components::board::level::StatelessLevelComponent;
+use crate::components::reducers::preview_reducer::{PreviewAction, PreviewState};
 
-use crate::helper::local_storage::change_screen;
+use crate::helper::local_storage::{change_screen, retrieve_editor_level};
 use crate::helper::screen::Screen;
 
 use game::model::coordinate::Coordinate;
@@ -29,30 +29,7 @@ pub fn level_preview_page_component(props: &LevelPreviewPageProps) -> Html {
         .map(|index| generate(*props.dimension, index as u64))
         .collect::<Vec<Grid<Tile<Square>>>>();
 
-    /*
-    let local_storage = web_sys::window().unwrap().local_storage().unwrap().unwrap();
-    let nr_saved_levels = local_storage.length().unwrap();
-
-    let mut saved_levels = (0..nr_saved_levels)
-        .into_iter()
-        .map(|index| {
-            local_storage
-                .get_item(format!("Own level {}", index + 1).as_str())
-                .unwrap()
-        })
-        .map(|level| {
-            if let Some(level_str) = level {
-                parse_level(level_str.as_str(), unicode_to_tile).unwrap()
-            } else {
-                Grid::EMPTY
-            }
-        })
-        .collect::<Vec<Grid<Tile<Square>>>>();
-
-    let level_count = use_state(|| generate_nr + saved_levels.len());
-    log::info!("lvls: {}", *level_count);
-    generated_levels.append(&mut saved_levels);
-    */
+    let saved_level = retrieve_editor_level();
 
     let level_count = use_state(|| generate_nr);
     let reducer = use_reducer(PreviewState::set(generated_levels));
@@ -97,45 +74,68 @@ pub fn level_preview_page_component(props: &LevelPreviewPageProps) -> Html {
         })
     };
 
-    fn to_level_action(level_grid: Grid<Tile<Square>>, screen: UseStateHandle<Screen>) -> Callback<MouseEvent> {
+    fn to_level_action(
+        level_grid: Grid<Tile<Square>>,
+        screen: UseStateHandle<Screen>,
+    ) -> Callback<MouseEvent> {
         Callback::from(move |_| {
             change_screen(screen.clone(), Screen::Level(level_grid.clone()));
         })
     }
 
     html! {
-        <div class="container">
-            <div id="preview-container">
-                {
-                    (0..*level_count).into_iter().map( | level_index | {
-                        let level_grid = reducer.extracted_levels[level_index].clone();
-                        html!{
-                            <div class="level-container" onclick={to_level_action(level_grid.clone(), props.screen.clone())}>
-                                <StatelessLevelComponent level_grid={level_grid.clone()} />
-                                <div class="level-title">{format!("#{}", level_index + 1)}</div>
+        <>
+            if saved_level != Grid::EMPTY {
+                <div id="saved-level-container">
+                    <div id="saved-level">
+                        <div
+                            class="level-container"
+                            onclick={to_level_action(saved_level.clone(), props.screen.clone())}>
+                            <StatelessLevelComponent level_grid={saved_level.clone()} />
+                            <div class="level-title">{"Saved"}</div>
+                        </div>
+                    </div>
+                </div>
+            }
+            <div id="container">
+                <div id="preview-container">
+                    {
+                        (0..*level_count).into_iter().map( | level_index | {
+                            let level_grid = reducer.extracted_levels[level_index].clone();
+                            html!{
+                                <div
+                                    class="level-container"
+                                    onclick={
+                                        to_level_action(level_grid.clone(),
+                                        props.screen.clone())}>
+                                    <StatelessLevelComponent level_grid={level_grid.clone()} />
+                                    <div class="level-title">
+                                        {format!("#{}", level_index + 1)}
+                                    </div>
                             </div>
-                        }
-                    }).collect::<Html>()
-                }
+                            }
+                        }).collect::<Html>()
+                    }
+                </div>
+                <div class="controller">
+                    <button
+                        onclick={load_more_levels}>
+                        {"-load more-"}
+                    </button>
+                    <button
+                        onclick={pick_random_level}>
+                        {"-pick random-"}
+                    </button>
+                    <button
+                        onclick={create_own_level}>
+                        {"-create your own-"}
+                    </button>
+                    <button
+                        onclick={back}>
+                        {"-back-"}
+                    </button>
+                </div>
             </div>
-            <div class="controller">
-                <button
-                    onclick={load_more_levels}>
-                    {"-load more-"}
-                </button>
-                <button
-                    onclick={pick_random_level}>
-                    {"-pick random-"}
-                </button>
-                <button
-                    onclick={create_own_level}>
-                    {"-create your own-"}
-                </button>
-                <button
-                    onclick={back}>
-                    {"-back-"}
-                </button>
-            </div>
-        </div>
+        </>
     }
 }

@@ -56,19 +56,19 @@ body::-webkit-scrollbar-thumb {
 }
 /* Custom scrollbar - End */
 
-.flex-box {	
-  display: flex;	
-}	
-.flex-col {	
-  display: flex;	
-  flex-direction: column;	
-}	
-.flex-row {	
-  display: flex;	
-  flex-direction: row;	
-}	
-.margin-bot-4vh {	
-  margin-bottom: 4vh;	
+.flex-box {
+  display: flex;
+}
+.flex-col {
+  display: flex;
+  flex-direction: column;
+}
+.flex-row {
+  display: flex;
+  flex-direction: row;
+}
+.margin-bot-4vh {
+  margin-bottom: 4vh;
 }
 
 #title {
@@ -156,9 +156,36 @@ body::-webkit-scrollbar-thumb {
   background-color: rgba(255, 255, 255, 0.05);
 }
 
+#saved-level-container {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 0;
+  margin-right: 10%;
+}
+
+#saved-level {
+  display: inline-flex;
+  width: 100%;
+  margin-left: 5vh;
+  flex-direction: row;
+  flex-wrap: wrap;
+  justify-content: center;
+  break-after: always;
+}
+
+#container {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 0;
+}
+
 #preview-container {
   display: inline-flex;
-  width: 80vw;
+  width: 100%;
   flex-direction: row;
   flex-wrap: wrap;
   justify-content: center;

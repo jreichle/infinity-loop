@@ -2,23 +2,20 @@ use yew::prelude::*;
 use yew::{html, Callback};
 
 use game::model::{
-    grid::Grid,
     coordinate::Coordinate,
+    gameboard::GameBoard,
+    grid::Grid,
     tile::{Square, Tile},
 };
 
+use crate::components::board::{cell::CellComponent, grid::GridComponent, row::RowComponent};
 use crate::components::reducers::board_reducer::{BoardAction, BoardState};
-use crate::components::board::{
-    row::RowComponent,
-    cell::CellComponent,
-    grid::GridComponent,
-};
-
-
+use crate::helper::local_storage::save_level;
 
 #[derive(Properties, PartialEq, Clone)]
 pub struct LevelProps {
     pub board: UseReducerHandle<BoardState>,
+    pub message: UseStateHandle<String>,
     #[prop_or(false)]
     pub can_turn: bool,
     #[prop_or(false)]
@@ -27,24 +24,40 @@ pub struct LevelProps {
 
 #[function_component(LevelComponent)]
 pub fn level_component(props: &LevelProps) -> html {
-
-    fn dispatch_turn_cell(board: UseReducerHandle<BoardState>, index: Coordinate<isize>) -> Callback<MouseEvent> {
+    fn dispatch_turn_cell(
+        board: UseReducerHandle<BoardState>,
+        index: Coordinate<isize>,
+        can_change: bool,
+        message: UseStateHandle<String>,
+    ) -> Callback<MouseEvent> {
         Callback::from(move |_| {
             log::info!(
                 "Tile with coordinate {:?} has been clicked.",
                 index.to_tuple()
             );
-            board.dispatch(BoardAction::TurnCell(index));
+            log::info!("can change? {}", can_change);
+            if can_change || !board.level_grid.is_solved() {
+                board.dispatch(BoardAction::TurnCell(index));
+                save_level(&board.level_grid);
+                log::info!("saving level now");
+            } else {
+                message.set(String::from("The level is already solved"));
+            }
         })
     }
 
-    fn dispatch_change_cell(board: UseReducerHandle<BoardState>, index: Coordinate<isize>) -> Callback<WheelEvent> {
+    fn dispatch_change_cell(
+        board: UseReducerHandle<BoardState>,
+        index: Coordinate<isize>,
+    ) -> Callback<WheelEvent> {
         Callback::from(move |_| {
             log::info!(
                 "Tile with coordinate {:?} has been wheeled.",
                 index.to_tuple()
             );
             board.dispatch(BoardAction::ChangeTileShape(index));
+            save_level(&board.level_grid);
+            log::info!("saving level now");
         })
     }
 
@@ -53,9 +66,9 @@ pub fn level_component(props: &LevelProps) -> html {
     let (height, width) = level_grid.dimensions().to_tuple();
     let (height, width) = (height as isize, width as isize);
 
-    html!{
+    html! {
         <div class="game-board">
-            <GridComponent> 
+            <GridComponent>
                 {
                     (0..height).into_iter().map(| row | {
                         html!{
@@ -70,8 +83,25 @@ pub fn level_component(props: &LevelProps) -> html {
                                                 tile={tile}
                                                 row_number={row}
                                                 column_number={column}
-                                                on_click={ if props.can_turn { dispatch_turn_cell(board.clone(), index) } else { Callback::from(|_|{}) } }
-                                                on_wheel={ if props.can_change { dispatch_change_cell(board.clone(), index) } else { Callback::from(|_|{}) } }
+                                                on_click={
+                                                    if props.can_turn {
+                                                        dispatch_turn_cell(
+                                                            board.clone(),
+                                                            index,
+                                                            props.can_change,
+                                                            props.message.clone()
+                                                        )
+                                                    } else {
+                                                        Callback::from(|_|{})
+                                                    }
+                                                }
+                                                on_wheel={
+                                                    if props.can_change {
+                                                        dispatch_change_cell(board.clone(), index)
+                                                    } else {
+                                                        Callback::from(|_|{})
+                                                    }
+                                                }
                                             ></CellComponent>
                                         }
                                     }).collect::<Html>()
@@ -85,7 +115,6 @@ pub fn level_component(props: &LevelProps) -> html {
     }
 }
 
-
 #[derive(Properties, PartialEq, Clone)]
 pub struct StatelessLevelProps {
     pub level_grid: Grid<Tile<Square>>,
@@ -97,9 +126,9 @@ pub fn stateless_level_component(props: &StatelessLevelProps) -> html {
     let (height, width) = level_grid.dimensions().to_tuple();
     let (height, width) = (height as isize, width as isize);
 
-    html!{
+    html! {
         <div class="flex-col">
-            <GridComponent> 
+            <GridComponent>
                 {
                     (0..height).into_iter().map(| row | {
                         html!{

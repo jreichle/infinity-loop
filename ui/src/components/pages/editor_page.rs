@@ -6,7 +6,7 @@ use yew::{html, Callback};
 
 use crate::components::board::level::LevelComponent;
 use crate::components::reducers::board_reducer::{BoardAction, BoardState};
-use crate::helper::local_storage::change_screen;
+use crate::helper::local_storage::{change_screen, save_editor_level};
 use crate::helper::screen::Screen;
 
 #[derive(Properties, PartialEq, Clone)]
@@ -106,10 +106,18 @@ pub fn editor_page_component(props: &EditorPageProps) -> Html {
     let play_onclick: Callback<MouseEvent> = {
         let screen = props.screen.clone();
         let grid = board.level_grid.clone();
+        let message = props.message.clone();
         Callback::from(move |_| {
             log::info!("[Button click] Play custom grid.");
             log::info!("Current grid\n{}", grid.to_string());
-            change_screen(screen.clone(), Screen::Level(grid.clone()));
+            // TODO: only allowed if valid
+            if grid.solve().count() != 0 {
+                change_screen(screen.clone(), Screen::Level(grid.clone()));
+            } else {
+                message.set(String::from(
+                    "The level is not valid and thus not playable.",
+                ));
+            }
         })
     };
 
@@ -186,15 +194,8 @@ pub fn editor_page_component(props: &EditorPageProps) -> Html {
         let message = props.message.clone();
         Callback::from(move |_| {
             log::info!("[Button click] Save level.");
-
-            let local_storage = web_sys::window().unwrap().local_storage().unwrap().unwrap();
-            let key = format!("Own level {}", (local_storage.length().unwrap() + 1));
-            local_storage
-                .set_item(key.as_str(), board.level_grid.to_string().as_str())
-                .unwrap();
-
-            let msg = format!("Level saved as \"{}\"", key);
-            message.set(msg);
+            save_editor_level(&board.level_grid);
+            message.set(String::from("Saved level"));
         })
     };
 
@@ -244,7 +245,11 @@ pub fn editor_page_component(props: &EditorPageProps) -> Html {
                 </ul>
             </section>
 
-            <LevelComponent board={board.clone()} can_turn=true can_change=true />
+            <LevelComponent
+                board={board.clone()}
+                can_turn=true
+                can_change=true
+                message={props.message.clone()} />
 
             <div class="controller">
                 <button
