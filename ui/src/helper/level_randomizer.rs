@@ -7,7 +7,8 @@ use rand::Rng;
 
 pub fn randomize_level(mut level: Grid<Tile<Square>>) -> Grid<Tile<Square>> {
     let dimension = level.dimensions();
-    while level.is_solved() {
+    let mut is_solved = true;
+    while is_solved {
         for row in 0..dimension.row {
             for col in 0..dimension.column {
                 let num = rand::thread_rng().gen_range(0..3);
@@ -16,6 +17,7 @@ pub fn randomize_level(mut level: Grid<Tile<Square>>) -> Grid<Tile<Square>> {
                     .unwrap();
             }
         }
+        is_solved = level.is_solved();
     }
     level
 }

@@ -252,7 +252,11 @@ pub fn editor_page_component(props: &EditorPageProps) -> Html {
                 </ul>
             </section>
 
-            <LevelComponent board={board.clone()} can_turn=true can_change=true />
+            <LevelComponent
+                board={board.clone()}
+                can_turn=true
+                can_change=true
+                message={props.message.clone()} />
 
             <div class="controller">
                 <button

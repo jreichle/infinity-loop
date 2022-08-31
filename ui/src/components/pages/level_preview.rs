@@ -3,8 +3,8 @@ use yew::{html, Callback};
 
 use rand::Rng;
 
-use crate::components::reducers::preview_reducer::{PreviewAction, PreviewState};
 use crate::components::board::level::StatelessLevelComponent;
+use crate::components::reducers::preview_reducer::{PreviewAction, PreviewState};
 
 use crate::helper::local_storage::change_screen;
 use crate::helper::screen::Screen;
@@ -97,7 +97,10 @@ pub fn level_preview_page_component(props: &LevelPreviewPageProps) -> Html {
         })
     };
 
-    fn to_level_action(level_grid: Grid<Tile<Square>>, screen: UseStateHandle<Screen>) -> Callback<MouseEvent> {
+    fn to_level_action(
+        level_grid: Grid<Tile<Square>>,
+        screen: UseStateHandle<Screen>,
+    ) -> Callback<MouseEvent> {
         Callback::from(move |_| {
             change_screen(screen.clone(), Screen::Level(level_grid.clone()));
         })

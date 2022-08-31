@@ -1,9 +1,7 @@
 use yew::prelude::*;
 use yew::{html, Callback, Properties};
 
-use game::model::{
-    tile::{Tile, Square}
-};
+use game::model::tile::{Square, Tile};
 
 use crate::components::utils::tile_image::TileImageComponent;
 
