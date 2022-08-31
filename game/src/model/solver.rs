@@ -47,7 +47,7 @@ use super::{
 ///! This is functionally equivalent to having a neighbor outside the level without connection.
 ///! Using a layer of empty sentinel tiles around the level can be used to simplify the problem by eliminating the special border rule.
 ///! * square tiles under rotational symmetry form 6 equivalence classes
-///! 
+///!
 ///!
 
 // enable dot notation for function calls by associating them with their respective structs for autocomplete and to avoid parantheses
@@ -104,9 +104,9 @@ impl<A: Finite + Clone> SentinelGrid<Tile<A>> {
     }
 }
 
-impl<A: Clone + Display + Finite + BoundedLattice + Iterator> Display for SentinelGrid<A>
+impl<A: Clone + Display + Finite + BoundedLattice + IntoIterator> Display for SentinelGrid<A>
 where
-    <A as IntoIterator>::Item: Debug + BoundedLattice + PartialEq,
+    <A as IntoIterator>::Item: Display + BoundedLattice + PartialEq,
 {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         self.0.map(BoundedLattice::or).fmt(f)
@@ -269,9 +269,11 @@ fn subset_containing<A: Copy + Finite>(value: A) -> Superposition<A> {
 /// iterative fixed point of a function
 ///
 /// applies function repeatedly starting from initial value until `condition(x, step(x))` holds true
-fn iter_fix<A, F, T>(initial: A, step: F, condition: T) -> A
+///
+/// fulfills idempotency
+pub fn iter_fix<A, F, T>(initial: A, mut step: F, condition: T) -> A
 where
-    F: Fn(&A) -> A,
+    F: FnMut(&A) -> A,
     T: Fn(&A, &A) -> bool,
 {
     let mut initial = initial;
@@ -291,14 +293,14 @@ impl Sentinel<Square> {
     ///
     /// # Postcondition
     ///
-    /// `s.minimize()` ≡ `s.minimize().minimize()`
+    /// idempotency: `∀s : Sentinel<Square>. s.minimize()` ≡ `s.minimize().minimize()`
     pub fn minimize(self) -> Sentinel<Square> {
         iter_fix(
             self,
             |g| {
-                g.0.coordinates()
-                    .into_iter()
-                    .fold(g.clone(), |g, c| propagate_restrictions_to_all_neighbors2(g, c, PartialEq::ne).0)
+                g.0.coordinates().into_iter().fold(g.clone(), |g, c| {
+                    propagate_restrictions_to_all_neighbors2(g, c, PartialEq::ne).0
+                })
             },
             SentinelGrid::eq,
         )
@@ -354,10 +356,12 @@ pub fn propagate_restrictions_to_all_neighbors(
     })
 }
 // for solving change_test is inequality, for hint it is collapse
-pub fn propagate_restrictions_to_all_neighbors2<F: FnMut(&Superposition<Square>, &Superposition<Square>) -> bool>(
+pub fn propagate_restrictions_to_all_neighbors2<
+    F: FnMut(&Superposition<Square>, &Superposition<Square>) -> bool,
+>(
     grid: Sentinel<Square>,
     index: Coordinate<isize>,
-    mut change_test: F, 
+    mut change_test: F,
 ) -> (Sentinel<Square>, Vec<Coordinate<isize>>) {
     // determine common connections
     let evidence = grid
@@ -368,13 +372,13 @@ pub fn propagate_restrictions_to_all_neighbors2<F: FnMut(&Superposition<Square>,
         .unwrap_or_default();
 
     // propagate connection information to neighbors
-    // pushing to vec as side effect is unclean, but easiest implementation 
+    // pushing to vec as side effect is unclean, but easiest implementation
     evidence.into_iter().fold((grid, vec![]), |(g, mut v), c| {
         let neighbor_index = index.get_neighbor_index(c.0);
         let sg = SentinelGrid(g.0.try_adjust_at(neighbor_index, |s| {
             let merged = s & c.1;
             if change_test(&s, &merged) {
-                // pushing to vec as side effect is unclean, but easiest implementation 
+                // pushing to vec as side effect is unclean, but easiest to implement
                 v.push(neighbor_index);
             }
             merged
@@ -470,5 +474,15 @@ mod tests {
         sentinel: Tile<Square>,
     ) -> bool {
         grid == grid.with_sentinels(sentinel).extract_grid()
+    }
+
+    #[quickcheck]
+    fn minimize_is_idempotent(sentinel: Sentinel<Square>) -> bool {
+        sentinel.clone().minimize().minimize() == sentinel.minimize()
+    }
+
+    #[quickcheck]
+    fn coordinates_is_stable(grid: Sentinel<Square>) -> bool {
+        grid.0.coordinates().collect::<Vec<_>>() == grid.clone().0.coordinates().collect::<Vec<_>>()
     }
 }
