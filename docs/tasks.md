@@ -19,15 +19,34 @@
 
 ### Model
 
-- [x] model for puzzle and functions defining relevant interactions
+- [X] model for puzzle and functions defining relevant interactions
 - [ ] test coverage
-    - [x] tile
+    - [X] tile
     - [ ] grid
-    - [ ] parsing / serializing
+    - [X] parsing / serializing
 - [ ] seperate test levels and parser / serializer into different files
 - [ ] establish way of sending gameboard status and updates to View
-- [ ] implement puzzle generator
-- [ ] implement puzzle solver
+- [X] implement puzzle generator
+- [X] implement puzzle solver
+
+### Level Editor
+- [x] Get tiles shown
+- [x] Turn cells
+- [x] Check with CPS
+- [ ] Check with SAT
+- [x] Check if level is already solved
+- [x] Generate with FastGen
+- [x] Generate with WFC
+- [x] Change size
+- [x] Play custom grid
+- [x] Create user-, not console-messages
+- [x] Shuffle current grid tile rotations
+- [x] Adjust editor to level previews
+- [x] Clear grid
+
+
+- [x] Save grid in local storage (optional)
+- [ ] Load grid in local storage (optional)
 
 ## Further Extensions
 
@@ -39,3 +58,16 @@
 * level editor
 * game server to manage level data and level + user statistics
 * audio support
+
+## Contribution Breakdown
+
+| Task                                   | Alexander Jensen   | Johannes Moosburger | Simon Redl         | Johannes Reichle   | Jakob Ritter       |
+|:---------------------------------------|:------------------:|:-------------------:|:------------------:|:------------------:|:------------------:|
+| Game Model                             |                    |                     | :heavy_check_mark: |                    |                    |
+| WASM Web-UI                            |                    |                     |                    | :heavy_check_mark: |                    |
+| Unweighted Generator                   |                    |                     |                    |                    |                    |
+| Wave Fuction Collapse Generator        | :heavy_check_mark: |                     |                    |                    |                    |
+| Solver based on Constraint Propagation |                    |                     | :heavy_check_mark: |                    |                    |
+| SAT Solver                             |                    |                     |                    |                    | :heavy_check_mark: |
+| Manual Level Editor                    |                    | :heavy_check_mark:  |                    |                    |                    |
+| Hint functionality                     |                    |                     | :heavy_check_mark: |                    |                    |
