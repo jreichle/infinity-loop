@@ -121,10 +121,10 @@ pub fn level_preview_page_component(props: &LevelPreviewPageProps) -> Html {
                         }).collect::<Html>()
                     }
                 </div>
-                <div class="controller">
+                <div class="controller preview-controller">
                     <button
                         onclick={load_more_levels}>
-                        {"-load more-"}
+                        {"-more levels-"}
                     </button>
                     <button
                         onclick={pick_random_level}>
@@ -132,11 +132,11 @@ pub fn level_preview_page_component(props: &LevelPreviewPageProps) -> Html {
                     </button>
                     <button
                         onclick={create_own_level}>
-                        {"-create your own-"}
+                        {"-create level-"}
                     </button>
                     <button
                         onclick={to_title}>
-                        {"-back to start-"}
+                        {"-home-"}
                     </button>
                 </div>
             </div>
