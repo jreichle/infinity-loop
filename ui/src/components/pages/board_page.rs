@@ -17,7 +17,7 @@ use crate::helper::local_storage::change_screen;
 pub struct BoardPageProps {
     pub level_grid: Grid<Tile<Square>>,
     pub screen: UseStateHandle<Screen>,
-    pub message: UseStateHandle<String>,
+    pub head_message: UseStateHandle<String>,
 }
 
 #[function_component(BoardPage)]
@@ -26,14 +26,14 @@ pub fn board_page_component(props: &BoardPageProps) -> Html {
 
     let hint_onclick: Callback<MouseEvent> = {
         let board = board.clone();
-        let message = props.message.clone();
+        let head_message = props.head_message.clone();
         Callback::from(move |_| {
             log::info!("[Button click] Hint.");
             if board.level_grid.solve().count() == 1 {
                 board.dispatch(BoardAction::GetHint);
             } else {
                 // hinting only works for one solution thus far!
-                message.set(String::from(
+                head_message.set(String::from(
                     "Hint can unfortunately not be generated for this level",
                 ));
             }
@@ -50,13 +50,13 @@ pub fn board_page_component(props: &BoardPageProps) -> Html {
 
     let next_onclick: Callback<MouseEvent> = {
         let board = board.clone();
-        let message = props.message.clone();
+        let head_message = props.head_message.clone();
         Callback::from(move |_| {
             log::info!("[Button click] Next.");
             if board.level_grid.is_solved() {
                 board.dispatch(BoardAction::NextLevel);
             } else {
-                message.set(String::from("Solve the level to unlock a new level."));
+                head_message.set(String::from("Solve the level to unlock a new level."));
             }
         })
     };
@@ -75,7 +75,7 @@ pub fn board_page_component(props: &BoardPageProps) -> Html {
                 board={board.clone()}
                 can_turn=true
                 can_change=false
-                message={props.message.clone()}/>
+                head_message={props.head_message.clone()}/>
             <div class="controller">
                 <button
                     onclick={hint_onclick}>

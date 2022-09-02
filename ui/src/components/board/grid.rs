@@ -5,13 +5,30 @@ use yew::{html, Children};
 pub struct GridComponentProps {
     #[prop_or_default]
     pub children: Children,
+    #[prop_or(use_state_eq(|| "".to_string()))]
+    pub overlay_message: UseStateHandle<String>,
 }
 
 #[function_component(GridComponent)]
 pub fn grid_component(props: &GridComponentProps) -> Html {
+    let children = props.children.clone();
+    let overlay_message = props.overlay_message.clone();
+
     html! {
         <>
-            { for props.children.iter() }
+            { for children.iter() }
+            
+            { 
+                if !overlay_message.trim().is_empty() {
+                    html!{
+                        <div class="level-overlay">
+                            <div class="overlay-text">{ (*overlay_message).clone() }</div>
+                        </div>
+                    }
+                } else { html!{} }
+            }
+
+
         </>
     }
 }

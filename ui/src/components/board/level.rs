@@ -15,7 +15,9 @@ use crate::helper::local_storage::save_level;
 #[derive(Properties, PartialEq, Clone)]
 pub struct LevelProps {
     pub board: UseReducerHandle<BoardState>,
-    pub message: UseStateHandle<String>,
+    pub head_message: UseStateHandle<String>,
+    #[prop_or(use_state_eq(|| "".to_string()))]
+    pub overlay_message: UseStateHandle<String>,
     #[prop_or(false)]
     pub can_turn: bool,
     #[prop_or(false)]
@@ -28,7 +30,7 @@ pub fn level_component(props: &LevelProps) -> html {
         board: UseReducerHandle<BoardState>,
         index: Coordinate<isize>,
         can_change: bool,
-        message: UseStateHandle<String>,
+        head_message: UseStateHandle<String>,
     ) -> Callback<MouseEvent> {
         Callback::from(move |_| {
             log::debug!(
@@ -41,7 +43,7 @@ pub fn level_component(props: &LevelProps) -> html {
                 save_level(&board.level_grid);
                 log::debug!("saving level now");
             } else {
-                message.set(String::from("The level is already solved"));
+                head_message.set(String::from("The level is already solved"));
             }
         })
     }
@@ -68,7 +70,7 @@ pub fn level_component(props: &LevelProps) -> html {
 
     html! {
         <div class="game-board">
-            <GridComponent>
+            <GridComponent overlay_message={props.overlay_message.clone()}>
                 {
                     (0..height).into_iter().map(| row | {
                         html!{
@@ -89,7 +91,7 @@ pub fn level_component(props: &LevelProps) -> html {
                                                             board.clone(),
                                                             index,
                                                             props.can_change,
-                                                            props.message.clone()
+                                                            props.head_message.clone()
                                                         )
                                                     } else {
                                                         Callback::from(|_|{})
@@ -118,6 +120,8 @@ pub fn level_component(props: &LevelProps) -> html {
 #[derive(Properties, PartialEq, Clone)]
 pub struct StatelessLevelProps {
     pub level_grid: Grid<Tile<Square>>,
+    #[prop_or(use_state_eq(|| "".to_string()))]
+    pub overlay_message: UseStateHandle<String>,
 }
 
 #[function_component(StatelessLevelComponent)]
@@ -128,7 +132,7 @@ pub fn stateless_level_component(props: &StatelessLevelProps) -> html {
 
     html! {
         <div class="flex-col">
-            <GridComponent>
+            <GridComponent overlay_message={props.overlay_message.clone()}>
                 {
                     (0..height).into_iter().map(| row | {
                         html!{

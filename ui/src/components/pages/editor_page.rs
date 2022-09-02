@@ -12,7 +12,7 @@ use crate::helper::screen::Screen;
 #[derive(Properties, PartialEq, Clone)]
 pub struct EditorPageProps {
     pub screen: UseStateHandle<Screen>,
-    pub message: UseStateHandle<String>,
+    pub head_message: UseStateHandle<String>,
 }
 
 #[function_component(EditorPage)]
@@ -48,7 +48,7 @@ pub fn editor_page_component(props: &EditorPageProps) -> Html {
 
     let check_cps_onclick: Callback<MouseEvent> = {
         // let board = board.clone();
-        let message = props.message.clone();
+        let head_message = props.head_message.clone();
         Callback::from(move |_| {
             log::info!("[Button click] Check with CPS.");
             log::info!("Current grid\n{}", level_grid.to_string());
@@ -66,7 +66,7 @@ pub fn editor_page_component(props: &EditorPageProps) -> Html {
                 0 => String::from("The level is not valid"),
                 n => format!("The level is valid and has {} possible solutions", n),
             };
-            message.set(msg);
+            head_message.set(msg);
         })
     };
 
@@ -79,7 +79,7 @@ pub fn editor_page_component(props: &EditorPageProps) -> Html {
 
     let check_solved_onclick: Callback<MouseEvent> = {
         let board = board.clone();
-        let message = props.message.clone();
+        let head_message = props.head_message.clone();
         Callback::from(move |_| {
             log::info!("[Button click] Check is solved.");
             log::info!("Current grid\n{}", board.level_grid.to_string());
@@ -91,7 +91,7 @@ pub fn editor_page_component(props: &EditorPageProps) -> Html {
                 true => String::from("The level is solved"),
                 false => String::from("The level is not solved"),
             };
-            message.set(msg);
+            head_message.set(msg);
         })
     };
 
@@ -106,7 +106,7 @@ pub fn editor_page_component(props: &EditorPageProps) -> Html {
     let play_onclick: Callback<MouseEvent> = {
         let screen = props.screen.clone();
         let grid = board.level_grid.clone();
-        let message = props.message.clone();
+        let head_message = props.head_message.clone();
         Callback::from(move |_| {
             log::info!("[Button click] Play custom grid.");
             log::info!("Current grid\n{}", grid.to_string());
@@ -114,7 +114,7 @@ pub fn editor_page_component(props: &EditorPageProps) -> Html {
             if grid.solve().count() != 0 {
                 change_screen(screen.clone(), Screen::Level(grid.clone()));
             } else {
-                message.set(String::from(
+                head_message.set(String::from(
                     "The level is not valid and thus not playable.",
                 ));
             }
@@ -191,11 +191,11 @@ pub fn editor_page_component(props: &EditorPageProps) -> Html {
 
     let save_onclick: Callback<MouseEvent> = {
         let board = board.clone();
-        let message = props.message.clone();
+        let head_message = props.head_message.clone();
         Callback::from(move |_| {
             log::info!("[Button click] Save level.");
             save_editor_level(&board.level_grid);
-            message.set(String::from("Saved level"));
+            head_message.set(String::from("Saved level"));
         })
     };
 
@@ -249,7 +249,7 @@ pub fn editor_page_component(props: &EditorPageProps) -> Html {
                 board={board.clone()}
                 can_turn=true
                 can_change=true
-                message={props.message.clone()} />
+                head_message={props.head_message.clone()} />
 
             <div class="controller">
                 <button
@@ -280,7 +280,7 @@ pub fn editor_page_component(props: &EditorPageProps) -> Html {
                     {"-Levels-"}
                 </button>
                 <button  onclick={to_title}>
-                    {"-back to start-"}
+                    {"-home-"}
                 </button>
             </div>
         </div>

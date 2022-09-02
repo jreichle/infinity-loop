@@ -11,10 +11,7 @@ use game::model::{
 };
 
 use crate::components::board::level::StatelessLevelComponent;
-use crate::components::utils::{
-    slider::SliderComponent,
-    tile_selector::TileSelector,
-};
+use crate::components::utils::{slider::SliderComponent, tile_selector::TileSelector};
 use crate::helper::local_storage::change_screen;
 use crate::helper::screen::Screen;
 
@@ -42,7 +39,13 @@ pub fn wfc_board_component(props: &VisualizerPageProps) -> Html {
     let interval_id = use_state(|| 0);
 
     let available_tiles: UseStateHandle<EnumSet<Tile<Square>>> = use_state_eq(|| EnumSet::FULL);
-    let wfc_generator = WfcGenerator::new(*width_value as usize, *height_value as usize, EnumSet::FULL, PASS_LIMIT, PROP_LIMIT);
+    let wfc_generator = WfcGenerator::new(
+        *width_value as usize,
+        *height_value as usize,
+        EnumSet::FULL,
+        PASS_LIMIT,
+        PROP_LIMIT,
+    );
     let (sentinel_grid, weights) = wfc_generator.init_board();
     let (sentinel_grid, weights) = wfc_generator.iteration_step(sentinel_grid, weights);
 
@@ -80,7 +83,8 @@ pub fn wfc_board_component(props: &VisualizerPageProps) -> Html {
                 width,
                 height
             );
-            let new_generator = WfcGenerator::new(width, height, *available_tiles, PASS_LIMIT, PROP_LIMIT);
+            let new_generator =
+                WfcGenerator::new(width, height, *available_tiles, PASS_LIMIT, PROP_LIMIT);
             let (mut new_grid, mut new_weights) = new_generator.init_board();
             (new_grid, new_weights) = new_generator.iteration_step(new_grid, new_weights);
             level_grid.set(WfcGenerator::extract_grid(&new_grid));
@@ -196,7 +200,7 @@ pub fn wfc_board_component(props: &VisualizerPageProps) -> Html {
                 </button>
             </div>
             <div class="game-board">
-                <StatelessLevelComponent level_grid={(*level_grid).clone()} />
+                <StatelessLevelComponent overlay_message={use_state_eq(|| "TEST".to_string())} level_grid={(*level_grid).clone()} />
             </div>
             <div class="controller space-between">
                 <div class="flex-col">
