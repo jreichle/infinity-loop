@@ -192,9 +192,15 @@ pub fn wfc_board_component(props: &VisualizerPageProps) -> Html {
 
     html! {
         <div class="container">
-            <div class="selector-controller controller">
-                <TileSelector tile_set={available_tiles.clone()} />
-                <button onclick={resize_onclick.clone()}>
+            <div class="controller">
+                <div class="selector-controller">
+                    <TileSelector tile_set={available_tiles.clone()} />
+                </div>
+                <div class="flex-col">
+                    <SliderComponent id="slider-height" label="#row" value={height_value.clone()} />
+                    <SliderComponent id="slider-width" label="#col"  value={width_value.clone()} />
+                </div>
+                <button onclick={update_onclick.clone()}>
                     {"-update-"}
                 </button>
             </div>
