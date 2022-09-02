@@ -15,6 +15,9 @@ use crate::components::utils::{slider::SliderComponent, tile_selector::TileSelec
 use crate::helper::local_storage::change_screen;
 use crate::helper::screen::Screen;
 
+type GameGrid = SentinelGrid<EnumSet<Tile<Square>>>;
+type Weights = EnumMap<Tile<Square>, usize>;
+
 const LOG_PREFIX: &str = "#viz";
 const DEFAULT_WIDTH: isize = 10;
 const DEFAULT_HEIGHT: isize = 10;
@@ -56,12 +59,9 @@ pub fn wfc_board_component(props: &VisualizerPageProps) -> Html {
 
     fn go_to_next_step(
         wfc_generator: WfcGenerator,
-        sentinel_grid: SentinelGrid<EnumSet<Tile<Square>>>,
-        weights: EnumMap<Tile<Square>, usize>,
-    ) -> (
-        SentinelGrid<EnumSet<Tile<Square>>>,
-        EnumMap<Tile<Square>, usize>,
-    ) {
+        sentinel_grid: GameGrid,
+        weights: Weights,
+    ) -> (GameGrid, Weights) {
         let (mut new_grid, mut new_weights) = (sentinel_grid, weights);
         if WfcGenerator::is_all_collapsed(&new_grid) {
             (new_grid, new_weights) = wfc_generator.init_board();
@@ -110,17 +110,17 @@ pub fn wfc_board_component(props: &VisualizerPageProps) -> Html {
                 (*weights).clone(),
             );
             level_grid.set(WfcGenerator::extract_grid(&new_grid));
-            sentinel_grid.set(new_grid.clone());
-            weights.set(new_weights.clone());
+            sentinel_grid.set(new_grid);
+            weights.set(new_weights);
         })
     };
 
     let play_onclick: Callback<MouseEvent> = {
-        let interval_id = interval_id.clone();
-        let wfc_generator = wfc_generator.clone();
+        let interval_id = interval_id;
+        let wfc_generator = wfc_generator;
         let level_grid = level_grid.clone();
-        let sentinel_grid = sentinel_grid.clone();
-        let weights = weights.clone();
+        let sentinel_grid = sentinel_grid;
+        let weights = weights;
 
         let playing = playing.clone();
         let speed_value = speed_value.clone();
@@ -146,8 +146,8 @@ pub fn wfc_board_component(props: &VisualizerPageProps) -> Html {
                     let level_grid = level_grid.clone();
                     let sentinel_grid = sentinel_grid.clone();
                     let weights = weights.clone();
-                    let mut new_grid = new_grid.clone();
-                    let mut new_weights = new_weights.clone();
+                    let mut new_grid = new_grid;
+                    let mut new_weights = new_weights;
 
                     let iteration_closure = Closure::<dyn FnMut()>::new(move || {
                         (new_grid, new_weights) = go_to_next_step(

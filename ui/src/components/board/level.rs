@@ -78,7 +78,7 @@ pub fn level_component(props: &LevelProps) -> html {
                                 {
                                     (0..width).into_iter().map(| column | {
                                         let index = Coordinate { row, column };
-                                        let tile = level_grid.get(index).unwrap().clone();
+                                        let tile = *level_grid.get(index).unwrap();
                                         html!{
                                             <CellComponent
                                                 key={column}
@@ -140,7 +140,7 @@ pub fn stateless_level_component(props: &StatelessLevelProps) -> html {
                                 {
                                     (0..width).into_iter().map(| column | {
                                         let index = Coordinate { row, column };
-                                        let tile = level_grid.get(index).unwrap().clone();
+                                        let tile = *level_grid.get(index).unwrap();
                                         html!{
                                             <CellComponent
                                                 key={column}

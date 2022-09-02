@@ -18,8 +18,8 @@ pub struct CellComponentProps {
 
 #[function_component(CellComponent)]
 pub fn cell_component(props: &CellComponentProps) -> Html {
-    let (row, column) = (props.row_number.clone(), props.column_number.clone());
-    let cell_tile = props.tile.clone();
+    let (row, column) = (props.row_number, props.column_number);
+    let cell_tile = props.tile;
 
     html! {
         <div

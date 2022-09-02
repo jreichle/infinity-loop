@@ -61,7 +61,7 @@ pub fn highlight_cells(row: usize, column: usize) {
         .unwrap();
 
     let class_names = cell.get_attribute("class").unwrap();
-    let highlight_class_names = format!("{} {}", class_names.clone(), "cell-hint-highlight");
+    let highlight_class_names = format!("{} {}", class_names, "cell-hint-highlight");
     cell.set_class_name(&highlight_class_names);
     let hl = Closure::<dyn Fn()>::new(move || {
         cell.set_class_name(&class_names);
@@ -77,7 +77,7 @@ impl Reducible for BoardState {
     type Action = BoardAction;
 
     fn reduce(self: Rc<Self>, action: Self::Action) -> Rc<Self> {
-        let mut new_level_number: usize = self.level_number.clone();
+        let mut new_level_number: usize = self.level_number;
         let mut new_level_grid: Grid<Tile<Square>> = self.level_grid.clone();
 
         match action {
@@ -138,7 +138,7 @@ impl Reducible for BoardState {
                 );
 
                 let mut generation_result = wfc.generate();
-                while let Err(_) = generation_result {
+                while generation_result.is_err() {
                     generation_result = wfc.generate();
                 }
 
@@ -160,7 +160,7 @@ impl Reducible for BoardState {
 
         Self {
             level_number: new_level_number,
-            level_grid: new_level_grid.clone(),
+            level_grid: new_level_grid,
         }
         .into()
     }

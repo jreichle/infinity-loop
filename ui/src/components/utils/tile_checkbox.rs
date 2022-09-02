@@ -14,7 +14,7 @@ pub struct TileCheckboxProps {
 #[function_component(TileCheckbox)]
 pub fn tile_checkbox_component(props: &TileCheckboxProps) -> Html {
     let is_used = props.is_used.clone();
-    let tile = props.tile.clone();
+    let tile = props.tile;
 
     let on_click: Callback<MouseEvent> = {
         let is_used = is_used.clone();
@@ -41,7 +41,7 @@ pub fn tile_checkbox_component(props: &TileCheckboxProps) -> Html {
             } 
             onclick={on_click.clone()} 
          >
-            <TileImage tile={tile.clone()} />
+            <TileImage tile={tile} />
         </div>
     }
 }

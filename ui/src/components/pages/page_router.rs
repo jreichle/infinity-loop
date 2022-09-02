@@ -19,10 +19,10 @@ pub fn page_router() -> Html {
     let head_message = use_state_eq(|| "".to_string());
     let head_message_timeout_id = use_state(|| -1_i32);
 
-    let dimension = use_state(|| Coordinate::new(5 as usize, 5 as usize));
+    let dimension = use_state(|| Coordinate::new(5_usize, 5_usize));
     let level_number = use_state(|| 0);
 
-    let screen = use_state(|| retrieve_screen());
+    let screen = use_state(retrieve_screen);
 
     let to_title: Callback<MouseEvent> = {
         let screen = screen.clone();
@@ -36,7 +36,7 @@ pub fn page_router() -> Html {
     // depends on message change
     {
         let head_message = head_message.clone();
-        let timeout_id = head_message_timeout_id.clone();
+        let timeout_id = head_message_timeout_id;
         use_effect_with_deps(
             move |head_message| {
                 let window = web_sys::window().unwrap();
@@ -50,7 +50,7 @@ pub fn page_router() -> Html {
 
                     let hide_action = {
                         let head_message = head_message.clone();
-                        let msg_element = msg_element.clone();
+                        let msg_element = msg_element;
                         let timeout_id = timeout_id.clone();
                         Closure::<dyn Fn()>::new(move || {
                             msg_element.set_attribute("hidden", "true").ok();
@@ -93,7 +93,7 @@ pub fn page_router() -> Html {
                             html! {
                                 <StartPage
                                     screen={screen.clone()}
-                                    head_message={head_message.clone()} />
+                                    head_message={head_message} />
                             }
                         },
                         Screen::Overview => {
@@ -108,7 +108,7 @@ pub fn page_router() -> Html {
                             html! {
                                 <EditorPage
                                     screen={screen.clone()}
-                                    head_message={head_message.clone()}/>
+                                    head_message={head_message}/>
                             }
                         },
                         Screen::Level(user_grid) => {
@@ -116,7 +116,7 @@ pub fn page_router() -> Html {
                                 <BoardPage
                                     level_grid={user_grid.clone()}
                                     screen={screen.clone()}
-                                    head_message={head_message.clone()}/>
+                                    head_message={head_message}/>
 
                             }
                         },

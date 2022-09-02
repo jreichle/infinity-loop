@@ -43,7 +43,7 @@ pub fn start_page(props: &StartPageProps) -> html {
     };
 
     let to_credit: Callback<MouseEvent> = {
-        let screen = screen.clone();
+        let screen = screen;
         Callback::from(move |_| {
             change_screen(screen.clone(), Screen::Credit);
         })

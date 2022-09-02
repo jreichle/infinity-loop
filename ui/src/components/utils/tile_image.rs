@@ -21,9 +21,9 @@ pub struct TileImageProps {
 
 #[function_component(TileImage)]
 pub fn tile_image_component(props: &TileImageProps) -> Html {
-    let tile = props.tile.clone();
+    let tile = props.tile;
     let cell_symbol = tile.to_string().chars().next().unwrap();
-    let cell_img = get_index(cell_symbol.clone());
+    let cell_img = get_index(cell_symbol);
 
     html!{
         <div class="tile">

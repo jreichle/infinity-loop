@@ -12,7 +12,7 @@ pub enum PreviewAction {
     LoadNew(usize, Coordinate<usize>),
 }
 
-#[derive(Clone, Debug, PartialEq, Eq)]
+#[derive(Clone, Debug, PartialEq, Eq, Default)]
 pub struct PreviewState {
     pub extracted_levels: Vec<Grid<Tile<Square>>>,
 }
@@ -34,14 +34,6 @@ impl Reducible for PreviewState {
         }
 
         Self { extracted_levels }.into()
-    }
-}
-
-impl Default for PreviewState {
-    fn default() -> Self {
-        Self {
-            extracted_levels: Vec::new(),
-        }
     }
 }
 

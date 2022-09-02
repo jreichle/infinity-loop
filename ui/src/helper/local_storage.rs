@@ -36,7 +36,7 @@ pub fn save_editor_level(grid: &Grid<Tile<Square>>) {
 pub fn retrieve_editor_level() -> Grid<Tile<Square>> {
     let local_storage = web_sys::window().unwrap().local_storage().unwrap().unwrap();
     if let Ok(Some(level)) = local_storage.get_item(SAVED_LEVEL) {
-        parse_level(&level.as_str(), unicode_to_tile).unwrap()
+        parse_level(level.as_str(), unicode_to_tile).unwrap()
     } else {
         Grid::EMPTY
     }
@@ -52,7 +52,7 @@ pub fn save_level(grid: &Grid<Tile<Square>>) {
 fn retrieve_level() -> Grid<Tile<Square>> {
     let local_storage = web_sys::window().unwrap().local_storage().unwrap().unwrap();
     if let Ok(Some(level)) = local_storage.get_item(CURRENT_LEVEL) {
-        parse_level(&level.as_str(), unicode_to_tile).unwrap()
+        parse_level(level.as_str(), unicode_to_tile).unwrap()
     } else {
         Grid::EMPTY
     }
