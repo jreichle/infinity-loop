@@ -8,6 +8,23 @@ use yew::prelude::*;
 pub const CURRENT_SCREEN: &str = "screen";
 pub const CURRENT_LEVEL: &str = "level";
 pub const SAVED_LEVEL: &str = "saved level";
+pub const PREVIEW_LEVELS: &str = "preview levels";
+
+pub fn save_preview_level_count(nr_levels: usize) {
+    let local_storage = web_sys::window().unwrap().local_storage().unwrap().unwrap();
+    local_storage
+        .set_item(PREVIEW_LEVELS, nr_levels.to_string().as_str())
+        .unwrap();
+}
+
+pub fn retrieve_preview_level_count() -> usize {
+    let local_storage = web_sys::window().unwrap().local_storage().unwrap().unwrap();
+    if let Ok(Some(nr_levels)) = local_storage.get_item(PREVIEW_LEVELS) {
+        nr_levels.parse().unwrap()
+    } else {
+        20
+    }
+}
 
 pub fn save_editor_level(grid: &Grid<Tile<Square>>) {
     let local_storage = web_sys::window().unwrap().local_storage().unwrap().unwrap();
