@@ -26,19 +26,3 @@ impl Display for Screen {
         write!(f, "{}", res)
     }
 }
-
-impl Screen {
-    pub fn new(input: &str) -> Screen {
-        match input {
-            // TODO: try getting level from local_storage
-            "level" => Screen::Level(Grid::EMPTY),
-            "overview" => Screen::Overview,
-            "title" => Screen::Title,
-            "help" => Screen::Help,
-            "credit" => Screen::Credit,
-            "editor" => Screen::Editor,
-            "visualizer" => Screen::Visualizer,
-            _ => Screen::Title,
-        }
-    }
-}

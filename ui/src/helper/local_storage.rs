@@ -78,11 +78,15 @@ pub fn retrieve_screen() -> Screen {
     let local_storage = web_sys::window().unwrap().local_storage().unwrap().unwrap();
     if let Ok(Some(saved_screen)) = local_storage.get_item(CURRENT_SCREEN) {
         log::info!("retrieved old screen: {}", saved_screen);
-        let screen = Screen::new(saved_screen.as_str());
-        if let Screen::Level(_) = screen {
-            Screen::Level(retrieve_level())
-        } else {
-            screen
+        match saved_screen.as_str() {
+            "level" => Screen::Level(retrieve_level()),
+            "overview" => Screen::Overview,
+            "title" => Screen::Title,
+            "help" => Screen::Help,
+            "credit" => Screen::Credit,
+            "editor" => Screen::Editor,
+            "visualizer" => Screen::Visualizer,
+            _ => Screen::Title,
         }
     } else {
         log::info!("default screen: title");
