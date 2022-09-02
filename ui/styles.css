@@ -58,19 +58,19 @@ body::-webkit-scrollbar-thumb {
 }
 /* Custom scrollbar - End */
 
-.flex-box {	
-  display: flex;	
-}	
-.flex-col {	
-  display: flex;	
-  flex-direction: column;	
-}	
-.flex-row {	
-  display: flex;	
-  flex-direction: row;	
-}	
-.margin-bot-4vh {	
-  margin-bottom: 4vh;	
+.flex-box {
+  display: flex;
+}
+.flex-col {
+  display: flex;
+  flex-direction: column;
+}
+.flex-row {
+  display: flex;
+  flex-direction: row;
+}
+.margin-bot-4vh {
+  margin-bottom: 4vh;
 }
 
 #title {

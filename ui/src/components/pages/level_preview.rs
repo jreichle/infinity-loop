@@ -110,7 +110,7 @@ pub fn level_preview_page_component(props: &LevelPreviewPageProps) -> Html {
                                 <div
                                     class="level-container"
                                     onclick={to_level_action(
-                                        saved_level.clone(),
+                                        level_grid.clone(),
                                         props.screen.clone())}>
                                     <StatelessLevelComponent level_grid={level_grid.clone()} />
                                     <div class="level-title">
