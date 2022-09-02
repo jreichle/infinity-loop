@@ -5,6 +5,8 @@
   --hightlight-bg: var(--light-blue);
   --light-blue: #e0e0ff;
   --dark-blue: rgb(85, 90, 141);
+  --red: #FA6B84;
+  --green: #ACF3AE;
 }
 
 * {
@@ -127,7 +129,7 @@ body::-webkit-scrollbar-thumb {
 }
 
 .controller {
-  margin-left: 15px;
+  margin: 0 2vw 0 2vw; 
   display: flex;
   flex-direction: column;
 }
@@ -334,4 +336,32 @@ input[type="range"]:focus::-webkit-slider-runnable-track {
 .page-content {
   line-height: 1;
   margin: 2vh 0 0 0;
+}
+
+/* selector */
+
+.selector-controller {
+  width: 10vw;
+}
+
+.tile-selector .tile {
+  pointer-events: none;
+  /* background-color: none; */
+}
+
+.tile-checkbox {
+  background-color: var(--light-blue);
+}
+
+.tile-checkbox:hover {
+  filter: brightness(0.5);
+}
+
+.unchecked {
+  filter: grayscale(1) brightness(0.7);
+}
+
+.unchecked:hover {
+  filter: grayscale(1);
+  background-color: var(--light-blue);
 }

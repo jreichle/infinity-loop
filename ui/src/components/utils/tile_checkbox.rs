@@ -30,11 +30,17 @@ pub fn tile_checkbox_component(props: &TileCheckboxProps) -> Html {
     }
 
     html!{
-        <div id={format!("option-{id}")} class="tile-checkbox" onclick={on_click.clone()} style={ 
-            if !*is_used {
-                "filter: grayscale(1);"
-            } else { "" }
-         }>
+        <div id={format!("option-{id}")} 
+            class={classes!("tile-checkbox"
+                ,{
+                    if !*is_used {
+                        Some("unchecked")
+                    } else { None::<&str> }
+                }
+            )
+            } 
+            onclick={on_click.clone()} 
+         >
             <TileImage tile={tile.clone()} />
         </div>
     }

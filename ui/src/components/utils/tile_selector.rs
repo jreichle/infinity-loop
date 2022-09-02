@@ -10,7 +10,6 @@ use game::model::{
 use crate::components::utils::tile_checkbox::TileCheckbox;
 
 fn get_all_roations(tile: Tile<Square>) -> EnumSet<Tile<Square>> {
-    // let rotations: EnumSet<Tile<Square>> = 
     enumset!(
         tile,
         tile.rotated_clockwise(1),
@@ -34,6 +33,7 @@ impl TileState {
 
 #[derive(Properties, PartialEq, Clone)]
 pub struct TileSelectorProps {
+    #[prop_or(use_state_eq(|| EnumSet::FULL))]
     pub tile_set: UseStateHandle<EnumSet<Tile<Square>>>,
 }
 
@@ -41,35 +41,36 @@ pub struct TileSelectorProps {
 pub fn tile_selector_component(props: &TileSelectorProps) -> Html {
     let tile_set = props.tile_set.clone();
 
-    let empty_tile = TileState::new(tile!(), false);
-    let u_tile = TileState::new(tile!(Up), false);
-    let ud_tile = TileState::new(tile!(Up, Down), false);
-    let ur_tile = TileState::new(tile!(Up, Right), false);
-    let urd_tile = TileState::new(tile!(Up, Right, Down), false);
-    let urdl_tile = TileState::new(tile!(Up, Right, Down, Left), false);
+    // all tile shapes base on connections (c)
+    let tile_0c = TileState::new(tile!(), true);
+    let tile_1c = TileState::new(tile!(Up), true);
+    let tile_2c_line = TileState::new(tile!(Up, Down), true);
+    let tile_2c_turn = TileState::new(tile!(Up, Right), true);
+    let tile_3c = TileState::new(tile!(Up, Right, Down), true);
+    let tile_4c = TileState::new(tile!(Up, Right, Down, Left), true);
 
-    let tiles = vec![empty_tile.clone(), u_tile.clone(), ud_tile.clone(), ur_tile.clone(), urd_tile.clone(), urdl_tile.clone()];
+    let tiles = vec![tile_0c.clone(), tile_1c.clone(), tile_2c_line.clone(), tile_2c_turn.clone(), tile_3c.clone(), tile_4c.clone()];
 
-    let a = tiles.iter()
+    let new_tile_set = tiles.iter()
         .filter(| tile | *(tile.state.clone()) )
         .map(| tile | tile.tile)
         .fold(EnumSet::EMPTY, | acc, x | acc.union(get_all_roations(x)));
 
-    log::info!("{:?}", a.to_string());
+    tile_set.set(new_tile_set);
 
     html!{
-        <div class="tile-selector flex-col" style="width: 5vw;">
+        <div class="tile-selector flex-col">
             <div class="flex-row">
-                <TileCheckbox tile={empty_tile.tile} is_used={empty_tile.state} />
-                <TileCheckbox tile={u_tile.tile} is_used={u_tile.state} />
+                <TileCheckbox tile={tile_0c.tile} is_used={tile_0c.state} />
+                <TileCheckbox tile={tile_1c.tile} is_used={tile_1c.state} />
                 </div>
             <div class="flex-row">
-                <TileCheckbox tile={ud_tile.tile} is_used={ud_tile.state} />
-                <TileCheckbox tile={ur_tile.tile} is_used={ur_tile.state} />         
+                <TileCheckbox tile={tile_2c_line.tile} is_used={tile_2c_line.state} />
+                <TileCheckbox tile={tile_2c_turn.tile} is_used={tile_2c_turn.state} />         
             </div>
             <div class="flex-row">
-                <TileCheckbox tile={urd_tile.tile} is_used={urd_tile.state} />
-                <TileCheckbox tile={urdl_tile.tile} is_used={urdl_tile.state} />                               
+                <TileCheckbox tile={tile_3c.tile} is_used={tile_3c.state} />
+                <TileCheckbox tile={tile_4c.tile} is_used={tile_4c.state} />                               
             </div>            
         </div>
     }
