@@ -207,7 +207,7 @@ pub fn editor_page_component(props: &EditorPageProps) -> Html {
         })
     };
 
-    let back_onclick: Callback<MouseEvent> = {
+    let to_title: Callback<MouseEvent> = {
         let screen = props.screen.clone();
         Callback::from(move |_| {
             log::info!("[Button click] Editor");
@@ -279,8 +279,8 @@ pub fn editor_page_component(props: &EditorPageProps) -> Html {
                 <button  onclick={preview_onclick}>
                     {"-Levels-"}
                 </button>
-                <button  onclick={back_onclick}>
-                    {"-back-"}
+                <button  onclick={to_title}>
+                    {"-back to start-"}
                 </button>
             </div>
         </div>

@@ -68,7 +68,7 @@ pub fn level_preview_page_component(props: &LevelPreviewPageProps) -> Html {
         })
     };
 
-    let back: Callback<MouseEvent> = {
+    let to_title: Callback<MouseEvent> = {
         let screen = props.screen.clone();
         Callback::from(move |_| {
             log::info!("[Button click] Editor");
@@ -135,8 +135,8 @@ pub fn level_preview_page_component(props: &LevelPreviewPageProps) -> Html {
                         {"-create your own-"}
                     </button>
                     <button
-                        onclick={back}>
-                        {"-back-"}
+                        onclick={to_title}>
+                        {"-back to start-"}
                     </button>
                 </div>
             </div>

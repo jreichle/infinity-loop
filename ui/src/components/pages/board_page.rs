@@ -92,7 +92,7 @@ pub fn board_page_component(props: &BoardPageProps) -> Html {
                 </button>
                 <button
                     onclick={to_preview}>
-                    {"-back-"}
+                    {"-level preview-"}
                 </button>
             </div>
         </div>

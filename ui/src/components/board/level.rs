@@ -31,15 +31,15 @@ pub fn level_component(props: &LevelProps) -> html {
         message: UseStateHandle<String>,
     ) -> Callback<MouseEvent> {
         Callback::from(move |_| {
-            log::info!(
+            log::debug!(
                 "Tile with coordinate {:?} has been clicked.",
                 index.to_tuple()
             );
-            log::info!("can change? {}", can_change);
+            log::debug!("can change? {}", can_change);
             if can_change || !board.level_grid.is_solved() {
                 board.dispatch(BoardAction::TurnCell(index));
                 save_level(&board.level_grid);
-                log::info!("saving level now");
+                log::debug!("saving level now");
             } else {
                 message.set(String::from("The level is already solved"));
             }
@@ -51,13 +51,13 @@ pub fn level_component(props: &LevelProps) -> html {
         index: Coordinate<isize>,
     ) -> Callback<WheelEvent> {
         Callback::from(move |_| {
-            log::info!(
+            log::debug!(
                 "Tile with coordinate {:?} has been wheeled.",
                 index.to_tuple()
             );
             board.dispatch(BoardAction::ChangeTileShape(index));
             save_level(&board.level_grid);
-            log::info!("saving level now");
+            log::debug!("saving level now");
         })
     }
 

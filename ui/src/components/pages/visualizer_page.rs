@@ -165,7 +165,7 @@ pub fn wfc_board_component(props: &VisualizerPageProps) -> Html {
         })
     };
 
-    let back_onclick: Callback<MouseEvent> = {
+    let to_title: Callback<MouseEvent> = {
         let screen = props.screen.clone();
         Callback::from(move |_| {
             log::debug!("{LOG_PREFIX} [Button click] back - go back to Menu page");
@@ -180,17 +180,26 @@ pub fn wfc_board_component(props: &VisualizerPageProps) -> Html {
             </div>
             <div class="controller">
                 <div class="flex-col margin-bot-4vh">
-                    <SliderComponent id="slider-height" label="#row" value={height_value.clone()} />
-                    <SliderComponent id="slider-width" label="#col"  value={width_value.clone()} />
-                    <button
-                        onclick={new_onclick}
-                    >
+                    <SliderComponent
+                        id="slider-height"
+                        label="#row"
+                        value={height_value.clone()} />
+                    <SliderComponent
+                        id="slider-width"
+                        label="#col"
+                        value={width_value.clone()} />
+                    <button onclick={new_onclick}>
                         {"-resize-"}
                     </button>
                 </div>
 
                 <div class="flex-col margin-bot-4vh">
-                    <SliderComponent id="slider-speed" label="#speed" value={speed_value.clone()} max=100 min=1 />
+                    <SliderComponent
+                        id="slider-speed"
+                        label="#speed"
+                        value={speed_value.clone()}
+                        max=100
+                        min=1 />
                     <button
                         onclick={play_onclick}
                     >
@@ -198,18 +207,14 @@ pub fn wfc_board_component(props: &VisualizerPageProps) -> Html {
                         if *playing {"-pause-"} else {"-play-"}
                     }
                     </button>
-                    <button
-                        onclick={next_onclick}
-                    >
+                    <button onclick={next_onclick}>
                         {"-next-"}
                     </button>
                 </div>
 
                 <div class="flex-col margin-bot-4vh">
-                    <button
-                        onclick={back_onclick}
-                    >
-                    {"-back-"}
+                    <button onclick={to_title}>
+                        {"-back to start-"}
                     </button>
                 </div>
 
