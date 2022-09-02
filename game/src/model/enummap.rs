@@ -8,12 +8,15 @@ use quickcheck::Arbitrary;
 
 use super::{cardinality::Cardinality, finite::Finite};
 
-/// dense structure, preallocates all memory instead of growing dynamically
+/// Dense Map data structure with keys of a statically enumerable types with known cardinality, as witnessed by the traits [Cardinality] and [Finite]
 ///
-/// for use case in enums and assuming even distribution,
-/// 87.5% of inhabitants require a vector of size of half or more of total capacity
+/// The capacity is determined at compile-time by the type of the stored elements and precludes the need for user management
 ///
-/// one notable exception are maps with a single key
+/// This implementation preallocates a fixed amount of memory and does not grow dynamically
+///
+/// # Memory Efficiency
+/// * assuming even distribution 87.5% of inhabitants require a vector of size of half or more of total capacity
+/// * inefficient representation for singleton maps
 ///
 /// # Invariant
 ///
@@ -34,43 +37,68 @@ impl<K: Cardinality, V: Clone> Default for EnumMap<K, V> {
 }
 
 impl<K: Cardinality, V: Clone> EnumMap<K, V> {
+    /// Create an empty map
     pub fn empty() -> Self {
         Self(vec![None; K::CARDINALITY as usize], PhantomData)
     }
 }
 
 impl<K, V> EnumMap<K, V> {
+    /// Wipes all stored associations
     pub fn clear(&mut self) {
         self.0.fill_with(|| None)
     }
 }
 
 impl<K: Finite, V> EnumMap<K, V> {
+    /// Indicates if the map contains 0 associations
     pub fn is_empty(&self) -> bool {
         self.0.iter().all(Option::is_none)
     }
 
+    /// Returns number of associations in the map
     pub fn len(&self) -> u32 {
         self.0.iter().filter(|x| x.is_some()).count() as u32
     }
 
+    /// Checks if the map contains a given key
     pub fn contains(self, key: K) -> bool {
         self.get(key).is_some()
     }
 
+    /// Inserts given association into the map
+    ///
+    /// Mutable variant of [`EnumMap::inserted`]
     pub fn insert(&mut self, key: K, value: V) {
         self.0[key.enum_to_index() as usize] = Some(value);
     }
 
+    /// Removes given key from the map
+    ///
+    /// Mutable variant of [`EnumMap::removed`]
     pub fn remove(&mut self, key: K) {
         self.0[key.enum_to_index() as usize] = None;
     }
 
+    /// Queries the associated value of the given key
     pub fn get(&self, key: K) -> Option<&V> {
         self.0[key.enum_to_index() as usize].as_ref()
     }
 
+    /// Returns a map containing every key present in both maps, favoring associated values of this map
     pub fn intersection(self, other: Self) -> Self {
+        Self(
+            self.0
+                .into_iter()
+                .zip(other.0.into_iter())
+                .map(|(x, y)| y.and(x))
+                .collect(),
+            PhantomData,
+        )
+    }
+
+    /// Returns a map containing every key present in either map, favoring associated values of this map
+    pub fn union(self, other: Self) -> Self {
         Self(
             self.0
                 .into_iter()
@@ -80,32 +108,28 @@ impl<K: Finite, V> EnumMap<K, V> {
             PhantomData,
         )
     }
-
-    pub fn union(self, other: Self) -> Self {
-        Self(
-            self.0
-                .into_iter()
-                .zip(other.0.into_iter())
-                .map(|(x, y)| x.and(y))
-                .collect(),
-            PhantomData,
-        )
-    }
 }
 
 impl<K: Finite, V: Clone> EnumMap<K, V> {
+    /// Inserts given associations into the map
+    /// 
+    /// Immutable variant of [`EnumMap::insert`]
     pub fn inserted(self, key: K, value: V) -> Self {
         let mut set = self;
         set.0[key.enum_to_index() as usize] = Some(value);
         set
     }
 
+    /// Removes given kay from the map
+    ///
+    /// Immutable variant of [`EnumMap::remove`]
     pub fn removed(self, key: K) -> Self {
         let mut set = self;
         set.0[key.enum_to_index() as usize] = None;
         set
     }
 
+    /// Returns an iterator over the associations in the map
     pub fn iter(&self) -> Iter<K, V> {
         Iter {
             elements: self.0.clone(),
@@ -114,10 +138,12 @@ impl<K: Finite, V: Clone> EnumMap<K, V> {
         }
     }
 
+    /// Returns an iterator over all keys in the map
     pub fn into_keys(&self) -> impl Iterator<Item = K> {
         self.iter().map(|t| t.0)
     }
 
+    /// Returns an iterator over all associated values in the map
     pub fn into_values(&self) -> impl Iterator<Item = V> {
         self.iter().map(|t| t.1)
     }
@@ -137,6 +163,9 @@ impl<K: Finite, V> IndexMut<K> for EnumMap<K, V> {
     }
 }
 
+/// Iterator for [`EnumMap`]
+/// 
+/// the successive keys in the iterator are in strictly ascending order iff the EnumSet is order isomorphic
 pub struct Iter<K, V> {
     elements: Vec<Option<V>>,
     index: usize,
@@ -195,10 +224,9 @@ impl<K: Finite, V: Clone> Iterator for Iter<K, V> {
 impl<K: Finite, V: Clone> FusedIterator for Iter<K, V> {}
 
 impl<K: Finite, V: Clone> FromIterator<(K, V)> for EnumMap<K, V> {
-    // TODO: use faster insert
     fn from_iter<T: IntoIterator<Item = (K, V)>>(iter: T) -> Self {
         let mut map = Self::empty();
-        iter.into_iter().for_each(|(k, v)| map.insert(k, v));
+        map.extend(iter);
         map
     }
 }
@@ -213,7 +241,7 @@ impl<K: Cardinality + 'static, V: Arbitrary> Arbitrary for EnumMap<K, V> {
     fn arbitrary(g: &mut quickcheck::Gen) -> Self {
         Self(
             (0..K::CARDINALITY)
-                .map(|_| Option::<V>::arbitrary(g))
+                .map(|_| Arbitrary::arbitrary(g))
                 .collect(),
             PhantomData,
         )
@@ -228,6 +256,12 @@ mod test {
     fn empty_is_all_none() -> bool {
         EnumMap::<u8, bool>::empty().0.iter().all(Option::is_none)
     }
+
+    #[quickcheck]
+    fn empty_then_is_empty() -> bool {
+        EnumMap::<Max<20>, u32>::empty().is_empty()
+    }
+
 
     #[quickcheck]
     fn is_empty_iff_len_is_zero(map: EnumMap<Max<20>, u32>) -> bool {

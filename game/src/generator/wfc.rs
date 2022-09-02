@@ -272,7 +272,6 @@ impl WfcGenerator {
         let board = board
             .0
             .coordinates()
-            .into_iter()
             .fold(board, propagate_restrictions_to_all_neighbors);
 
         let mut weights: EnumMap<Tile<Square>, usize> = EnumMap::empty();

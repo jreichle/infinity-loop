@@ -1,8 +1,8 @@
 use super::{
     coordinate::Coordinate,
-    enumset::EnumSet,
     grid::Grid,
-    tile::{Square, Tile}, solver::*,
+    solver::*,
+    tile::{Square, Tile},
 };
 
 #[derive(Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Debug, Hash)]
@@ -19,54 +19,35 @@ enum Status {
 // else `Puzzle<S, A>`
 // where S = Unsolvable | Unique | Multiple, corresponding to a list
 
-/// algorithm
-///     1. verify all changed grid tiles are correct by diffing with solution, else hint is incorrect tile
-///     2. apply propagation algorithm to superposition grid with changed tiles collapsed and original tiles uncollapsed
-fn generate_hint(grid: Grid<(Tile<Square>, Status)>) -> Result<Coordinate<isize>, String> {
-    let solution = grid
-        .map(|t| t.0)
-        .solve()
-        .next()
-        .ok_or("puzzle has no solution")?;
-    // how to handle multiple solutions? try to match any?
-    let difference_grid = grid.zip(solution.with_index()).map(|((t, s), (i, c))| {
-        if s == Status::Changed {
-            if t == c {
-                Ok(EnumSet::from(t))
-            } else {
-                Err(i) // differs from solution
-            }
-        } else {
-            Ok(t.superimpose())
-        }
-    });
+// algorithm:
+// 1. solve level with a trace of the collapsed superpositions in order
+// 2. return first trace entry which is unequal to current configuration
+/// **note:** currently only work fully for levels with a unique solution
+pub fn generate_hint(grid: &Grid<Tile<Square>>) -> Result<Coordinate<isize>, String> {
+    // generate trace
+    let sentinel = grid.with_sentinels(Tile::NO_CONNECTIONS).superimpose();
 
-    match difference_grid.sequence() {
-        Err(c) => Ok(c),
-        Ok(g) => {
-            // propagate information until a superposition collapses
-            // concept: solve level with given information and generate return first newly collapsed index
+    let mut trace = vec![];
+    let solved = iter_fix(
+        sentinel,
+        |s| {
+            s.0.coordinates().into_iter().fold(s.clone(), |g, c| {
+                let (s_new, v) = propagate_restrictions_to_all_neighbors2(g, c, |old, new| {
+                    old.len() != 1 && new.len() == 1
+                });
+                trace.extend(v);
+                s_new
+            })
+        },
+        PartialEq::eq,
+    );
 
-            let mut sentinel = g.with_sentinels(Tile::NO_CONNECTIONS.into());
-            let mut has_changed = true;
-            // easier with a do while loop
-            while has_changed {
-                has_changed = false;
-                for coordinate in sentinel.0.coordinates() {
-                    let (s_new, changed) = propagate_restrictions_to_all_neighbors2(sentinel, coordinate, |old, new| {
-                        if old != new {
-                            has_changed = true;
-                        }
-                        old.len() != 1 && new.len() == 1
-                    });
-                    if let Some(c_changed) = changed.first() {
-                        return Ok(*c_changed)
-                    }
-                    sentinel = s_new;
-                }
-            }
-            Err("already solved".into())
-        }
-    }
-    
+    trace
+        .into_iter()
+        .map(|c| {
+            log::info!("c: {}", c);
+            c - 1
+        })
+        .find(|c| grid[*c] != solved.0[*c + 1].unwrap_if_singleton().unwrap())
+        .ok_or_else(|| "No hint available".into())
 }

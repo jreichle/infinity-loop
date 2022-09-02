@@ -24,24 +24,19 @@ pub struct BoardPageProps {
 pub fn board_page_component(props: &BoardPageProps) -> Html {
     let board = use_reducer_eq(BoardState::set_grid(props.level_grid.clone()));
 
-    let check_onclick: Callback<MouseEvent> = {
-        let level_grid = board.level_grid.clone();
-        let message = props.message.clone();
-        Callback::from(move |_| {
-            log::info!("[Button click] Check.");
-            let msg = match level_grid.is_solved() {
-                true => String::from("The level is solved"),
-                false => String::from("The level is not solved"),
-            };
-            message.set(msg);
-        })
-    };
-
     let hint_onclick: Callback<MouseEvent> = {
         let board = board.clone();
+        let message = props.message.clone();
         Callback::from(move |_| {
             log::info!("[Button click] Hint.");
-            board.dispatch(BoardAction::GetHint);
+            if board.level_grid.solve().count() == 1 {
+                board.dispatch(BoardAction::GetHint);
+            } else {
+                // hinting only works for one solution thus far!
+                message.set(String::from(
+                    "Hint can unfortunately not be generated for this level",
+                ));
+            }
         })
     };
 
@@ -55,9 +50,14 @@ pub fn board_page_component(props: &BoardPageProps) -> Html {
 
     let next_onclick: Callback<MouseEvent> = {
         let board = board.clone();
+        let message = props.message.clone();
         Callback::from(move |_| {
             log::info!("[Button click] Next.");
-            board.dispatch(BoardAction::NextLevel);
+            if board.level_grid.is_solved() {
+                board.dispatch(BoardAction::NextLevel);
+            } else {
+                message.set(String::from("Solve the level to unlock a new level."));
+            }
         })
     };
 
@@ -71,12 +71,12 @@ pub fn board_page_component(props: &BoardPageProps) -> Html {
 
     html! {
         <div class="container">
-            <LevelComponent board={board.clone()} can_turn=true can_change=false />
+            <LevelComponent
+                board={board.clone()}
+                can_turn=true
+                can_change=false
+                message={props.message.clone()}/>
             <div class="controller">
-                <button
-                    onclick={check_onclick}>
-                    {"-check-"}
-                </button>
                 <button
                     onclick={hint_onclick}>
                     {"-hint-"}
@@ -92,7 +92,7 @@ pub fn board_page_component(props: &BoardPageProps) -> Html {
                 </button>
                 <button
                     onclick={to_preview}>
-                    {"-back-"}
+                    {"-level preview-"}
                 </button>
             </div>
         </div>

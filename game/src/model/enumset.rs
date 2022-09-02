@@ -24,11 +24,11 @@ type BitArray = u64;
 /// This is based on the number of bits in the underlying [`BitArray`] type
 const CAPACITY: u64 = BitArray::BITS as u64;
 
-/// Set for storing elements of statically enumerable types with known cardinality, as witnessed by the traits [Cardinality] and [Finite]
+/// Set data structure for storing elements of statically enumerable types with known cardinality, as witnessed by the traits [Cardinality] and [Finite]
 ///
 /// The capacity is determined at compile-time by the type of the stored elements and precludes the need for user management
 ///
-/// This implementation uses a fixed amount of memory and does not grow dynamically
+/// This implementation preallocates a fixed amount of memory and does not grow dynamically
 ///
 /// Using types that exceed the maximum storing capacity leads to a compile-time error: [`BitArray::BITS`] ≥ [`A::CARDINALITY`][Cardinality]
 ///
@@ -195,7 +195,7 @@ impl<A: Cardinality> EnumSet<A> {
 }
 
 impl<A: Finite> EnumSet<A> {
-    /// Checks if set contains a given element
+    /// Checks if the set contains a given element
     pub fn contains(self, element: A) -> bool {
         test_bit(self.0, element.enum_to_index() as BitArray)
     }

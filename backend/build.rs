@@ -1,4 +1,4 @@
-use std::path::Path; 
+use std::path::Path;
 use std::process::Command;
 
 const FRONTEND_DIR: &str = "../ui";
@@ -6,7 +6,7 @@ const FRONTEND_DIR: &str = "../ui";
 fn main() {
     println!("cargo:rerun-if-changed={}/src", FRONTEND_DIR);
     println!("cargo:rerun-if-changed={}/index.html", FRONTEND_DIR);
-    
+
     build_frontend(FRONTEND_DIR);
 }
 

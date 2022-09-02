@@ -173,7 +173,7 @@ pub fn wfc_board_component(props: &VisualizerPageProps) -> Html {
         })
     };
 
-    let back_onclick: Callback<MouseEvent> = {
+    let to_title: Callback<MouseEvent> = {
         let screen = props.screen.clone();
         Callback::from(move |_| {
             log::debug!("{LOG_PREFIX} [Button click] back - go back to Menu page");
@@ -230,9 +230,9 @@ pub fn wfc_board_component(props: &VisualizerPageProps) -> Html {
 
                 <div class="flex-col margin-bot-4vh">
                     <button
-                        onclick={back_onclick.clone()}
+                        onclick={to_title.clone()}
                     >
-                    {"-back-"}
+                    {"-home-"}
                     </button>
                 </div>
 

@@ -1,5 +1,4 @@
 use std::{
-    collections::HashSet,
     fmt::Display,
     ops::{Index, IndexMut},
     vec::IntoIter,
@@ -118,10 +117,15 @@ impl<A> Grid<A> {
         self.elements.clone()
     }
 
-    pub fn coordinates(&self) -> HashSet<Coordinate<isize>> {
+    /// Returns a collection of all valid coordinates
+    ///
+    /// # postcondition
+    ///
+    /// Coordinates are guaranteed to be unique, but no promise of stable iteration order
+    pub fn coordinates(&self) -> impl Iterator<Item = Coordinate<isize>> {
+        let columns = self.columns as isize; // erase reference to grid for independent lifetime
         (0..self.rows as isize)
-            .flat_map(|r| (0..self.columns as isize).map(move |c| Coordinate { row: r, column: c }))
-            .collect()
+            .flat_map(move |row| (0..columns).map(move |column| Coordinate::new(row, column)))
     }
 
     pub fn zip<B, I: IntoIterator<Item = B>>(&self, iter: I) -> Grid<(A, B)>
@@ -168,7 +172,11 @@ impl<A> Grid<A> {
     }
 
     /// applies transformation to element at supplied index, if possible
-    pub fn try_adjust_at<F: FnMut(A) -> A>(&self, index: Coordinate<isize>, transformation: F) -> Self
+    pub fn try_adjust_at<F: FnMut(A) -> A>(
+        &self,
+        index: Coordinate<isize>,
+        transformation: F,
+    ) -> Self
     where
         A: Clone,
     {

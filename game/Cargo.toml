@@ -10,3 +10,7 @@ edition = "2021"
 rand = "0.8.4"
 quickcheck = "1"
 quickcheck_macros = "1"
+
+wasm-logger = "0.2.0"
+wasm-bindgen = "0.2.82"
+log = "0.4.14"
