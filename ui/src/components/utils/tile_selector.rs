@@ -40,6 +40,7 @@ pub struct TileSelectorProps {
 #[function_component(TileSelector)]
 pub fn tile_selector_component(props: &TileSelectorProps) -> Html {
     let tile_set = props.tile_set.clone();
+    log::info!("tile_set: {}", tile_set.to_string());
 
     // all tile shapes base on connections (c)
     let tile_0c = TileState::new(tile!(), true);

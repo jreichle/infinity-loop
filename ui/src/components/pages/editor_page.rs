@@ -216,30 +216,30 @@ pub fn editor_page_component(props: &EditorPageProps) -> Html {
     };
 
     html! {
-        <div class="container">
+        <div class="container editor-page">
             <section class="controller">
                 <ul style="list-style-type: none">
                     <li><button
                         onclick={resize_height_minus_one_onclick}
-                        style="width:80px;height:50px;margin-left:65px;margin-right:20px"
+                        style="width:50px;height:50px;margin-left:55px;margin-right:20px"
                         >{"-"}</button></li>
                     <li><button
                         onclick={resize_width_minus_one_onclick}
-                        style="width:80px;height:50px"
+                        style="width:50px;height:50px"
                         >{"-"}</button>
-                    <b style="width:80px;height:50px">{"Resize"}</b>
+                    <b style="width:50px;height:50px">{"Resize"}</b>
                     <button
                         onclick={resize_width_plus_one_onclick}
-                        style="width:80px;height:50px;margin-right:20px"
+                        style="width:50px;height:50px;margin-right:20px"
                         >{"+"}</button></li>
                     <li><button
                         onclick={resize_height_plus_one_onclick}
-                        style="width:80px;height:50px;margin-left:65px;margin-right:20px"
+                        style="width:50px;height:50px;margin-left:55px;margin-right:20px"
                         >{"+"}</button></li>
                     <li>
                         <button
                             onclick={save_onclick}
-                            style="margin-left:65px;margin-right:20px, margin-top=20px"
+                            style="margin-left:40px;margin-right:20px, margin-top:20px"
                             >{"-Save-"}</button>
                     </li>
                 </ul>

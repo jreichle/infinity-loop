@@ -42,7 +42,7 @@ pub fn wfc_board_component(props: &VisualizerPageProps) -> Html {
     let interval_id = use_state(|| 0);
 
     let available_tiles: UseStateHandle<EnumSet<Tile<Square>>> = use_state_eq(|| EnumSet::FULL);
-    let wfc_generator = WfcGenerator::new(*width_value as usize, *height_value as usize, *available_tiles.clone(), PASS_LIMIT, PROP_LIMIT);
+    let wfc_generator = WfcGenerator::new(*width_value as usize, *height_value as usize, EnumSet::FULL, PASS_LIMIT, PROP_LIMIT);
     let (sentinel_grid, weights) = wfc_generator.init_board();
     let (sentinel_grid, weights) = wfc_generator.iteration_step(sentinel_grid, weights);
 
@@ -66,7 +66,7 @@ pub fn wfc_board_component(props: &VisualizerPageProps) -> Html {
         wfc_generator.iteration_step(new_grid, new_weights)
     }
 
-    let resize_onclick: Callback<MouseEvent> = {
+    let update_onclick: Callback<MouseEvent> = {
         let available_tiles = available_tiles.clone();
         let wfc_generator = wfc_generator.clone();
         let level_grid = level_grid.clone();
@@ -181,15 +181,6 @@ pub fn wfc_board_component(props: &VisualizerPageProps) -> Html {
         })
     };
 
-    let update_onclick: Callback<MouseEvent> = {
-        let available_tiles = available_tiles.clone();
-        Callback::from(move |_| {
-            
-            let str = available_tiles.to_string();
-            log::info!("Tilesss -> {str}");
-        })
-    };
-
     html! {
         <div class="container">
             <div class="controller">
@@ -207,18 +198,8 @@ pub fn wfc_board_component(props: &VisualizerPageProps) -> Html {
             <div class="game-board">
                 <StatelessLevelComponent level_grid={(*level_grid).clone()} />
             </div>
-            <div class="controller">
-                <div class="flex-col margin-bot-4vh">
-                    <SliderComponent id="slider-height" label="#row" value={height_value.clone()} />
-                    <SliderComponent id="slider-width" label="#col"  value={width_value.clone()} />
-                    <button
-                        onclick={resize_onclick.clone()}
-                    >
-                        {"-resize-"}
-                    </button>
-                </div>
-
-                <div class="flex-col margin-bot-4vh">
+            <div class="controller space-between">
+                <div class="flex-col">
                     <SliderComponent id="slider-speed" label="#speed" value={speed_value.clone()} max=100 min=1 />
                     <button
                         onclick={play_onclick.clone()}
@@ -234,7 +215,7 @@ pub fn wfc_board_component(props: &VisualizerPageProps) -> Html {
                     </button>
                 </div>
 
-                <div class="flex-col margin-bot-4vh">
+                <div class="flex-col">
                     <button
                         onclick={to_title.clone()}
                     >
