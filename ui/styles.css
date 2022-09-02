@@ -83,11 +83,15 @@ body::-webkit-scrollbar-thumb {
   color: var(--white);
   font-size: 6vmin;
   font-family: "Franklin Gothic Medium", "Arial Narrow", Arial, sans-serif;
-  /* font-family: 'Fira Code', monospace; */
   padding: 5px;
   position: absolute;
+  margin-top: 20px;
   top: 0;
   left: 3px;
+}
+
+#title:hover {
+    cursor: pointer;
 }
 
 #head-message {

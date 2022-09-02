@@ -2,15 +2,14 @@ use wasm_bindgen::prelude::Closure;
 use wasm_bindgen::JsCast;
 use yew::prelude::*;
 
-
 use crate::components::pages::board_page::BoardPage;
 use crate::components::pages::editor_page::EditorPage;
+use crate::components::pages::level_preview::LevelPreviewPage;
 use crate::components::pages::start_page::StartPage;
 use crate::components::pages::text_page::TextPage;
 use crate::components::pages::visualizer_page::VisualizerPage;
-use crate::components::pages::level_preview::LevelPreviewPage;
 
-use crate::helper::local_storage::retrieve_screen;
+use crate::helper::local_storage::{change_screen, retrieve_screen};
 use crate::helper::screen::Screen;
 
 use game::model::coordinate::Coordinate;
@@ -25,7 +24,15 @@ pub fn page_router() -> Html {
 
     let screen = use_state(|| retrieve_screen());
 
-    // use effect to let head_message disappear after 1.5 seconds
+    let to_title: Callback<MouseEvent> = {
+        let screen = screen.clone();
+        Callback::from(move |_| {
+            log::info!("[Button click] Editor");
+            change_screen(screen.clone(), Screen::Title);
+        })
+    };
+
+    // use effect to let message disappear after 1.5 seconds
     // depends on message change
     {
         let head_message = head_message.clone();
@@ -72,6 +79,11 @@ pub fn page_router() -> Html {
 
     html! {
         <>
+            <div
+                id="title"
+                onclick={to_title}>
+                {"Rusty infinity loop!"}
+            </div>
             <div id="head-message" hidden=true>
                 {(*head_message).clone()}
             </div>
