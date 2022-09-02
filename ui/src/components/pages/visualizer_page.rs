@@ -11,7 +11,10 @@ use game::model::{
 };
 
 use crate::components::board::level::StatelessLevelComponent;
-use crate::components::utils::slider::SliderComponent;
+use crate::components::utils::{
+    slider::SliderComponent,
+    tile_selector::TileSelector,
+};
 use crate::helper::local_storage::change_screen;
 use crate::helper::screen::Screen;
 
@@ -19,6 +22,9 @@ const LOG_PREFIX: &str = "#viz";
 const DEFAULT_WIDTH: isize = 10;
 const DEFAULT_HEIGHT: isize = 10;
 const DEFAULT_SPEED: isize = 80;
+
+const PASS_LIMIT: usize = 40000;
+const PROP_LIMIT: usize = 1000;
 
 #[derive(Properties, PartialEq, Clone)]
 pub struct VisualizerPageProps {
@@ -35,7 +41,8 @@ pub fn wfc_board_component(props: &VisualizerPageProps) -> Html {
     let playing = use_state(|| false);
     let interval_id = use_state(|| 0);
 
-    let wfc_generator = WfcGenerator::default(DEFAULT_WIDTH as usize, DEFAULT_HEIGHT as usize);
+    let available_tiles: UseStateHandle<EnumSet<Tile<Square>>> = use_state_eq(|| EnumSet::FULL);
+    let wfc_generator = WfcGenerator::new(*width_value as usize, *height_value as usize, EnumSet::FULL, PASS_LIMIT, PROP_LIMIT);
     let (sentinel_grid, weights) = wfc_generator.init_board();
     let (sentinel_grid, weights) = wfc_generator.iteration_step(sentinel_grid, weights);
 
@@ -59,7 +66,8 @@ pub fn wfc_board_component(props: &VisualizerPageProps) -> Html {
         wfc_generator.iteration_step(new_grid, new_weights)
     }
 
-    let new_onclick: Callback<MouseEvent> = {
+    let update_onclick: Callback<MouseEvent> = {
+        let available_tiles = available_tiles.clone();
         let wfc_generator = wfc_generator.clone();
         let level_grid = level_grid.clone();
         let sentinel_grid = sentinel_grid.clone();
@@ -72,7 +80,7 @@ pub fn wfc_board_component(props: &VisualizerPageProps) -> Html {
                 width,
                 height
             );
-            let new_generator = WfcGenerator::default(width, height);
+            let new_generator = WfcGenerator::new(width, height, *available_tiles, PASS_LIMIT, PROP_LIMIT);
             let (mut new_grid, mut new_weights) = new_generator.init_board();
             (new_grid, new_weights) = new_generator.iteration_step(new_grid, new_weights);
             level_grid.set(WfcGenerator::extract_grid(&new_grid));
@@ -175,46 +183,43 @@ pub fn wfc_board_component(props: &VisualizerPageProps) -> Html {
 
     html! {
         <div class="container">
-            <div class="game-board">
-            <StatelessLevelComponent level_grid={(*level_grid).clone()} />
-            </div>
             <div class="controller">
-                <div class="flex-col margin-bot-4vh">
-                    <SliderComponent
-                        id="slider-height"
-                        label="#row"
-                        value={height_value.clone()} />
-                    <SliderComponent
-                        id="slider-width"
-                        label="#col"
-                        value={width_value.clone()} />
-                    <button onclick={new_onclick}>
-                        {"-resize-"}
-                    </button>
+                <div class="selector-controller">
+                    <TileSelector tile_set={available_tiles.clone()} />
                 </div>
-
-                <div class="flex-col margin-bot-4vh">
-                    <SliderComponent
-                        id="slider-speed"
-                        label="#speed"
-                        value={speed_value.clone()}
-                        max=100
-                        min=1 />
+                <div class="flex-col">
+                    <SliderComponent id="slider-height" label="#row" value={height_value.clone()} />
+                    <SliderComponent id="slider-width" label="#col"  value={width_value.clone()} />
+                </div>
+                <button onclick={update_onclick.clone()}>
+                    {"-update-"}
+                </button>
+            </div>
+            <div class="game-board">
+                <StatelessLevelComponent level_grid={(*level_grid).clone()} />
+            </div>
+            <div class="controller space-between">
+                <div class="flex-col">
+                    <SliderComponent id="slider-speed" label="#speed" value={speed_value.clone()} max=100 min=1 />
                     <button
-                        onclick={play_onclick}
+                        onclick={play_onclick.clone()}
                     >
                     {
                         if *playing {"-pause-"} else {"-play-"}
                     }
                     </button>
-                    <button onclick={next_onclick}>
+                    <button
+                        onclick={next_onclick.clone()}
+                    >
                         {"-next-"}
                     </button>
                 </div>
 
-                <div class="flex-col margin-bot-4vh">
-                    <button onclick={to_title}>
-                        {"-back to start-"}
+                <div class="flex-col">
+                    <button
+                        onclick={to_title.clone()}
+                    >
+                    {"-home-"}
                     </button>
                 </div>
 
