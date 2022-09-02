@@ -280,7 +280,7 @@ pub fn editor_page_component(props: &EditorPageProps) -> Html {
                     {"-Levels-"}
                 </button>
                 <button  onclick={to_title}>
-                    {"-back to start-"}
+                    {"-home-"}
                 </button>
             </div>
         </div>
