@@ -9,7 +9,7 @@ use std::{
 
 use quickcheck::Arbitrary;
 
-use super::{cardinality::Cardinality, finite::Finite, num::Num};
+use super::{cardinality::Cardinality, finite::Finite};
 
 // prefered representation, supports sets with arbitrary capacity
 // struct EnumSet<A: Cardinality>([BitArray; (A::CARDINALITY + CAPACITY - 1) / CAPACITY], PhantomData<A>);
@@ -275,7 +275,6 @@ impl<A: Finite> EnumSet<A> {
     pub fn iter(&self) -> Iter<A> {
         Iter {
             bits: self.0,
-            mask: 0,
             phantom: PhantomData,
         }
     }
@@ -294,12 +293,9 @@ impl<A: Finite> IntoIterator for EnumSet<A> {
 /// Iterator for [`EnumSet`]
 ///
 /// the successive values in the iterator are in strictly ascending order iff the EnumSet is order isomorphic
-///
-/// The Iterator implementation currently successively consumes the bits until reaching 0 and therefore cannot implement [`DoubleEndedIterator`]
 #[derive(Hash, PartialEq, Eq, Debug, Default)]
 pub struct Iter<A> {
-    bits: BitArray, // does not change
-    mask: BitArray,
+    bits: BitArray,
     phantom: PhantomData<A>,
 }
 
@@ -307,7 +303,6 @@ impl<A> Clone for Iter<A> {
     fn clone(&self) -> Self {
         Self {
             bits: self.bits,
-            mask: self.mask,
             phantom: PhantomData,
         }
     }
@@ -319,10 +314,10 @@ impl<A: Finite> Iterator for Iter<A> {
     type Item = A;
 
     fn next(&mut self) -> Option<Self::Item> {
-        if self.bits == 0 {
+        let bits = self.bits;
+        if bits == 0 {
             None
         } else {
-            let bits = self.bits;
             let index = bits.trailing_zeros();
             self.bits = bits & (bits - 1); // delete set lsb
             Some(A::unchecked_index_to_enum(index as u64))
@@ -364,6 +359,19 @@ impl<A: Finite> ExactSizeIterator for Iter<A> {
 }
 
 impl<A: Finite> FusedIterator for Iter<A> {}
+
+impl<A: Finite> DoubleEndedIterator for Iter<A> {
+    fn next_back(&mut self) -> Option<Self::Item> {
+        let bits = self.bits;
+        if bits == 0 {
+            None
+        } else {
+            let index = (BitArray::BITS - bits.leading_zeros() - 1) as u64;
+            self.bits = clear_bit(bits, index);
+            Some(A::unchecked_index_to_enum(index))
+        }
+    }
+}
 
 impl<A: Finite> FromIterator<A> for EnumSet<A> {
     fn from_iter<T: IntoIterator<Item = A>>(iter: T) -> Self {
@@ -480,13 +488,6 @@ where
     A: Shl<Output = A> + BitXor + From<u8>,
 {
     value ^ bit_at(index)
-}
-
-/// # Precondition
-/// 
-/// `0 <= index <= A::BITS`
-fn set_bits_until<A: Num + Sub<Output = A>>(index: A) -> A {
-    A::MAX >> (A::BITS - index)
 }
 
 #[macro_export]
@@ -654,8 +655,22 @@ mod test {
     }
 
     #[quickcheck]
-    fn iter_then_collect_is_id(set: EnumSet<EnumSet<bool>>) -> bool {
-        set.iter().collect::<EnumSet<EnumSet<bool>>>() == set
+    fn iter_then_collect_is_id(set: EnumSet<Max<{ CAPACITY as usize - 1 }>>) -> bool {
+        set.iter().collect::<EnumSet<_>>() == set
+    }
+
+    #[quickcheck]
+    fn iter_size_hint_is_exact(set: EnumSet<Max<{ CAPACITY as usize - 1 }>>, random: usize) -> bool {
+        let skip_distance = random.checked_rem(set.len() as usize).unwrap_or_default();
+        let len = set.iter().skip(skip_distance).collect::<Vec<_>>().len();
+        set.iter().skip(skip_distance).size_hint() == (len, Some(len))
+    }
+
+    #[quickcheck]
+    fn iter_count_is_correct(set: EnumSet<Max<{ CAPACITY as usize - 1 }>>, random: usize) -> bool {
+        let skip_distance = random.checked_rem(set.len() as usize).unwrap_or_default();
+        set.iter().skip(skip_distance).count()
+            == set.iter().skip(skip_distance).collect::<Vec<_>>().len()
     }
 
     #[quickcheck]
@@ -669,23 +684,14 @@ mod test {
     }
 
     #[quickcheck]
-    fn iter_size_hint_is_exact(set: EnumSet<EnumSet<bool>>, random: usize) -> bool {
-        let skip_distance = random.checked_rem(set.len() as usize).unwrap_or_default();
-        let len = set.iter().skip(skip_distance).collect::<Vec<_>>().len();
-        set.iter().skip(skip_distance).size_hint() == (len, Some(len))
-    }
-
-    #[quickcheck]
-    fn iter_count_is_correct(set: EnumSet<EnumSet<bool>>, random: usize) -> bool {
-        let skip_distance = random.checked_rem(set.len() as usize).unwrap_or_default();
-        set.iter().skip(skip_distance).count()
-            == set.iter().skip(skip_distance).collect::<Vec<_>>().len()
-    }
-
-    #[quickcheck]
     fn iterator_values_are_in_ascending_order(set: EnumSet<EnumSet<bool>>) -> bool {
         let iter = set.iter().map(|v| v.enum_to_index());
         iter.clone().zip(iter.skip(1)).all(|(x, y)| x < y)
+    }
+
+    #[quickcheck]
+    fn rev_iter_then_collect_is_id(set: EnumSet<Max<{ CAPACITY as usize - 1 }>>) -> bool {
+        set.iter().rev().collect::<EnumSet<_>>() == set
     }
 
     // test the invariant for all methods
