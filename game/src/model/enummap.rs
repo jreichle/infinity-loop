@@ -112,7 +112,7 @@ impl<K: Finite, V> EnumMap<K, V> {
 
 impl<K: Finite, V: Clone> EnumMap<K, V> {
     /// Inserts given associations into the map
-    /// 
+    ///
     /// Immutable variant of [`EnumMap::insert`]
     pub fn inserted(self, key: K, value: V) -> Self {
         let mut set = self;
@@ -164,7 +164,7 @@ impl<K: Finite, V> IndexMut<K> for EnumMap<K, V> {
 }
 
 /// Iterator for [`EnumMap`]
-/// 
+///
 /// the successive keys in the iterator are in strictly ascending order iff the EnumSet is order isomorphic
 pub struct Iter<K, V> {
     elements: Vec<Option<V>>,
@@ -261,7 +261,6 @@ mod test {
     fn empty_then_is_empty() -> bool {
         EnumMap::<Max<20>, u32>::empty().is_empty()
     }
-
 
     #[quickcheck]
     fn is_empty_iff_len_is_zero(map: EnumMap<Max<20>, u32>) -> bool {
