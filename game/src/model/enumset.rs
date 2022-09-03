@@ -175,8 +175,12 @@ impl<A: Cardinality> EnumSet<A> {
     ///
     /// `∀s : EnumSet. s.intersection(EnumSet::FULL) == s`
     const USED_BITS: BitArray = if CAPACITY >= A::CARDINALITY {
-        // == `Self::CARDINALITY - 1` without risk of overflow
-        BitArray::MAX >> (CAPACITY - A::CARDINALITY) as BitArray
+        if A::CARDINALITY == 0 {
+            0
+        } else {
+            // == `Self::CARDINALITY - 1` without risk of overflow
+            BitArray::MAX >> (CAPACITY - A::CARDINALITY) as BitArray
+        }
     } else {
         panic!("EnumSet only supports up to 64 elements")
     };
@@ -260,7 +264,7 @@ impl<A: Finite> EnumSet<A> {
     /// * returns `Some(e)` if set is a singleton
     /// * returns `None` if set contains several elements or is empty
     pub fn unwrap_if_singleton(self) -> Option<A> {
-        if self.len() == 1 {
+        if self.0.is_power_of_two() {
             Some(A::unchecked_index_to_enum(self.0.trailing_zeros() as u64))
         } else {
             None
@@ -271,7 +275,7 @@ impl<A: Finite> EnumSet<A> {
     pub fn iter(&self) -> Iter<A> {
         Iter {
             bits: self.0,
-            index: 0,
+            mask: 0,
             phantom: PhantomData,
         }
     }
@@ -294,8 +298,8 @@ impl<A: Finite> IntoIterator for EnumSet<A> {
 /// The Iterator implementation currently successively consumes the bits until reaching 0 and therefore cannot implement [`DoubleEndedIterator`]
 #[derive(Hash, PartialEq, Eq, Debug, Default)]
 pub struct Iter<A> {
-    bits: BitArray,
-    index: BitArray,
+    bits: BitArray, // does not change
+    mask: BitArray,
     phantom: PhantomData<A>,
 }
 
@@ -303,7 +307,7 @@ impl<A> Clone for Iter<A> {
     fn clone(&self) -> Self {
         Self {
             bits: self.bits,
-            index: self.index,
+            mask: self.mask,
             phantom: PhantomData,
         }
     }
@@ -318,13 +322,10 @@ impl<A: Finite> Iterator for Iter<A> {
         if self.bits == 0 {
             None
         } else {
-            let trailing = self.bits.trailing_zeros() as BitArray;
-
-            self.bits >>= trailing;
-            self.bits &= !1; // consume element at current index
-            self.index += trailing;
-
-            Some(A::unchecked_index_to_enum(self.index as u64))
+            let bits = self.bits;
+            let index = bits.trailing_zeros();
+            self.bits = bits & (bits - 1); // delete set lsb
+            Some(A::unchecked_index_to_enum(index as u64))
         }
     }
 
@@ -343,7 +344,7 @@ impl<A: Finite> Iterator for Iter<A> {
             None
         } else {
             Some(A::unchecked_index_to_enum(
-                CAPACITY - bits.leading_zeros() as u64 + self.index - 1,
+                (BitArray::BITS - bits.leading_zeros() - 1) as BitArray
             ))
         }
     }
@@ -449,10 +450,6 @@ fn bit_at<A: Shl + From<u8>>(index: A) -> <A as Shl>::Output {
     A::from(1) << index
 }
 
-fn bit_at2<A: Num>(index: A) -> A {
-    A::ONE << index
-}
-
 #[inline(always)]
 fn test_bit<A>(value: A, index: A) -> bool
 where
@@ -483,6 +480,13 @@ where
     A: Shl<Output = A> + BitXor + From<u8>,
 {
     value ^ bit_at(index)
+}
+
+/// # Precondition
+/// 
+/// `0 <= index <= A::BITS`
+fn set_bits_until<A: Num + Sub<Output = A>>(index: A) -> A {
+    A::MAX >> (A::BITS - index)
 }
 
 #[macro_export]
@@ -865,3 +869,15 @@ mod test {
         }
     }
 }
+
+// Array of Struct <=> Struct of Array
+// Vec<EnumSet<A>> == EnumSetVec<A>
+// 
+// # Invariant
+// 
+// s : EnumSetVec<A>. s.0.len() == A::CARDINALITY
+// type Length = u64;
+// const MAX_STORE: Length = Length::BITS as Length;
+// struct EnumSetVec<A>(Vec<Length>, PhantomData<A>);
+
+
