@@ -124,9 +124,7 @@ The editor has following functions:
 * Save grid in local storage
 * Load grid in local storage
 
-The editor is based on the *Basic game representation*. It contains a initial immutable grid, which is replaced by every manipulation during the editing process. To display the grid in HTML notation the board component is used and extended to serve the purpose of the editor. Flags are passed to the component representing cells to enable/disable tile roatation and shape change. Furthermore, various members were add to the `BoardAction`, such as ChangeTileShape, ChangeSize, GenerateFastGen, GenerateWFC, ShuffleTileRotations, ClearGrid. These different actions are handled in the `board_reducer`-file.
-
-
+The editor is based on the *Basic game representation*. It contains a initial grid, which is replaced or changed by every manipulation during the editing process. To display the grid in HTML notation the board component is used and extended to serve the purpose of the editor. Flags are passed to the component representing cells to enable/disable tile roatation and shape change. Furthermore, various members were add to the `BoardAction`, such as ChangeTileShape, ChangeSize, GenerateFastGen, GenerateWFC, ShuffleTileRotations, ClearGrid. These different actions are handled in the `board_reducer`-file.
 
 
 [unsolvedexample]: <images/example-level.png>

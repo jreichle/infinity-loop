@@ -362,6 +362,10 @@ impl GameBoard for Grid<Tile<Square>> {
 
 impl Grid<Tile<Square>> {
     pub fn resize(&mut self, size: Coordinate<usize>) {
+        // Sets the grid to a new size and maps the tiles from the old-sized-element-vector to the new-sized one.
+        // If one of the new dimensions is larger than the old ones, the new gird-cells will be filld with empty tiles.
+        // If one of the new dimensions is smaller than the old ones, the unnecessary grid-cells will be removed completely.
+
         let mut new_elements = vec![Tile::NO_CONNECTIONS; size.row * size.column];
 
         for r in 0..size.row {
@@ -382,6 +386,9 @@ impl Grid<Tile<Square>> {
     }
 
     pub fn change_tile_shape(&self, index: Coordinate<isize>) -> Result<Self, AccessError> {
+        // Depending on the number and (if the number is two) on the arrangement of the tile's arms, it will reshaped in the following order:
+        // ╹ -> -> ┗ -> ┃ -> ┣ -> ╋ -> ' ' 
+
         self.adjust_at(index, |tile| -> Tile<Square> {
             match tile.0.len() {
                 0 => tile!(Square::Up),
