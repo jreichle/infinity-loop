@@ -14,7 +14,7 @@ use super::{
     enumset::EnumSet,
     finite::Finite,
     grid::Grid,
-    lattice::BoundedLattice,
+    lattice::{BoundedLattice, BoundedLatticeExt},
     tile::{Square, Tile},
 };
 
@@ -109,7 +109,7 @@ where
     <A as IntoIterator>::Item: Display + BoundedLattice + PartialEq,
 {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        self.0.map(BoundedLattice::or).fmt(f)
+        self.0.map(BoundedLatticeExt::or).fmt(f)
     }
 }
 
@@ -246,15 +246,8 @@ fn memoize<A: Finite, B: Copy, F: Fn(A) -> B>(f: F) -> impl FnMut(A) -> B {
 impl<A: Copy + Finite + Neg<Output = A> + PartialEq> Superposition<A> {
     /// Generates all propagation information from on a single superposition
     pub fn extract_common_connections(self) -> EnumMap<A, Superposition<A>> {
-        let present_evidence = BoundedLattice::and(self)
-            .0
-            .into_iter()
-            .map(|x| (x, subset_containing(-x)));
-        let absent_evidence = BoundedLattice::or(self)
-            .0
-            .not()
-            .into_iter()
-            .map(|x| (x, !subset_containing(-x)));
+        let present_evidence = self.and().0.map(|x| (x, subset_containing(-x)));
+        let absent_evidence = self.or().0.not().map(|x| (x, !subset_containing(-x)));
         present_evidence.chain(absent_evidence).collect()
     }
 }

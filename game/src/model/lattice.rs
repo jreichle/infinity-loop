@@ -23,25 +23,27 @@ impl<A: MeetSemilattice + JoinSemilattice> Lattice for A {}
 /// [Bounded Lattice](https://en.wikipedia.org/wiki/Lattice_(order)) is a Lattice with neutral elements for "meet" and "join"
 pub trait BoundedLattice: Lattice {
     /// least element
-    /// 
+    ///
     /// neutral element of the join monoid
     const BOTTOM: Self;
 
     /// greatest element
-    /// 
+    ///
     /// neutral element of the meet monoid
     const TOP: Self;
+}
 
+pub trait BoundedLatticeExt<A>: IntoIterator<Item = A> + Sized
+where
+    A: BoundedLattice + PartialEq,
+{
     /// greatest lower bound of all values
     ///
     /// lazy meet fold: early return if [`Self::BOTTOM`]
-    fn and<I: IntoIterator<Item = Self>>(iter: I) -> Self
-    where
-        Self: PartialEq,
-    {
-        let mut acc = Self::TOP;
-        for v in iter.into_iter() {
-            if acc == Self::BOTTOM {
+    fn and(self) -> A {
+        let mut acc = A::TOP;
+        for v in self.into_iter() {
+            if acc == A::BOTTOM {
                 break;
             }
             acc = acc & v
@@ -52,13 +54,10 @@ pub trait BoundedLattice: Lattice {
     /// least upper bound of all values
     ///
     /// lazy join fold: early return if [`Self::TOP`]
-    fn or<I: IntoIterator<Item = Self>>(iter: I) -> Self
-    where
-        Self: PartialEq,
-    {
-        let mut acc = Self::BOTTOM;
-        for v in iter.into_iter() {
-            if acc == Self::TOP {
+    fn or(self) -> A {
+        let mut acc = A::BOTTOM;
+        for v in self.into_iter() {
+            if acc == A::TOP {
                 break;
             }
             acc = acc | v
@@ -66,6 +65,8 @@ pub trait BoundedLattice: Lattice {
         acc
     }
 }
+
+impl<I: IntoIterator<Item = A>, A: PartialEq + BoundedLattice> BoundedLatticeExt<A> for I {}
 
 /// Lattice with distributive "meet" and "join"
 pub trait DistributiveLattice: Lattice {}
@@ -250,11 +251,11 @@ mod tests {
     }
 
     fn and_fold_is_lazy<A: BoundedLattice + PartialEq + Clone>(x: A) -> bool {
-        BoundedLattice::and(iter::once(A::BOTTOM).chain(iter::repeat(x))) == A::BOTTOM
+        iter::once(A::BOTTOM).chain(iter::repeat(x)).and() == A::BOTTOM
     }
 
     fn or_fold_is_lazy<A: BoundedLattice + PartialEq + Clone>(x: A) -> bool {
-        BoundedLattice::or(iter::once(A::TOP).chain(iter::repeat(x))) == A::TOP
+        iter::once(A::TOP).chain(iter::repeat(x)).or() == A::TOP
     }
 
     fn join_distributivity<A: DistributiveLattice + PartialEq + Copy>(x: A, y: A, z: A) -> bool {
