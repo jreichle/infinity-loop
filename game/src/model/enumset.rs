@@ -36,6 +36,12 @@ const CAPACITY: u64 = BitArray::BITS as u64;
 ///
 /// `EnumSet` is a specialized implementation of an [`EnumMap`][super::enummap::EnumMap]: `EnumSet<A> ≅ EnumMap<A, ()>`
 ///
+/// # Iterator
+///
+/// [`EnumSet`] is its own [`Iterator`] representation
+///
+/// the successive values in the iterator are in strictly ascending order iff the EnumSet is order isomorphic
+///
 /// # Invariants
 ///
 /// 1. bits exceeding [`A::Cardinality`] are always set to 0
@@ -272,74 +278,41 @@ impl<A: Finite> EnumSet<A> {
     }
 
     /// Returns an iterator over the elements in the set
-    pub fn iter(&self) -> Iter<A> {
-        Iter {
-            bits: self.0,
-            phantom: PhantomData,
-        }
+    pub fn iter(&self) -> Self {
+        *self
     }
 }
 
-impl<A: Finite> IntoIterator for EnumSet<A> {
-    type Item = A;
-
-    type IntoIter = Iter<A>;
-
-    fn into_iter(self) -> Self::IntoIter {
-        self.iter()
-    }
-}
-
-/// Iterator for [`EnumSet`]
-///
-/// the successive values in the iterator are in strictly ascending order iff the EnumSet is order isomorphic
-#[derive(Hash, PartialEq, Eq, Debug, Default)]
-pub struct Iter<A> {
-    bits: BitArray,
-    phantom: PhantomData<A>,
-}
-
-impl<A> Clone for Iter<A> {
-    fn clone(&self) -> Self {
-        Self {
-            bits: self.bits,
-            phantom: PhantomData,
-        }
-    }
-}
-
-impl<A> Copy for Iter<A> {}
-
-impl<A: Finite> Iterator for Iter<A> {
+impl<A: Finite> Iterator for EnumSet<A> {
     type Item = A;
 
     fn next(&mut self) -> Option<Self::Item> {
-        let bits = self.bits;
+        let bits = self.0;
         if bits == 0 {
             None
         } else {
             let index = bits.trailing_zeros();
-            self.bits = bits & (bits - 1); // delete set lsb
+            self.0 = bits & (bits - 1); // delete least significant set bit
             Some(A::unchecked_index_to_enum(index as u64))
         }
     }
 
     fn size_hint(&self) -> (usize, Option<usize>) {
-        let size = self.bits.count_ones() as usize;
+        let size = self.0.count_ones() as usize;
         (size, Some(size))
     }
 
     fn count(self) -> usize {
-        self.bits.count_ones() as usize
+        self.0.count_ones() as usize
     }
 
     fn last(self) -> Option<Self::Item> {
-        let bits = self.bits;
+        let bits = self.0;
         if bits == 0 {
             None
         } else {
             Some(A::unchecked_index_to_enum(
-                (BitArray::BITS - bits.leading_zeros() - 1) as BitArray
+                (BitArray::BITS - bits.leading_zeros() - 1) as BitArray,
             ))
         }
     }
@@ -348,9 +321,9 @@ impl<A: Finite> Iterator for Iter<A> {
     // improves asymptotic runtime behavior from linear O(n) to constant O(1)
 }
 
-impl<A: Finite> ExactSizeIterator for Iter<A> {
+impl<A: Finite> ExactSizeIterator for EnumSet<A> {
     fn len(&self) -> usize {
-        self.bits.count_ones() as usize
+        self.0.count_ones() as usize
     }
 
     // fn is_empty(&self) -> bool {
@@ -358,16 +331,16 @@ impl<A: Finite> ExactSizeIterator for Iter<A> {
     // }
 }
 
-impl<A: Finite> FusedIterator for Iter<A> {}
+impl<A: Finite> FusedIterator for EnumSet<A> {}
 
-impl<A: Finite> DoubleEndedIterator for Iter<A> {
+impl<A: Finite> DoubleEndedIterator for EnumSet<A> {
     fn next_back(&mut self) -> Option<Self::Item> {
-        let bits = self.bits;
+        let bits = self.0;
         if bits == 0 {
             None
         } else {
             let index = (BitArray::BITS - bits.leading_zeros() - 1) as u64;
-            self.bits = clear_bit(bits, index);
+            self.0 = clear_bit(bits, index);
             Some(A::unchecked_index_to_enum(index))
         }
     }
@@ -660,7 +633,10 @@ mod test {
     }
 
     #[quickcheck]
-    fn iter_size_hint_is_exact(set: EnumSet<Max<{ CAPACITY as usize - 1 }>>, random: usize) -> bool {
+    fn iter_size_hint_is_exact(
+        set: EnumSet<Max<{ CAPACITY as usize - 1 }>>,
+        random: usize,
+    ) -> bool {
         let skip_distance = random.checked_rem(set.len() as usize).unwrap_or_default();
         let len = set.iter().skip(skip_distance).collect::<Vec<_>>().len();
         set.iter().skip(skip_distance).size_hint() == (len, Some(len))
@@ -818,7 +794,7 @@ mod test {
                 assert_eq!(enum_set.contains(element), hash_set.contains(&element))
             }
             Command::Length => assert_eq!(enum_set.len() as usize, hash_set.len()),
-            Command::IsEmpty => assert_eq!(enum_set.is_empty(), hash_set.is_empty()),
+            Command::IsEmpty => assert_eq!(EnumSet::<A>::is_empty(*enum_set), hash_set.is_empty()),
             Command::Intersection => {
                 let set = EnumSet::<A>::arbitrary(g);
                 *enum_set = enum_set.intersection(set);
@@ -878,12 +854,10 @@ mod test {
 
 // Array of Struct <=> Struct of Array
 // Vec<EnumSet<A>> == EnumSetVec<A>
-// 
+//
 // # Invariant
-// 
+//
 // s : EnumSetVec<A>. s.0.len() == A::CARDINALITY
 // type Length = u64;
 // const MAX_STORE: Length = Length::BITS as Length;
 // struct EnumSetVec<A>(Vec<Length>, PhantomData<A>);
-
-
