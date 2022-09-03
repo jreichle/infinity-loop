@@ -23,9 +23,13 @@ impl<A: MeetSemilattice + JoinSemilattice> Lattice for A {}
 /// [Bounded Lattice](https://en.wikipedia.org/wiki/Lattice_(order)) is a Lattice with neutral elements for "meet" and "join"
 pub trait BoundedLattice: Lattice {
     /// least element
+    /// 
+    /// neutral element of the join monoid
     const BOTTOM: Self;
 
     /// greatest element
+    /// 
+    /// neutral element of the meet monoid
     const TOP: Self;
 
     /// greatest lower bound of all values
@@ -121,12 +125,6 @@ impl<A: Finite> BoundedLattice for Tile<A> {
 }
 
 impl<A: Finite> DistributiveLattice for Tile<A> {}
-
-/*
-hint function
-put general purpose features into core folder
-maybe seperate levelstream and unfold iterator
-*/
 
 #[cfg(test)]
 mod tests {
