@@ -109,9 +109,20 @@ Developer: Jakob Ritter
 
 Developer: Johannes Moosburger
 
-This part shall provide a editor page, where the user can create his/her own level gameboards. For that, the user can specify a grid (width/height), add tiles of different shapes and rotate them, to shape a initial level pattern. Furthermore, the board can be tested with both the custom and the SAT-solver, to check, whether the level is a valid one or not. At last, it can be continued with the solving of the puzzle.
+This part shall provide a editor page, where the user can create his/her own level gameboards. For that, the user can specify a grid (width/height), add tiles of different shapes (use mouse wheel on tile) and rotate (click on a tile) them, to shape a initial level pattern. Furthermore, the board can be tested with both the custom and the SAT-solver, to check, whether the level is a valid one or not. At last, it can be continued with the solving of the puzzle or the gameboard can be serialized, to replay it at another time but in the same browser session.
 
-Optional: The gameboard can be serialized, to replay it in another session.
+In short, the editor has following functions:
+* Shape level (rotate and change tiles)
+* Resize grid 
+* Check validity of current level with Constraint-Propagation-Solver
+* Check if level is already solved
+* Generate level with FastGen
+* Generate level with WFC
+* Shuffle current grid tile rotations
+* Clear grid
+* Conintinue with to play the custom grid
+* Save grid in local storage
+* Load grid in local storage
 
 TODO: können wir auch den schwierigkeitsgrad bestimmen?
 

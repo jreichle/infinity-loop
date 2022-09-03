@@ -46,7 +46,7 @@
 
 
 - [x] Save grid in local storage (optional)
-- [ ] Load grid in local storage (optional)
+- [x] Load grid in local storage (optional)
 
 ## Further Extensions
 
