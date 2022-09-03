@@ -24,7 +24,7 @@ pub fn cell_component(props: &CellComponentProps) -> Html {
     html! {
         <div
             id={format!("cell-r-{}-c-{}", row, column)}
-            class={format!("row-{} col-{}", row, column)}
+            class={format!("cell row-{} col-{}", row, column)}
             onclick={props.on_click.clone()}
             onwheel={props.on_wheel.clone()}
             >
