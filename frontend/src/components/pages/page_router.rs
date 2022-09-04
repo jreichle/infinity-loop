@@ -126,14 +126,19 @@ pub fn page_router() -> Html {
                         Screen::Help => {
                             let content = html!{
                                 <>
-                                <p>
-                                {"In the programming world, an infinite loop is a sequence of instructions that will repeat endlessly.
-                                Usually we would want to prevent this, but in this game we want to create a loop with no way out."}
-                                </p>
-                                <p>
-                                {"A level is build with multiple cells, each cell contains a fixed shape that can be rotated on click.
-                                And there are six kind of shape in total. (from none to four outgoing connections) The goal is to get all the piece connected, creating a enclosed loop."}
-                                </p>
+                                    <p>
+                                        {"In the programming world, an infinite loop is a
+                                        sequence of instructions that will repeat endlessly.
+                                        Usually we would want to prevent this, but in this
+                                        game we want to create a loop with no way out."}
+                                    </p>
+                                    <p>
+                                        {"A level is build with multiple cells, each cell
+                                        contains a fixed shape that can be rotated on click.
+                                        And there are six kind of shape in total. (from none
+                                        to four outgoing connections) The goal is to get all
+                                        the piece connected, creating a enclosed loop."}
+                                    </p>
                                 </>
                             };
                             html!{
