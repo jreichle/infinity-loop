@@ -1,3 +1,4 @@
+
 use super::{
     coordinate::Coordinate,
     grid::Grid,
@@ -5,82 +6,77 @@ use super::{
     tile::{Square, Tile},
 };
 
-#[derive(Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Debug, Hash)]
-enum Status {
-    Changed,
-    Original,
-}
-
-// introduce `Solvable` newtype, where the constructor ensures solvability of the puzzle
-// Puzzle<A> -> Option<Solvable<A>>
-// introduce `Unique` newtype, where the constructor ensures puzzle has unique solution
-// Puzzle<A> -> Option<Unique<A>>
-
-// else `Puzzle<S, A>`
-// where S = Unsolvable | Unique | Multiple, corresponding to a list
-
 // algorithm:
 // 1. solve level with a trace of the collapsed superpositions in order
 // 2. return first trace entry which is unequal to current configuration
-/// **note:** currently only work fully for levels with a unique solution
-pub fn generate_hint(grid: &Grid<Tile<Square>>) -> Result<Coordinate<isize>, String> {
-    let sentinel = grid.with_sentinels(Tile::NO_CONNECTIONS).superimpose();
 
-    let mut trace = vec![];
-    let solved = iter_fix(
-        sentinel,
-        |s| {
-            s.0.coordinates().into_iter().fold(s.clone(), |g, c| {
-                let (s_new, v) = propagate_restrictions_to_all_neighbors2(g, c, |old, new| {
-                    old.len() != 1 && new.len() == 1
-                });
-                trace.extend(v);
-                s_new
-            })
-        },
-        PartialEq::eq,
-    );
-
-    trace
-        .into_iter()
-        .map(|c| c - 1)
-        .inspect(|c| log::info!("c: {c}"))
-        .find(|c| grid[*c] != solved.0[*c + 1].unwrap_if_singleton().unwrap())
-        .ok_or_else(|| "No hint available".into())
-}
-
+/// Generates a trace of the successively solved tiles
+/// 
 /// can be memoized
-pub fn trace_solver(grid: &Grid<Tile<Square>>) -> Vec<(Coordinate<isize>, Tile<Square>)> {
-    let sentinel = grid.with_sentinels(Tile::NO_CONNECTIONS).superimpose();
+pub fn generate_solving_trace(grid: &Grid<Tile<Square>>) -> Vec<(Coordinate<isize>, Tile<Square>)> {
+    let mut stack = vec![(grid.with_sentinels(Tile::NO_CONNECTIONS).superimpose(), vec![])];
 
-    let mut trace = vec![];
-    iter_fix(
-        sentinel,
-        |s| {
-            s.0.coordinates().into_iter().fold(s.clone(), |g, c| {
-                let (s_new, v) = propagate_restrictions_to_all_neighbors2(g, c, |old, new| {
-                    old.len() != 1 && new.len() == 1
-                });
-                trace.extend(
-                    v.into_iter()
-                        .map(|c| (c - 1, s_new.0[c].unwrap_if_singleton().unwrap())),
-                ); // grid vs sentinelgrid indexing
-                s_new
-            })
-        },
-        PartialEq::eq,
-    );
-    trace
+    loop {
+        let v = stack.pop();
+        if v.is_none() {
+            return vec![]
+        }
+        let (mut sentinel, mut trace) = v.unwrap();
+        sentinel = iter_fix(
+            sentinel,
+            |s| {
+                s.0.coordinates().into_iter().fold(s.clone(), |g, c| {
+                    let (s_new, v) = propagate_restrictions_to_all_neighbors2(g, c, |old, new| {
+                        old.len() != 1 && new.len() == 1
+                    });
+                    trace.extend(
+                        v.into_iter()
+                            .map(|c| (c - 1, s_new.0[c].unwrap_if_singleton().unwrap())),
+                    ); // grid vs sentinelgrid indexing
+                    s_new
+                })
+            },
+            PartialEq::eq,
+        );
+        if let Some(_) = sentinel.extract_if_collapsed() {
+            return trace
+        }
+
+        // distinguish between no and several solutions
+        if let Some(grid) = sentinel.clone().check_no_empty_superposition() {
+            let c = most_superimposed_states(&grid);
+            let v = grid.branch(most_superimposed_states).into_iter().map(|g| {
+                let mut new_trace = trace.clone();
+                new_trace.push((c - 1, g.0[c].unwrap_if_singleton().unwrap()));
+                (g, new_trace)
+            });
+            stack.extend(v);
+        }
+    }
 }
 
-pub fn hint(
+/// Returns hint based on given trace
+pub fn get_hint(
     grid: &Grid<Tile<Square>>,
     trace: Vec<(Coordinate<isize>, Tile<Square>)>,
 ) -> Result<Coordinate<isize>, String> {
     trace
         .into_iter()
-        .inspect(|(c, _)| log::info!("c: {c}"))
         .find(|(c, t)| grid[*c] != *t)
         .map(|(c, _)| c)
         .ok_or_else(|| "No hint available".into())
+}
+
+#[cfg(test)]
+mod test {
+    use crate::model::{coordinate::Coordinate, fastgen::generate, tile::Tile, interval::{Max, Interval}};
+
+    use super::generate_solving_trace;
+
+    #[quickcheck]
+    fn number_of_hints(dimension: Coordinate<Max<20>>, seed: u64) -> bool {
+        let grid = generate(dimension.map(Interval::to_usize), seed);
+        let trace = generate_solving_trace(&grid);
+        grid.elements().into_iter().filter(|t| *t != Tile::NO_CONNECTIONS && *t !=Tile::ALL_CONNECTIONS).count() == trace.len()
+    }
 }

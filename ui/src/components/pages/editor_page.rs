@@ -5,7 +5,7 @@ use yew::prelude::*;
 use yew::{html, Callback};
 
 use crate::components::board::level::LevelComponent;
-use crate::components::reducers::board_reducer::{BoardAction, BoardState};
+use crate::components::reducers::board_reducer::{BoardAction, Level};
 use crate::helper::local_storage::{change_screen, save_editor_level};
 use crate::helper::screen::Screen;
 
@@ -18,9 +18,9 @@ pub struct EditorPageProps {
 #[function_component(EditorPage)]
 pub fn editor_page_component(props: &EditorPageProps) -> Html {
     let new_grid = generate(Coordinate { row: 5, column: 5 }, 99);
-    let board = use_reducer_eq(BoardState::set_grid(new_grid));
+    let board = use_reducer_eq(Level::set_grid(new_grid));
 
-    let level_grid = board.level_grid.clone();
+    let level_grid = board.data.clone();
 
     let clear_onclick: Callback<MouseEvent> = {
         let board = board.clone();
@@ -82,9 +82,9 @@ pub fn editor_page_component(props: &EditorPageProps) -> Html {
         let message = props.message.clone();
         Callback::from(move |_| {
             log::info!("[Button click] Check is solved.");
-            log::info!("Current grid\n{}", board.level_grid.to_string());
+            log::info!("Current grid\n{}", board.data.to_string());
 
-            let is_solved = board.level_grid.is_solved();
+            let is_solved = board.data.is_solved();
             log::info!("Is solved? {}", is_solved);
 
             let msg = match is_solved {
@@ -105,7 +105,7 @@ pub fn editor_page_component(props: &EditorPageProps) -> Html {
 
     let play_onclick: Callback<MouseEvent> = {
         let screen = props.screen.clone();
-        let grid = board.level_grid.clone();
+        let grid = board.data.clone();
         let message = props.message.clone();
         Callback::from(move |_| {
             log::info!("[Button click] Play custom grid.");
@@ -127,12 +127,12 @@ pub fn editor_page_component(props: &EditorPageProps) -> Html {
             log::info!("[Button click] Resize width +1.");
             log::info!(
                 "[Button click] Resize width +1.{} {}",
-                board.level_grid.dimensions().column + 1,
-                board.level_grid.dimensions().row
+                board.data.dimensions().column + 1,
+                board.data.dimensions().row
             );
             board.dispatch(BoardAction::ChangeSize(Coordinate {
-                column: board.level_grid.dimensions().column + 1,
-                row: board.level_grid.dimensions().row,
+                column: board.data.dimensions().column + 1,
+                row: board.data.dimensions().row,
             }));
         })
     };
@@ -141,15 +141,15 @@ pub fn editor_page_component(props: &EditorPageProps) -> Html {
         let board = board.clone();
         Callback::from(move |_| {
             log::info!("[Button click] Resize width -1.");
-            if board.level_grid.dimensions().column > 1 {
+            if board.data.dimensions().column > 1 {
                 log::info!(
                     "[Button click] Resize width +1.{} {}",
-                    board.level_grid.dimensions().column - 1,
-                    board.level_grid.dimensions().row
+                    board.data.dimensions().column - 1,
+                    board.data.dimensions().row
                 );
                 board.dispatch(BoardAction::ChangeSize(Coordinate {
-                    column: board.level_grid.dimensions().column - 1,
-                    row: board.level_grid.dimensions().row,
+                    column: board.data.dimensions().column - 1,
+                    row: board.data.dimensions().row,
                 }));
             }
         })
@@ -161,12 +161,12 @@ pub fn editor_page_component(props: &EditorPageProps) -> Html {
             log::info!("[Button click] Resize height +1.");
             log::info!(
                 "[Button click] Resize width +1.{} {}",
-                board.level_grid.dimensions().column,
-                board.level_grid.dimensions().row + 1
+                board.data.dimensions().column,
+                board.data.dimensions().row + 1
             );
             board.dispatch(BoardAction::ChangeSize(Coordinate {
-                column: board.level_grid.dimensions().column,
-                row: board.level_grid.dimensions().row + 1,
+                column: board.data.dimensions().column,
+                row: board.data.dimensions().row + 1,
             }));
         })
     };
@@ -175,15 +175,15 @@ pub fn editor_page_component(props: &EditorPageProps) -> Html {
         let board = board.clone();
         Callback::from(move |_| {
             log::info!("[Button click] Resize height -1.");
-            if board.level_grid.dimensions().row > 1 {
+            if board.data.dimensions().row > 1 {
                 log::info!(
                     "[Button click] Resize width +1.{} {}",
-                    board.level_grid.dimensions().column,
-                    board.level_grid.dimensions().row - 1
+                    board.data.dimensions().column,
+                    board.data.dimensions().row - 1
                 );
                 board.dispatch(BoardAction::ChangeSize(Coordinate {
-                    column: board.level_grid.dimensions().column,
-                    row: board.level_grid.dimensions().row - 1,
+                    column: board.data.dimensions().column,
+                    row: board.data.dimensions().row - 1,
                 }));
             }
         })
@@ -194,7 +194,7 @@ pub fn editor_page_component(props: &EditorPageProps) -> Html {
         let message = props.message.clone();
         Callback::from(move |_| {
             log::info!("[Button click] Save level.");
-            save_editor_level(&board.level_grid);
+            save_editor_level(&board.data);
             message.set(String::from("Saved level"));
         })
     };

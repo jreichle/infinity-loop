@@ -9,12 +9,12 @@ use game::model::{
 };
 
 use crate::components::board::{cell::CellComponent, grid::GridComponent, row::RowComponent};
-use crate::components::reducers::board_reducer::{BoardAction, BoardState};
+use crate::components::reducers::board_reducer::{BoardAction, Level};
 use crate::helper::local_storage::save_level;
 
 #[derive(Properties, PartialEq, Clone)]
 pub struct LevelProps {
-    pub board: UseReducerHandle<BoardState>,
+    pub board: UseReducerHandle<Level<Grid<Tile<Square>>>>,
     pub message: UseStateHandle<String>,
     #[prop_or(false)]
     pub can_turn: bool,
@@ -25,7 +25,7 @@ pub struct LevelProps {
 #[function_component(LevelComponent)]
 pub fn level_component(props: &LevelProps) -> html {
     fn dispatch_turn_cell(
-        board: UseReducerHandle<BoardState>,
+        board: UseReducerHandle<Level<Grid<Tile<Square>>>>,
         index: Coordinate<isize>,
         can_change: bool,
         message: UseStateHandle<String>,
@@ -36,9 +36,9 @@ pub fn level_component(props: &LevelProps) -> html {
                 index.to_tuple()
             );
             log::info!("can change? {}", can_change);
-            if can_change || !board.level_grid.is_solved() {
+            if can_change || !board.data.is_solved() {
                 board.dispatch(BoardAction::TurnCell(index));
-                save_level(&board.level_grid);
+                save_level(&board.data);
                 log::info!("saving level now");
             } else {
                 message.set(String::from("The level is already solved"));
@@ -47,7 +47,7 @@ pub fn level_component(props: &LevelProps) -> html {
     }
 
     fn dispatch_change_cell(
-        board: UseReducerHandle<BoardState>,
+        board: UseReducerHandle<Level<Grid<Tile<Square>>>>,
         index: Coordinate<isize>,
     ) -> Callback<WheelEvent> {
         Callback::from(move |_| {
@@ -56,13 +56,13 @@ pub fn level_component(props: &LevelProps) -> html {
                 index.to_tuple()
             );
             board.dispatch(BoardAction::ChangeTileShape(index));
-            save_level(&board.level_grid);
+            save_level(&board.data);
             log::info!("saving level now");
         })
     }
 
     let board = props.board.clone();
-    let level_grid = board.level_grid.clone();
+    let level_grid = board.data.clone();
     let (height, width) = level_grid.dimensions().to_tuple();
     let (height, width) = (height as isize, width as isize);
 

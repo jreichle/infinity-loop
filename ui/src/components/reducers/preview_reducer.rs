@@ -12,7 +12,7 @@ pub enum PreviewAction {
     LoadNew(usize, Coordinate<usize>),
 }
 
-#[derive(Clone, Debug, PartialEq, Eq)]
+#[derive(Clone, Debug, PartialEq, Eq, Default)]
 pub struct PreviewState {
     pub extracted_levels: Vec<Grid<Tile<Square>>>,
 }
@@ -21,39 +21,21 @@ impl Reducible for PreviewState {
     type Action = PreviewAction;
 
     fn reduce(self: Rc<Self>, action: Self::Action) -> Rc<Self> {
-        let mut extracted_levels = self.extracted_levels.clone();
-
         match action {
-            PreviewAction::LoadNew(num, dimension) => {
-                let mut generated_levels = (0..num)
+            PreviewAction::LoadNew(level_number, dimension) => {
+                let generated_levels = (0..level_number as u64)
                     .into_iter()
-                    .map(|index| randomize_level(generate(dimension, index as u64)))
-                    .collect::<Vec<Grid<Tile<Square>>>>();
-                extracted_levels.append(&mut generated_levels);
+                    .map(|index| randomize_level(generate(dimension, index)));
+                Self { extracted_levels: self.extracted_levels.clone().into_iter().chain(generated_levels).collect() }.into()
             }
-        }
-
-        Self { extracted_levels }.into()
-    }
-}
-
-impl Default for PreviewState {
-    fn default() -> Self {
-        Self {
-            extracted_levels: Vec::new(),
         }
     }
 }
 
 impl PreviewState {
-    pub fn set(mut extracted_levels: Vec<Grid<Tile<Square>>>) -> impl Fn() -> PreviewState {
-        for i in 0..extracted_levels.len() {
-            let new_level = randomize_level(extracted_levels[i].clone());
-            extracted_levels.remove(i);
-            extracted_levels.insert(i, new_level);
-        }
+    pub fn set(extracted_levels: Vec<Grid<Tile<Square>>>) -> impl Fn() -> PreviewState {
         move || PreviewState {
-            extracted_levels: extracted_levels.clone(),
+            extracted_levels: extracted_levels.clone().into_iter().map(randomize_level).collect(),
         }
     }
 }

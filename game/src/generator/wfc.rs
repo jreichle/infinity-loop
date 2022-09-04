@@ -5,7 +5,7 @@ use crate::model::{
     coordinate::Coordinate,
     enummap::EnumMap,
     enumset::EnumSet,
-    finite::Finite,
+    finite::{Finite, all_enums_ascending},
     grid::Grid,
     solver::{propagate_restrictions_to_all_neighbors, Sentinel, Superposition},
     tile::{
@@ -44,7 +44,7 @@ impl<A: Finite + Eq + Hash + Clone + Copy + Display> EnumSet<A> {
         for (option, weight) in option_weights.iter() {
             rng_weights -= weight;
             if rng_weights < 0.0 {
-                for tile in A::all_enums_ascending() {
+                for tile in all_enums_ascending() {
                     if tile != option {
                         self.remove(tile);
                     }
@@ -57,7 +57,7 @@ impl<A: Finite + Eq + Hash + Clone + Copy + Display> EnumSet<A> {
 
 /// A generator with fixed settings, which can be reused for multiple level generations.
 #[derive(Clone, PartialEq, Eq)]
-pub struct WfcGenerator {
+pub struct WfcSettings {
     width: usize,
     height: usize,
     available_tiles: EnumSet<Tile<Square>>,
@@ -65,15 +65,15 @@ pub struct WfcGenerator {
     pass_limit: usize,
 }
 
-impl WfcGenerator {
+impl WfcSettings {
     pub fn new(
         width: usize,
         height: usize,
         available_tiles: EnumSet<Tile<Square>>,
         pass_limit: usize,
         prop_limit: usize,
-    ) -> WfcGenerator {
-        WfcGenerator {
+    ) -> WfcSettings {
+        WfcSettings {
             width,
             height,
             available_tiles,
@@ -82,12 +82,11 @@ impl WfcGenerator {
         }
     }
 
-    pub fn default(width: usize, height: usize) -> WfcGenerator {
-        let available_tiles = EnumSet::<Tile<Square>>::FULL;
-        WfcGenerator {
+    pub fn with_all_tiles(width: usize, height: usize) -> WfcSettings {
+        WfcSettings {
             width,
             height,
-            available_tiles,
+            available_tiles: EnumSet::FULL,
             prop_limit: 40000,
             pass_limit: 1000,
         }
@@ -96,17 +95,14 @@ impl WfcGenerator {
     fn update_weights(board: &Sentinel<Square>, weights: &mut EnumMap<Tile<Square>, usize>) {
         weights.clear();
 
-        // initialize weights
-        let full_set: Superposition<Square> = EnumSet::FULL;
-        full_set.iter().for_each(|tile| {
-            weights.insert(tile, 0);
-        });
+        // initialize all weights to 0
+        // weights.extend(all_enums_ascending().into_iter().map(|t| (t, 0)));
 
         // update weights: only calculate weight for uncollapsed cells
-        for cell in board.0.elements().into_iter() {
+        for cell in board.0.as_slice() {
             if !cell.is_collapsed() {
                 cell.into_iter().for_each(|tile| {
-                    weights[tile] = weights[tile].map(|x| x + 1);
+                    weights[tile] = Some(weights[tile].unwrap_or(0) + 1);
                 });
             }
         }
@@ -148,7 +144,7 @@ impl WfcGenerator {
             .iter()
             .filter(|(_, c)| !c.is_collapsed())
         {
-            entropy = WfcGenerator::shannon_entropy(cell, weights);
+            entropy = WfcSettings::shannon_entropy(cell, weights);
             // add random effect -> so same value has slight different probs
             entropy_rng = entropy + rng.gen_range(1..10) as f64 * 0.000001;
 
@@ -187,7 +183,7 @@ impl WfcGenerator {
 
         let mut passes = 0_usize;
         while let Some(index) = stack.pop() {
-            for dir in Square::all_enums_ascending() {
+            for dir in all_enums_ascending() {
                 let neighbor_index = index.get_neighbor_index(dir);
                 let neighbor_cell = &board.0.get(neighbor_index).unwrap();
 
@@ -276,7 +272,7 @@ impl WfcGenerator {
 
         let mut weights: EnumMap<Tile<Square>, usize> = EnumMap::empty();
         // update weights
-        WfcGenerator::update_weights(&board, &mut weights);
+        WfcSettings::update_weights(&board, &mut weights);
 
         (board, weights)
     }
@@ -287,13 +283,13 @@ impl WfcGenerator {
         mut board: Sentinel<Square>,
         mut weights: EnumMap<Tile<Square>, usize>,
     ) -> (Sentinel<Square>, EnumMap<Tile<Square>, usize>) {
-        let current_coordinate = WfcGenerator::find_entropy_cell(&board, &weights);
-        WfcGenerator::collapse_cell(&mut board, &weights, current_coordinate);
-        WfcGenerator::propagate(&mut board, current_coordinate, self.prop_limit);
-        WfcGenerator::update_weights(&board, &mut weights);
+        let current_coordinate = WfcSettings::find_entropy_cell(&board, &weights);
+        WfcSettings::collapse_cell(&mut board, &weights, current_coordinate);
+        WfcSettings::propagate(&mut board, current_coordinate, self.prop_limit);
+        WfcSettings::update_weights(&board, &mut weights);
 
         if PRINT_INTERMEDIATE_RESULTS {
-            WfcGenerator::print_map(&board);
+            WfcSettings::print_map(&board);
             print!("{esc}[2J{esc}[1;1H", esc = 27 as char);
         }
 
@@ -312,11 +308,11 @@ impl WfcGenerator {
 
             if PRINT_INTERMEDIATE_RESULTS {
                 println!("PASS #{}\n", passes);
-                WfcGenerator::print_map(&board);
+                WfcSettings::print_map(&board);
                 print!("{esc}[2J{esc}[1;1H", esc = 27 as char);
             }
 
-            if WfcGenerator::is_all_collapsed(&board) || passes >= self.pass_limit {
+            if WfcSettings::is_all_collapsed(&board) || passes >= self.pass_limit {
                 break;
             }
         }
@@ -327,7 +323,7 @@ impl WfcGenerator {
 #[cfg(test)]
 mod tests {
 
-    use crate::generator::wfc::WfcGenerator;
+    use crate::generator::wfc::WfcSettings;
     use crate::model::{
         enumset::EnumSet,
         tile::{
@@ -363,7 +359,7 @@ mod tests {
         prop_limit: usize,
     ) -> bool {
         let wfc_generator =
-            WfcGenerator::new(width, height, available_tiles, pass_limit, prop_limit);
+            WfcSettings::new(width, height, available_tiles, pass_limit, prop_limit);
         let mut generation_result = wfc_generator.generate();
 
         while let Err(_) = generation_result {

@@ -515,7 +515,7 @@ mod test {
 
     use quickcheck::Gen;
 
-    use crate::model::{enumset::*, interval::Max, tile::Square};
+    use crate::model::{enumset::*, interval::Max, tile::Square, finite::all_enums_ascending};
 
     #[quickcheck]
     fn set_to_index_and_back_is_id(set: EnumSet<EnumSet<Option<bool>>>) -> bool {
@@ -674,11 +674,9 @@ mod test {
 
     /// test all possible cases instead of randomly
     fn invariant<A: Finite>(operation: fn(EnumSet<A>, A) -> EnumSet<A>) {
-        EnumSet::<A>::all_enums_ascending()
-            .into_iter()
+        all_enums_ascending()
             .flat_map(|s| {
-                A::all_enums_ascending()
-                    .into_iter()
+                all_enums_ascending()
                     .map(move |e| operation(s, e))
             })
             .for_each(|s| assert_eq!(s.0 & EnumSet::<A>::USED_BITS, s.0));

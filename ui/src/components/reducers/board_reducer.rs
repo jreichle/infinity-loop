@@ -1,7 +1,6 @@
 #![allow(dead_code)]
 
 use rand::Rng;
-use std::ops::Add;
 use std::rc::Rc;
 use yew::prelude::*;
 
@@ -9,8 +8,8 @@ use crate::helper::level_randomizer::randomize_level;
 use crate::helper::local_storage::save_level;
 use wasm_bindgen::{prelude::*, JsCast};
 
-use game::generator::wfc::WfcGenerator;
-use game::model::hint::generate_hint;
+use game::generator::wfc::WfcSettings;
+use game::model::hint::{generate_solving_trace, get_hint};
 use game::model::{
     coordinate::Coordinate,
     fastgen::generate,
@@ -37,18 +36,16 @@ pub enum BoardAction {
 }
 
 // reducer's state
-#[derive(Clone, Debug, PartialEq, Eq)]
-pub struct BoardState {
-    pub level_number: usize,
-    pub level_grid: Grid<Tile<Square>>,
+// is a functor
+#[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Debug, Hash)]
+pub struct Level<A> {
+    pub id: usize,
+    pub data: A,
 }
 
-impl Default for BoardState {
-    fn default() -> Self {
-        Self {
-            level_number: 1,
-            level_grid: generate(Coordinate { row: 5, column: 5 }, 1),
-        }
+impl<A> Level<A> {
+    fn new(id: usize, data: A) -> Self {
+        Level { id, data }
     }
 }
 
@@ -61,8 +58,7 @@ pub fn highlight_cells(row: usize, column: usize) {
         .unwrap();
 
     let class_names = cell.get_attribute("class").unwrap();
-    let highlight_class_names = format!("{} {}", class_names.clone(), "cell-hint-highlight");
-    cell.set_class_name(&highlight_class_names);
+    cell.set_class_name(&format!("{} {}", class_names.clone(), "cell-hint-highlight"));
     let hl = Closure::<dyn Fn()>::new(move || {
         cell.set_class_name(&class_names);
     });
@@ -73,111 +69,111 @@ pub fn highlight_cells(row: usize, column: usize) {
     hl.forget();
 }
 
-impl Reducible for BoardState {
+impl Reducible for Level<Grid<Tile<Square>>> {
     type Action = BoardAction;
 
     fn reduce(self: Rc<Self>, action: Self::Action) -> Rc<Self> {
-        let mut new_level_number: usize = self.level_number.clone();
-        let mut new_level_grid: Grid<Tile<Square>> = self.level_grid.clone();
-
         match action {
             BoardAction::TurnCell(index) => {
-                new_level_grid = new_level_grid.rotate_clockwise(index).unwrap();
+                Level::new(self.id, self.data.rotate_clockwise(index).unwrap()).into()
             }
             BoardAction::ReplaceGrid(grid) => {
-                new_level_grid = grid;
+                Level::new(self.id, grid).into()
             }
             BoardAction::NextLevel => {
-                new_level_number += 1;
-                new_level_grid = randomize_level(generate(
-                    self.level_grid.dimensions().add(1),
-                    new_level_number as u64,
+                let data = randomize_level(generate(
+                    self.data.dimensions() + 1,
+                    self.id as u64,
                 ));
-                save_level(&new_level_grid);
+                save_level(&data);
+                Level::new(self.id + 1, data).into()
+
             }
             BoardAction::GetHint => {
-                if let Ok(coordinate) = generate_hint(&new_level_grid) {
+                let trace = generate_solving_trace(&self.data);
+                log::info!("trace: {:?}", trace);
+                if let Ok(coordinate) = get_hint(&self.data, trace) {
                     highlight_cells(
-                        coordinate.row.try_into().unwrap(),
-                        coordinate.column.try_into().unwrap(),
+                        coordinate.row as usize,
+                        coordinate.column as usize,
                     );
                     log::info!("Highlighting: {}", coordinate);
                 }
+                self
             }
             BoardAction::SolveLevel => {
-                let mut solved_versions = new_level_grid.solve();
-                if let Some(solved_level) = solved_versions.next() {
-                    log::info!("solved level:\n {}", solved_level);
-                    save_level(&solved_level);
-                    new_level_grid = solved_level;
+                match self.data.solve().next() {
+                    None => self,
+                    Some(solution) => {
+                        log::info!("solved level:\n{solution}");
+                        save_level(&solution);
+                        Level::new(self.id, solution).into()
+                    }
                 }
             }
 
             // Editor actions
             BoardAction::ChangeTileShape(index) => {
                 log::info!("Change tile shape");
-                new_level_grid = new_level_grid.change_tile_shape(index).unwrap();
+                Level::new(self.id, self.data.change_tile_shape(index).unwrap()).into()
             }
             BoardAction::ChangeSize(size) => {
-                let mut rng = rand::thread_rng();
-                new_level_grid = generate(size, rng.gen_range(0..10000));
+                Level::new(self.id, generate(size, rand::thread_rng().gen_range(0..10000))).into()
             }
             BoardAction::GenerateFastGen => {
-                let mut rng = rand::thread_rng();
-                new_level_grid = generate(self.level_grid.dimensions(), rng.gen_range(0..10000));
-                log::info!("Generated grid\n{}", new_level_grid.to_string());
+                let data = generate(self.data.dimensions(), rand::thread_rng().gen_range(0..10000));
+                log::info!("Generated grid\n{data}");
+                Level::new(self.id, data).into()
             }
             BoardAction::GenerateWFC => {
-                let (height, width) = self.level_grid.dimensions().to_tuple();
-                let wfc = WfcGenerator::new(
-                    width as usize,
-                    height as usize,
-                    Tile::ALL_CONNECTIONS.0,
-                    40000,
-                    1000,
+                let wfc_settings = WfcSettings::with_all_tiles(
+                    self.data.columns(),
+                    self.data.rows(),
                 );
+                let data = retry_until_ok(wfc_settings, WfcSettings::generate);
 
-                let mut generation_result = wfc.generate();
-                while let Err(_) = generation_result {
-                    generation_result = wfc.generate();
-                }
-
-                new_level_grid = generation_result.unwrap();
-                log::info!("Generated grid\n{}", new_level_grid.to_string());
+                log::info!("Generated grid\n{data}");
+                Level::new(self.id, data).into()
             }
             BoardAction::ShuffleTileRotations => {
-                new_level_grid = randomize_level(new_level_grid);
-                save_level(&new_level_grid);
-                log::info!("Tile rotations shuffled\n{}", new_level_grid.to_string());
+                let data = randomize_level(self.data.clone());
+                save_level(&data);
+                log::info!("Tile rotations shuffled\n{data}");
+                Level::new(self.id, data).into()
             }
             BoardAction::ClearGrid => {
-                new_level_grid = Grid::new(
-                    new_level_grid.dimensions(),
-                    vec![Tile::NO_CONNECTIONS; new_level_grid.elements().len()],
-                )
+                let data = Grid::filled_with(
+                    self.data.dimensions(),
+                    Tile::NO_CONNECTIONS,
+                );
+                Level::new(self.id, data).into()
             }
-        };
-
-        Self {
-            level_number: new_level_number,
-            level_grid: new_level_grid.clone(),
         }
-        .into()
     }
 }
 
-impl BoardState {
-    pub fn set_size(dimensions: Coordinate<usize>) -> impl Fn() -> BoardState {
-        move || BoardState {
-            level_number: 1,
-            level_grid: generate(dimensions, 1),
+impl Level<Grid<Tile<Square>>> {
+    pub fn set_size(dimensions: Coordinate<usize>) -> impl Fn() -> Level<Grid<Tile<Square>>> {
+        move || Level {
+            id: 1,
+            data: generate(dimensions, 1),
         }
     }
 
-    pub fn set_grid(grid: Grid<Tile<Square>>) -> impl Fn() -> BoardState {
-        move || BoardState {
-            level_number: 1,
-            level_grid: grid.clone(),
+    pub fn set_grid(grid: Grid<Tile<Square>>) -> impl Fn() -> Level<Grid<Tile<Square>>> {
+        move || Level {
+            id: 1,
+            data: grid.clone(),
+        }
+    }
+}
+
+/// Retries an impure computation until it succeeds
+fn retry_until_ok<A, B, E, F: Fn(&A) -> Result<B, E>>(initial: A, computation: F) -> B {
+    loop {
+        match computation(&initial) {
+            Err(_) => continue,
+            Ok(value) => return value
         }
     }
 }

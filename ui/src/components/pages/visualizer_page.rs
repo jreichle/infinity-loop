@@ -2,7 +2,7 @@ use wasm_bindgen::{prelude::*, JsCast};
 use yew::prelude::*;
 use yew::{html, Callback};
 
-use game::generator::wfc::WfcGenerator;
+use game::generator::wfc::WfcSettings;
 use game::model::{
     enummap::EnumMap,
     enumset::EnumSet,
@@ -35,17 +35,17 @@ pub fn wfc_board_component(props: &VisualizerPageProps) -> Html {
     let playing = use_state(|| false);
     let interval_id = use_state(|| 0);
 
-    let wfc_generator = WfcGenerator::default(DEFAULT_WIDTH as usize, DEFAULT_HEIGHT as usize);
+    let wfc_generator = WfcSettings::with_all_tiles(DEFAULT_WIDTH as usize, DEFAULT_HEIGHT as usize);
     let (sentinel_grid, weights) = wfc_generator.init_board();
     let (sentinel_grid, weights) = wfc_generator.iteration_step(sentinel_grid, weights);
 
     let wfc_generator = use_state_eq(|| wfc_generator);
     let sentinel_grid = use_state_eq(|| sentinel_grid);
     let weights = use_state_eq(|| weights);
-    let level_grid = use_state_eq(|| WfcGenerator::extract_grid(&sentinel_grid));
+    let level_grid = use_state_eq(|| WfcSettings::extract_grid(&sentinel_grid));
 
     fn go_to_next_step(
-        wfc_generator: WfcGenerator,
+        wfc_generator: WfcSettings,
         sentinel_grid: SentinelGrid<EnumSet<Tile<Square>>>,
         weights: EnumMap<Tile<Square>, usize>,
     ) -> (
@@ -53,7 +53,7 @@ pub fn wfc_board_component(props: &VisualizerPageProps) -> Html {
         EnumMap<Tile<Square>, usize>,
     ) {
         let (mut new_grid, mut new_weights) = (sentinel_grid, weights);
-        if WfcGenerator::is_all_collapsed(&new_grid) {
+        if WfcSettings::is_all_collapsed(&new_grid) {
             (new_grid, new_weights) = wfc_generator.init_board();
         }
         wfc_generator.iteration_step(new_grid, new_weights)
@@ -72,10 +72,10 @@ pub fn wfc_board_component(props: &VisualizerPageProps) -> Html {
                 width,
                 height
             );
-            let new_generator = WfcGenerator::default(width, height);
+            let new_generator = WfcSettings::with_all_tiles(width, height);
             let (mut new_grid, mut new_weights) = new_generator.init_board();
             (new_grid, new_weights) = new_generator.iteration_step(new_grid, new_weights);
-            level_grid.set(WfcGenerator::extract_grid(&new_grid));
+            level_grid.set(WfcSettings::extract_grid(&new_grid));
             wfc_generator.set(new_generator);
             sentinel_grid.set(new_grid);
             weights.set(new_weights);
@@ -97,7 +97,7 @@ pub fn wfc_board_component(props: &VisualizerPageProps) -> Html {
                 (*sentinel_grid).clone(),
                 (*weights).clone(),
             );
-            level_grid.set(WfcGenerator::extract_grid(&new_grid));
+            level_grid.set(WfcSettings::extract_grid(&new_grid));
             sentinel_grid.set(new_grid.clone());
             weights.set(new_weights.clone());
         })
@@ -143,7 +143,7 @@ pub fn wfc_board_component(props: &VisualizerPageProps) -> Html {
                             new_grid.clone(),
                             new_weights.clone(),
                         );
-                        level_grid.set(WfcGenerator::extract_grid(&new_grid));
+                        level_grid.set(WfcSettings::extract_grid(&new_grid));
                         sentinel_grid.set(new_grid.clone());
                         weights.set(new_weights.clone());
                     });

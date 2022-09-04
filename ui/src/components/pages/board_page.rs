@@ -9,7 +9,7 @@ use game::model::{
 };
 
 use crate::components::board::level::LevelComponent;
-use crate::components::reducers::board_reducer::{BoardAction, BoardState};
+use crate::components::reducers::board_reducer::{BoardAction, Level};
 
 use crate::helper::local_storage::change_screen;
 
@@ -22,21 +22,13 @@ pub struct BoardPageProps {
 
 #[function_component(BoardPage)]
 pub fn board_page_component(props: &BoardPageProps) -> Html {
-    let board = use_reducer_eq(BoardState::set_grid(props.level_grid.clone()));
+    let board = use_reducer_eq(Level::set_grid(props.level_grid.clone()));
 
     let hint_onclick: Callback<MouseEvent> = {
         let board = board.clone();
-        let message = props.message.clone();
         Callback::from(move |_| {
             log::info!("[Button click] Hint.");
-            if board.level_grid.solve().count() == 1 {
-                board.dispatch(BoardAction::GetHint);
-            } else {
-                // hinting only works for one solution thus far!
-                message.set(String::from(
-                    "Hint can unfortunately not be generated for this level",
-                ));
-            }
+            board.dispatch(BoardAction::GetHint);
         })
     };
 
@@ -53,7 +45,7 @@ pub fn board_page_component(props: &BoardPageProps) -> Html {
         let message = props.message.clone();
         Callback::from(move |_| {
             log::info!("[Button click] Next.");
-            if board.level_grid.is_solved() {
+            if board.data.is_solved() {
                 board.dispatch(BoardAction::NextLevel);
             } else {
                 message.set(String::from("Solve the level to unlock a new level."));

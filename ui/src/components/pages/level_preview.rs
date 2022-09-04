@@ -24,10 +24,10 @@ pub struct LevelPreviewPageProps {
 #[function_component(LevelPreviewPage)]
 pub fn level_preview_page_component(props: &LevelPreviewPageProps) -> Html {
     let generate_nr = 20;
-    let generated_levels = (0..generate_nr)
+    let generated_levels = (0..generate_nr as u64)
         .into_iter()
-        .map(|index| generate(*props.dimension, index as u64))
-        .collect::<Vec<Grid<Tile<Square>>>>();
+        .map(|index| generate(*props.dimension, index))
+        .collect::<Vec<_>>();
 
     let saved_level = retrieve_editor_level();
 

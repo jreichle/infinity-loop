@@ -79,18 +79,11 @@ pub trait Finite: Cardinality {
             .map(Self::unchecked_index_to_enum)
             .collect()
     }
+}
 
-    /// Returns all inhabitants in ascending order
-    ///
-    /// # Note
-    ///
-    /// Implementation should return lazy iterator, but returning `impl <trait>`
-    /// is disallowed in traits as of Rust 1.6.3
-    fn all_enums_ascending() -> Vec<Self> {
-        (0..Self::CARDINALITY)
-            .map(Self::unchecked_index_to_enum)
-            .collect()
-    }
+/// Returns all inhabitants in ascending order
+pub fn all_enums_ascending<A: Finite>() -> impl Iterator<Item = A> {
+    (0..A::CARDINALITY).map(A::unchecked_index_to_enum)
 }
 
 impl Finite for Void {
