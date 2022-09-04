@@ -41,7 +41,8 @@ pub fn wfc_board_component(props: &VisualizerPageProps) -> Html {
     let playing = use_state(|| false);
     let interval_id = use_state(|| 0);
 
-    let wfc_generator = WfcGenerator::with_all_tiles(DEFAULT_WIDTH as usize, DEFAULT_HEIGHT as usize);
+    let wfc_generator =
+        WfcGenerator::with_all_tiles(DEFAULT_WIDTH as usize, DEFAULT_HEIGHT as usize);
     let (sentinel_grid, weights) = wfc_generator.init_board();
     let (sentinel_grid, weights) = wfc_generator.iteration_step(sentinel_grid, weights);
 

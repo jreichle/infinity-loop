@@ -61,7 +61,7 @@ pub fn highlight_cells(row: usize, column: usize) {
 
     // prevent re-highlighting if already highlighted
     if class_names.contains("cell-hint-highlight") {
-        return
+        return;
     }
 
     let highlight_class_names = format!("{} {}", class_names, "cell-hint-highlight");
@@ -84,59 +84,51 @@ impl Reducible for Level<Grid<Tile<Square>>> {
             BoardAction::TurnCell(index) => {
                 Level::new(self.id, self.data.rotate_clockwise(index).unwrap()).into()
             }
-            BoardAction::ReplaceGrid(grid) => {
-                Level::new(self.id, grid).into()
-            }
+            BoardAction::ReplaceGrid(grid) => Level::new(self.id, grid).into(),
             BoardAction::NextLevel => {
-                let data = randomize_level(generate(
-                    self.data.dimensions() + 1,
-                    self.id as u64,
-                ));
+                let data = randomize_level(generate(self.data.dimensions() + 1, self.id as u64));
                 save_level(&data);
                 Level::new(self.id + 1, data).into()
-
             }
             BoardAction::GetHint => {
                 let trace = generate_solving_trace(&self.data);
                 log::info!("trace: {:?}", trace);
                 if let Ok(coordinate) = get_hint(&self.data, trace) {
-                    highlight_cells(
-                        coordinate.row as usize,
-                        coordinate.column as usize,
-                    );
+                    highlight_cells(coordinate.row as usize, coordinate.column as usize);
                     log::info!("Highlighting: {}", coordinate);
                 }
                 self
             }
-            BoardAction::SolveLevel => {
-                match self.data.solve().next() {
-                    None => self,
-                    Some(solution) => {
-                        log::info!("solved level:\n{solution}");
-                        save_level(&solution);
-                        Level::new(self.id, solution).into()
-                    }
+            BoardAction::SolveLevel => match self.data.solve().next() {
+                None => self,
+                Some(solution) => {
+                    log::info!("solved level:\n{solution}");
+                    save_level(&solution);
+                    Level::new(self.id, solution).into()
                 }
-            }
+            },
 
             // Editor actions
             BoardAction::ChangeTileShape(index) => {
                 log::info!("Change tile shape");
                 Level::new(self.id, self.data.change_tile_shape(index).unwrap()).into()
             }
-            BoardAction::ChangeSize(size) => {
-                Level::new(self.id, generate(size, rand::thread_rng().gen_range(0..10000))).into()
-            }
+            BoardAction::ChangeSize(size) => Level::new(
+                self.id,
+                generate(size, rand::thread_rng().gen_range(0..10000)),
+            )
+            .into(),
             BoardAction::GenerateFastGen => {
-                let data = generate(self.data.dimensions(), rand::thread_rng().gen_range(0..10000));
+                let data = generate(
+                    self.data.dimensions(),
+                    rand::thread_rng().gen_range(0..10000),
+                );
                 log::info!("Generated grid\n{data}");
                 Level::new(self.id, data).into()
             }
             BoardAction::GenerateWFC => {
-                let wfc_settings = WfcGenerator::with_all_tiles(
-                    self.data.columns(),
-                    self.data.rows(),
-                );
+                let wfc_settings =
+                    WfcGenerator::with_all_tiles(self.data.columns(), self.data.rows());
                 let data = retry_until_ok(wfc_settings, WfcGenerator::generate);
 
                 log::info!("Generated grid\n{data}");
@@ -149,10 +141,7 @@ impl Reducible for Level<Grid<Tile<Square>>> {
                 Level::new(self.id, data).into()
             }
             BoardAction::ClearGrid => {
-                let data = Grid::filled_with(
-                    self.data.dimensions(),
-                    Tile::NO_CONNECTIONS,
-                );
+                let data = Grid::filled_with(self.data.dimensions(), Tile::NO_CONNECTIONS);
                 Level::new(self.id, data).into()
             }
         }
@@ -180,7 +169,7 @@ fn retry_until_ok<A, B, E, F: Fn(&A) -> Result<B, E>>(initial: A, computation: F
     loop {
         match computation(&initial) {
             Err(_) => continue,
-            Ok(value) => return value
+            Ok(value) => return value,
         }
     }
 }

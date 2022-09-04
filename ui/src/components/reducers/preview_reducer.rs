@@ -26,7 +26,15 @@ impl Reducible for PreviewState {
                 let generated_levels = (0..level_number as u64)
                     .into_iter()
                     .map(|index| randomize_level(generate(dimension, index)));
-                Self { extracted_levels: self.extracted_levels.clone().into_iter().chain(generated_levels).collect() }.into()
+                Self {
+                    extracted_levels: self
+                        .extracted_levels
+                        .clone()
+                        .into_iter()
+                        .chain(generated_levels)
+                        .collect(),
+                }
+                .into()
             }
         }
     }
@@ -35,7 +43,11 @@ impl Reducible for PreviewState {
 impl PreviewState {
     pub fn set(extracted_levels: Vec<Grid<Tile<Square>>>) -> impl Fn() -> PreviewState {
         move || PreviewState {
-            extracted_levels: extracted_levels.clone().into_iter().map(randomize_level).collect(),
+            extracted_levels: extracted_levels
+                .clone()
+                .into_iter()
+                .map(randomize_level)
+                .collect(),
         }
     }
 }

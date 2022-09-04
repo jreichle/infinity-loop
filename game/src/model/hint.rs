@@ -1,4 +1,3 @@
-
 use super::{
     coordinate::Coordinate,
     grid::Grid,
@@ -11,15 +10,18 @@ use super::{
 // 2. return first trace entry which is unequal to current configuration
 
 /// Generates a trace of the successively solved tiles
-/// 
+///
 /// can be memoized
 pub fn generate_solving_trace(grid: &Grid<Tile<Square>>) -> Vec<(Coordinate<isize>, Tile<Square>)> {
-    let mut stack = vec![(grid.with_sentinels(Tile::NO_CONNECTIONS).superimpose(), vec![])];
+    let mut stack = vec![(
+        grid.with_sentinels(Tile::NO_CONNECTIONS).superimpose(),
+        vec![],
+    )];
 
     loop {
         let v = stack.pop();
         if v.is_none() {
-            return vec![]
+            return vec![];
         }
         let (mut sentinel, mut trace) = v.unwrap();
         sentinel = iter_fix(
@@ -38,8 +40,8 @@ pub fn generate_solving_trace(grid: &Grid<Tile<Square>>) -> Vec<(Coordinate<isiz
             },
             PartialEq::eq,
         );
-        if let Some(_) = sentinel.extract_if_collapsed() {
-            return trace
+        if sentinel.extract_if_collapsed().is_some() {
+            return trace;
         }
 
         // distinguish between no and several solutions
@@ -69,7 +71,12 @@ pub fn get_hint(
 
 #[cfg(test)]
 mod test {
-    use crate::model::{coordinate::Coordinate, fastgen::generate, tile::Tile, interval::{Max, Interval}};
+    use crate::model::{
+        coordinate::Coordinate,
+        fastgen::generate,
+        interval::{Interval, Max},
+        tile::Tile,
+    };
 
     use super::generate_solving_trace;
 
@@ -77,6 +84,10 @@ mod test {
     fn number_of_hints(dimension: Coordinate<Max<20>>, seed: u64) -> bool {
         let grid = generate(dimension.map(Interval::to_usize), seed);
         let trace = generate_solving_trace(&grid);
-        grid.elements().into_iter().filter(|t| *t != Tile::NO_CONNECTIONS && *t !=Tile::ALL_CONNECTIONS).count() == trace.len()
+        grid.elements()
+            .into_iter()
+            .filter(|t| *t != Tile::NO_CONNECTIONS && *t != Tile::ALL_CONNECTIONS)
+            .count()
+            == trace.len()
     }
 }

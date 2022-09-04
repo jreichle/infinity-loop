@@ -1,9 +1,7 @@
 use yew::html;
 use yew::prelude::*;
 
-use game::model::{
-    tile::{Tile, Square}
-};
+use game::model::tile::{Square, Tile};
 
 const IMG_PATH: [&str; 6] = [
     "data/tiles/0.svg",
@@ -25,7 +23,7 @@ pub fn tile_image_component(props: &TileImageProps) -> Html {
     let cell_symbol = tile.to_string().chars().next().unwrap();
     let cell_img = get_index(cell_symbol);
 
-    html!{
+    html! {
         <div class="tile">
             <img src={IMG_PATH[cell_img]}
                 style={format!("{}{}{}",
@@ -35,7 +33,6 @@ pub fn tile_image_component(props: &TileImageProps) -> Html {
             />
         </div>
     }
-
 }
 
 pub fn get_angle(cell_symbol: char) -> usize {

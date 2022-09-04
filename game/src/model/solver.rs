@@ -12,7 +12,7 @@ use super::{
     coordinate::Coordinate,
     enummap::EnumMap,
     enumset::EnumSet,
-    finite::{Finite, all_enums_ascending},
+    finite::{all_enums_ascending, Finite},
     grid::Grid,
     lattice::{BoundedLattice, BoundedLatticeExt},
     tile::{Square, Tile},
@@ -177,8 +177,7 @@ impl Coordinate<isize> {
 
     /// Returns the position of all neighboring tiles in arbitrary order
     pub fn all_neighbor_indices(self) -> impl Iterator<Item = Coordinate<isize>> {
-        all_enums_ascending()
-            .map(move |dir| self.get_neighbor_index(dir))
+        all_enums_ascending().map(move |dir| self.get_neighbor_index(dir))
     }
 }
 
@@ -414,7 +413,7 @@ impl Iterator for SolutionIterator<Sentinel<Square>> {
             if let Some(grid) = minimized_grid.extract_if_collapsed() {
                 return Some(grid);
             }
-            
+
             // distinguish between no and several solutions
             if let Some(grid) = minimized_grid.check_no_empty_superposition() {
                 // INFO: certain candidates after branching are unsolvable in rare cases
@@ -431,7 +430,7 @@ const _: Superposition<Square> = EnumSet::FULL;
 mod tests {
 
     use super::*;
-    use crate::model::{interval::Max, finite::all_enums_ascending};
+    use crate::model::{finite::all_enums_ascending, interval::Max};
 
     #[quickcheck]
     fn tile_configurations_have_same_number_of_connections(tile: Tile<Square>) -> bool {
@@ -454,9 +453,7 @@ mod tests {
     fn neighborhood_is_euclidian(index: Coordinate<Max<100>>) -> bool {
         // restrict coordinates to a range resembling actual values used in grid and avoid integer over- / underflows
         let index = index.map(Max::to_isize);
-        all_enums_ascending()
-            .fold(index, Coordinate::get_neighbor_index)
-            == index
+        all_enums_ascending().fold(index, Coordinate::get_neighbor_index) == index
     }
 
     #[quickcheck]

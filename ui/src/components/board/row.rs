@@ -1,5 +1,5 @@
 use yew::prelude::*;
-use yew::{html, Properties, Children};
+use yew::{html, Children, Properties};
 
 #[derive(Properties, PartialEq, Clone)]
 pub struct RowComponentProps {

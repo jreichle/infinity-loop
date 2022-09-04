@@ -1,13 +1,13 @@
 #![allow(dead_code, unused_imports)]
-use game::model::tile::Square::{Down, Left, Right, Up};
-use game::{enumset, tile};
 use game::generator::wfc::{self, WfcGenerator};
 use game::model::solver::SentinelGrid;
 use game::model::testlevel::unicode_to_tile;
+use game::model::tile::Square::{Down, Left, Right, Up};
 use game::model::{
     enumset::EnumSet,
     tile::{Square, Tile},
 };
+use game::{enumset, tile};
 
 use std::process::Command;
 

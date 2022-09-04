@@ -17,8 +17,8 @@ pub fn grid_component(props: &GridComponentProps) -> Html {
     html! {
         <>
             { for children.iter() }
-            
-            { 
+
+            {
                 if !overlay_message.trim().is_empty() {
                     html!{
                         <div class="level-overlay">

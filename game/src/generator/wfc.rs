@@ -5,7 +5,7 @@ use crate::model::{
     coordinate::Coordinate,
     enummap::EnumMap,
     enumset::EnumSet,
-    finite::{Finite, all_enums_ascending},
+    finite::{all_enums_ascending, Finite},
     grid::Grid,
     solver::{propagate_restrictions_to_all_neighbors, Sentinel, Superposition},
     tile::{
