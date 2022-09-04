@@ -10,6 +10,7 @@ pub struct TextPageProps {
     pub content: Html,
 }
 
+/// This page is a simple component that displays given html and a heading.
 #[function_component(TextPage)]
 pub fn text_page(props: &TextPageProps) -> html {
     let back_onclick: Callback<MouseEvent> = {

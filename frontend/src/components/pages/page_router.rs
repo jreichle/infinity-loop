@@ -14,13 +14,15 @@ use crate::helper::screen::Screen;
 
 use game::model::coordinate::Coordinate;
 
+/// This page is used as a router which directs to the correct page depending on
+/// which screen is required
+/// Additionally the page can display messages to inform the user.
 #[function_component(PageRouter)]
 pub fn page_router() -> Html {
     let head_message = use_state_eq(|| "".to_string());
     let bottom_message = use_state_eq(|| "".to_string());
     let head_message_timeout_id = use_state(|| -1_i32);
     let bottom_message_timeout_id = use_state(|| -2_i32);
-    
 
     let dimension = use_state(|| Coordinate::new(5_usize, 5_usize));
     let screen = use_state(retrieve_screen);
