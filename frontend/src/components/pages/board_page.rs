@@ -1,10 +1,9 @@
 use crate::helper::screen::Screen;
 use yew::prelude::*;
-use yew::{html, Callback, events::Event};
+use yew::{events::Event, html, Callback};
 
 use wasm_bindgen::JsCast;
-use web_sys::{HtmlInputElement};
-
+use web_sys::HtmlInputElement;
 
 pub struct Comp;
 
@@ -30,7 +29,7 @@ use crate::helper::local_storage::change_screen;
 pub struct BoardPageProps {
     pub level_grid: Grid<Tile<Square>>,
     pub screen: UseStateHandle<Screen>,
-    pub head_message: UseStateHandle<String>,   
+    pub head_message: UseStateHandle<String>,
     pub cnf: UseStateHandle<String>,
     pub literals: UseStateHandle<String>,
 }
@@ -162,7 +161,7 @@ pub fn board_page_component(props: &BoardPageProps) -> Html {
                     {"-levels-"}
                 </button>
 
-                
+
             </div>
         </div>
     }

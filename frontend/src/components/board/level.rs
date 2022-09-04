@@ -130,8 +130,7 @@ pub fn level_component(props: &LevelProps) -> html {
     }
 }
 
-
-/// A stateless level board that doesn't support any mouse action. 
+/// A stateless level board that doesn't support any mouse action.
 /// Mainly used for preview.
 #[derive(Properties, PartialEq, Clone)]
 pub struct StatelessLevelProps {

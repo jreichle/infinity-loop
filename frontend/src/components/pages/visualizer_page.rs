@@ -23,7 +23,7 @@ const DEFAULT_SPEED: isize = 80;
 const PASS_LIMIT: usize = 40000;
 const PROP_LIMIT: usize = 1000;
 
-/// get new board with the given generator, 
+/// get new board with the given generator,
 /// and return the grid and weight after 1 step
 fn get_new_board(wfc_generator: &WfcGenerator) -> (GameGrid, Weights) {
     let (sentinel_grid, weights) = wfc_generator.init_board();
@@ -49,7 +49,7 @@ pub struct VisualizerPageProps {
 }
 
 /// A board that visualizes the steps of the wfc generator.
-/// Provides a selection Allows users to specify the size and tiles for generation 
+/// Provides a selection Allows users to specify the size and tiles for generation
 #[function_component(VisualizerPage)]
 pub fn wfc_board_component(props: &VisualizerPageProps) -> Html {
     let overlay_message = use_state_eq(|| String::from(""));

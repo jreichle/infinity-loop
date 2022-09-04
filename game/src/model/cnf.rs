@@ -1,7 +1,6 @@
 use crate::{enumset, tile};
 
-
-use crate::core::{finite::Finite};
+use crate::core::finite::Finite;
 
 use super::{
     grid::Grid,
@@ -9,7 +8,6 @@ use super::{
         Square,
         Square::{Down, Left, Right, Up},
         Tile,
-        
     },
 };
 
@@ -22,8 +20,7 @@ use super::{
 // (B ∨ A) ∧ (C ∨ A) ∧ (D ∨ A) ∧ (C ∨ B) ∧ (D ∨ B) ∧ (¬C ∨ ¬D ∨ ¬A ∨ ¬B) ∧ (D ∨ C)
 // since there are many tiles the sides are given numbers, beginning in the top left with 1-4, then moving to the right 5-8 and so forth
 // to achieve this the number of each tile is given to the function and multiplied by 4 before adding 1 to 4 to it. The most up left tile is numbered 0
-fn tile_to_literals(tile: Tile<Square>, num: i32) -> String{
-
+fn tile_to_literals(tile: Tile<Square>, num: i32) -> String {
     match tile.enum_to_index(){
         0 => format!("-{} 0\n-{} 0\n-{} 0\n-{} 0\n",num*4+1,num*4+2,num*4+3,num*4+4),
         1 => format!("-{} -{} 0\n-{} -{} 0\n-{} -{} 0\n{} {} {} {} 0\n-{} -{} 0\n-{} -{} 0\n-{} -{} 0\n",num*4+2,num*4+1,num*4+1,num*4+3,num*4+1,num*4+4,num*4+1,num*4+2,num*4+3,num*4+4,num*4+2,num*4+3,num*4+4,num*4+3,num*4+2,num*4+4),
@@ -50,13 +47,13 @@ fn tile_to_literals(tile: Tile<Square>, num: i32) -> String{
 // this also sets all literals that are at the edge of the puzzle to false
 // this also assures that adjacent sides of tiles have the same value, so they either connect or they don't but not that one tile has a connection and one doesn't
 
-pub fn level_to_cnf(level: &Grid<Tile<Square>>) -> Result<String, String>{
+pub fn level_to_cnf(level: &Grid<Tile<Square>>) -> Result<String, String> {
     let mut num = 0;
     let mut cnf = String::from("");
     //run tile_to_literal for all tiles
     for l in level.clone().into_iter() {
-        let char_cnf = tile_to_literals(l,num);
-        num+=1;
+        let char_cnf = tile_to_literals(l, num);
+        num += 1;
 
         cnf.push_str(&char_cnf);
     }
@@ -68,101 +65,116 @@ pub fn level_to_cnf(level: &Grid<Tile<Square>>) -> Result<String, String>{
         for y in 0..rows {
             //set literals at the edge of the puzzle false
             if y == 0 {
-                cnf.push_str(&format!("-{} 0\n",{(x+columns*y)*4+1}))
+                cnf.push_str(&format!("-{} 0\n", { (x + columns * y) * 4 + 1 }))
             }
 
-            if y == rows -1 {
-                cnf.push_str(&format!("-{} 0\n",{(x+columns*y)*4+3}))
+            if y == rows - 1 {
+                cnf.push_str(&format!("-{} 0\n", { (x + columns * y) * 4 + 3 }))
             }
 
             if x == 0 {
-                cnf.push_str(&format!("-{} 0\n",{(x+columns*y)*4+4}))
+                cnf.push_str(&format!("-{} 0\n", { (x + columns * y) * 4 + 4 }))
             }
 
-            if x == columns-1 {
-                cnf.push_str(&format!("-{} 0\n",(x+columns*y)*4+2))
+            if x == columns - 1 {
+                cnf.push_str(&format!("-{} 0\n", (x + columns * y) * 4 + 2))
             }
 
             //assure that adjacent tiles have the same value
-            if x < columns-1 {
-                cnf.push_str(&format!("{} -{} 0\n-{} {} 0\n", {(x+columns*y)*4+2} ,{((x+1)+columns*y)*4+4}, {(x+columns*y)*4+2}, {((x+1)+columns*y)*4+4}))
+            if x < columns - 1 {
+                cnf.push_str(&format!(
+                    "{} -{} 0\n-{} {} 0\n",
+                    { (x + columns * y) * 4 + 2 },
+                    { ((x + 1) + columns * y) * 4 + 4 },
+                    { (x + columns * y) * 4 + 2 },
+                    { ((x + 1) + columns * y) * 4 + 4 }
+                ))
             }
 
-            if y < rows-1 {
-                cnf.push_str(&format!("{} -{} 0\n-{} {} 0\n", (x+columns*y)*4+3, (x+columns*(y+1))*4+1, (x+columns*y)*4+3, (x+columns*(y+1))*4+1))
+            if y < rows - 1 {
+                cnf.push_str(&format!(
+                    "{} -{} 0\n-{} {} 0\n",
+                    (x + columns * y) * 4 + 3,
+                    (x + columns * (y + 1)) * 4 + 1,
+                    (x + columns * y) * 4 + 3,
+                    (x + columns * (y + 1)) * 4 + 1
+                ))
             }
         }
     }
-    
+
     //add header for the cnf file
-    let header = format!("p cnf {} {} \n",rows*columns*4,cnf.matches(" 0\n").count());
+    let header = format!(
+        "p cnf {} {} \n",
+        rows * columns * 4,
+        cnf.matches(" 0\n").count()
+    );
     let combine = header + &cnf;
 
-    log::info!("{}",combine);
+    log::info!("{}", combine);
     Ok(combine)
 }
 
 // this function takes a string of signed literals and creates the corresponding tiles
 // first it puts all literals into an array and sorts them by their absolute values
 // then it runs through that array by increments of 4 and depending on which literals are set to true it creates tiles with connections on these sides
-pub fn solved_to_tiles(solved: &str) -> Result<Vec<Tile<Square>>, String>{
+pub fn solved_to_tiles(solved: &str) -> Result<Vec<Tile<Square>>, String> {
     let mut literals = vec![];
     let mut literal = String::from("");
     for c in solved.chars() {
         if c == ' ' {
             let lit = literal.parse::<i32>();
             match lit {
-                Ok(i) => {literals.push(i)},
+                Ok(i) => literals.push(i),
                 Err(_e) => return Ok(vec![]),
             }
             literal = String::from("");
             continue;
-        }
-        else{
+        } else {
             literal.push(c)
         }
     }
     if literal != "" {
         let last = literal.parse::<i32>();
         match last {
-            Ok(i) => {literals.push(i)},
+            Ok(i) => literals.push(i),
             Err(_e) => return Ok(vec![]),
         }
     }
 
-    literals.sort_by(|a,b| a.abs().cmp(&b.abs()));
+    literals.sort_by(|a, b| a.abs().cmp(&b.abs()));
 
-    log::info!("literals: {}",literals.len());
+    log::info!("literals: {}", literals.len());
 
     //run through the literals in increments of 4, creating the tiles depending on those
 
     let mut tiles = vec![];
 
-    for i in 0..literals.len()/4 {
-        if literals[i*4] > 0 {
-            if literals[i*4+1] > 0 {
-                if literals[i*4+2] > 0 {
-                    if literals[i*4+3] > 0 {
+    for i in 0..literals.len() / 4 {
+        if literals[i * 4] > 0 {
+            if literals[i * 4 + 1] > 0 {
+                if literals[i * 4 + 2] > 0 {
+                    if literals[i * 4 + 3] > 0 {
                         tiles.push(Tile::ALL_CONNECTIONS)
                     } else {
                         tiles.push(tile!(Up, Right, Down))
                     }
                 } else {
-                    if literals[i*4+3] > 0 {
-                        tiles.push(tile!(Up,Right, Left))
+                    if literals[i * 4 + 3] > 0 {
+                        tiles.push(tile!(Up, Right, Left))
                     } else {
                         tiles.push(tile!(Up, Right))
                     }
                 }
             } else {
-                if literals[i*4+2] > 0 {
-                    if literals[i*4+3] > 0 {
-                        tiles.push(tile!(Up,Down,Left))
+                if literals[i * 4 + 2] > 0 {
+                    if literals[i * 4 + 3] > 0 {
+                        tiles.push(tile!(Up, Down, Left))
                     } else {
                         tiles.push(tile!(Up, Down))
                     }
                 } else {
-                    if literals[i*4+3] > 0 {
+                    if literals[i * 4 + 3] > 0 {
                         tiles.push(tile!(Up, Left))
                     } else {
                         tiles.push(tile!(Up))
@@ -170,29 +182,29 @@ pub fn solved_to_tiles(solved: &str) -> Result<Vec<Tile<Square>>, String>{
                 }
             }
         } else {
-            if literals[i*4+1] > 0 {
-                if literals[i*4+2] > 0 {
-                    if literals[i*4+3] > 0 {
+            if literals[i * 4 + 1] > 0 {
+                if literals[i * 4 + 2] > 0 {
+                    if literals[i * 4 + 3] > 0 {
                         tiles.push(tile!(Right, Down, Left))
                     } else {
                         tiles.push(tile!(Right, Down))
                     }
                 } else {
-                    if literals[i*4+3] > 0 {
+                    if literals[i * 4 + 3] > 0 {
                         tiles.push(tile!(Right, Left))
                     } else {
                         tiles.push(tile!(Right))
                     }
                 }
             } else {
-                if literals[i*4+2] > 0 {
-                    if literals[i*4+3] > 0 {
-                        tiles.push(tile!(Down,Left))
+                if literals[i * 4 + 2] > 0 {
+                    if literals[i * 4 + 3] > 0 {
+                        tiles.push(tile!(Down, Left))
                     } else {
                         tiles.push(tile!(Down))
                     }
                 } else {
-                    if literals[i*4+3] > 0 {
+                    if literals[i * 4 + 3] > 0 {
                         tiles.push(tile!(Left))
                     } else {
                         tiles.push(Tile::NO_CONNECTIONS)
@@ -201,6 +213,6 @@ pub fn solved_to_tiles(solved: &str) -> Result<Vec<Tile<Square>>, String>{
             }
         }
     }
-    log::info!("tiles: {}",tiles.len());
+    log::info!("tiles: {}", tiles.len());
     Ok(tiles)
 }

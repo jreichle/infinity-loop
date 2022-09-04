@@ -49,8 +49,7 @@ fn get_index(cell_symbol: char) -> usize {
     }
 }
 
-
-/// get the correct angle for image roation 
+/// get the correct angle for image roation
 fn get_angle(cell_symbol: char) -> usize {
     match cell_symbol {
         ' ' | '╋' | '╹' | '┗' | '┣' => 0,
@@ -60,4 +59,3 @@ fn get_angle(cell_symbol: char) -> usize {
         _ => 0,
     }
 }
-

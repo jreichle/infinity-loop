@@ -2,8 +2,8 @@ use yew::html;
 use yew::prelude::*;
 
 use game::model::tile::{
-        Square::{self, Down, Left, Right, Up},
-        Tile,
+    Square::{self, Down, Left, Right, Up},
+    Tile,
 };
 
 use game::core::enumset::EnumSet;

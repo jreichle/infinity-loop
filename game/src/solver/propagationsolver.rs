@@ -17,10 +17,10 @@ use crate::core::{
 };
 
 use crate::model::{
+    cnf,
     coordinate::Coordinate,
     grid::Grid,
     tile::{Square, Tile},
-    cnf
 };
 
 ///! This file contains a solver algorithm
@@ -90,7 +90,7 @@ pub struct SentinelGrid<A>(pub Grid<A>);
 
 impl<A: Clone> SentinelGrid<A> {
     pub const EMPTY: Self = SentinelGrid(Grid::EMPTY);
-    
+
     /// Deletes the layer of sentinel values and returns the original grid
     pub fn extract_grid(&self) -> Grid<A> {
         Grid::init(self.0.dimensions() - 2, |c| self.0[c + 1].clone())
@@ -399,16 +399,14 @@ impl Grid<Tile<Square>> {
     pub fn solve_with_input(&self, input: &str) -> Grid<Tile<Square>> {
         let tiles = cnf::solved_to_tiles(input).unwrap();
         if tiles.len() == self.columns() * self.rows() {
-            Grid::new(Coordinate::new(self.columns(),self.rows()),tiles)
-        }
-        else {
+            Grid::new(Coordinate::new(self.columns(), self.rows()), tiles)
+        } else {
             let mut unsolvable = vec![];
-            for _i in 0..self.columns()*self.rows() {
+            for _i in 0..self.columns() * self.rows() {
                 unsolvable.push(Tile::ALL_CONNECTIONS);
             }
-            Grid::new(Coordinate::new(self.columns(),self.rows()), unsolvable)
+            Grid::new(Coordinate::new(self.columns(), self.rows()), unsolvable)
         }
-        
     }
 }
 

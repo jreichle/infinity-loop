@@ -125,29 +125,33 @@ impl Reducible for Level<Grid<Tile<Square>>> {
                     Level::new(self.id, solution).into()
                 }
             },
-            BoardAction::SolveLevelInput(input) => {               
+            BoardAction::SolveLevelInput(input) => {
                 let solved_version = self.data.solve_with_input(&input);
-                    log::info!("solved level:\n {}", solved_version);
+                log::info!("solved level:\n {}", solved_version);
 
-                    let mut same = true;
+                // let mut same = true;
 
-                    let first_grid = solved_version.as_slice().clone();
-                    let second_grid = self.data.as_slice().clone();
+                // let first_grid = solved_version.as_slice().clone();
+                // let second_grid = self.data.as_slice().clone();
 
-                    for i in 0..first_grid.len() {
-                        if !check_match(first_grid[i], second_grid[i]) {
-                            same = false;
-                        }
-                    }
-                    if solved_version.is_solved() && same {
-                        Level::new(self.id,solved_version).into()
-                    }
-                    else {
-                        self
-                    }
-                
+                // for i in 0..first_grid.len() {
+                //     if !check_match(first_grid[i], second_grid[i]) {
+                //         same = false;
+                //     }
+                // }
+
+                let same = self
+                    .data
+                    .clone()
+                    .into_iter()
+                    .zip(solved_version.clone().into_iter())
+                    .all(|(x, y)| check_match(x, y));
+                if solved_version.is_solved() && same {
+                    Level::new(self.id, solved_version).into()
+                } else {
+                    self
+                }
             }
-
 
             // Editor actions
             BoardAction::ChangeTileShape(index) => {
@@ -206,33 +210,92 @@ impl Level<Grid<Tile<Square>>> {
 }
 
 //checks if 2 tiles have the same playing piece on them, no matter the rotation
-pub fn check_match(first: Tile<Square>, second: Tile<Square>) -> bool{
-    match first.enum_to_index(){
+pub fn check_match(first: Tile<Square>, second: Tile<Square>) -> bool {
+    match first.enum_to_index() {
         0 => second.enum_to_index() == 0,
-        1 => second.enum_to_index() == 1 || second.enum_to_index() == 2 || second.enum_to_index() == 4 || second.enum_to_index() == 8,
-        2 => second.enum_to_index() == 1 || second.enum_to_index() == 2 || second.enum_to_index() == 4 || second.enum_to_index() == 8,
-        4 => second.enum_to_index() == 1 || second.enum_to_index() == 2 || second.enum_to_index() == 4 || second.enum_to_index() == 8,
-        8 => second.enum_to_index() == 1 || second.enum_to_index() == 2 || second.enum_to_index() == 4 || second.enum_to_index() == 8,
+        1 => {
+            second.enum_to_index() == 1
+                || second.enum_to_index() == 2
+                || second.enum_to_index() == 4
+                || second.enum_to_index() == 8
+        }
+        2 => {
+            second.enum_to_index() == 1
+                || second.enum_to_index() == 2
+                || second.enum_to_index() == 4
+                || second.enum_to_index() == 8
+        }
+        4 => {
+            second.enum_to_index() == 1
+                || second.enum_to_index() == 2
+                || second.enum_to_index() == 4
+                || second.enum_to_index() == 8
+        }
+        8 => {
+            second.enum_to_index() == 1
+                || second.enum_to_index() == 2
+                || second.enum_to_index() == 4
+                || second.enum_to_index() == 8
+        }
 
-        3 => second.enum_to_index() == 3 || second.enum_to_index() == 6 || second.enum_to_index() == 9 || second.enum_to_index() == 12,
-        6 => second.enum_to_index() == 3 || second.enum_to_index() == 6 || second.enum_to_index() == 9 || second.enum_to_index() == 12,
-        9 => second.enum_to_index() == 3 || second.enum_to_index() == 6 || second.enum_to_index() == 9 || second.enum_to_index() == 12,
-        12 => second.enum_to_index() == 3 || second.enum_to_index() == 6 || second.enum_to_index() == 9 || second.enum_to_index() == 12,
+        3 => {
+            second.enum_to_index() == 3
+                || second.enum_to_index() == 6
+                || second.enum_to_index() == 9
+                || second.enum_to_index() == 12
+        }
+        6 => {
+            second.enum_to_index() == 3
+                || second.enum_to_index() == 6
+                || second.enum_to_index() == 9
+                || second.enum_to_index() == 12
+        }
+        9 => {
+            second.enum_to_index() == 3
+                || second.enum_to_index() == 6
+                || second.enum_to_index() == 9
+                || second.enum_to_index() == 12
+        }
+        12 => {
+            second.enum_to_index() == 3
+                || second.enum_to_index() == 6
+                || second.enum_to_index() == 9
+                || second.enum_to_index() == 12
+        }
 
-        5 => second.enum_to_index() == 5 || second.enum_to_index() == 10 ,
-        10 => second.enum_to_index() == 5 || second.enum_to_index() == 10 ,
+        5 => second.enum_to_index() == 5 || second.enum_to_index() == 10,
+        10 => second.enum_to_index() == 5 || second.enum_to_index() == 10,
 
-        7 => second.enum_to_index() == 7 || second.enum_to_index() == 11 || second.enum_to_index() == 13 || second.enum_to_index() == 14,
-        11 => second.enum_to_index() == 7 || second.enum_to_index() == 11 || second.enum_to_index() == 13 || second.enum_to_index() == 14,
-        13 => second.enum_to_index() == 7 || second.enum_to_index() == 11 || second.enum_to_index() == 13 || second.enum_to_index() == 14,
-        14 => second.enum_to_index() == 7 || second.enum_to_index() == 11 || second.enum_to_index() == 13 || second.enum_to_index() == 14,
+        7 => {
+            second.enum_to_index() == 7
+                || second.enum_to_index() == 11
+                || second.enum_to_index() == 13
+                || second.enum_to_index() == 14
+        }
+        11 => {
+            second.enum_to_index() == 7
+                || second.enum_to_index() == 11
+                || second.enum_to_index() == 13
+                || second.enum_to_index() == 14
+        }
+        13 => {
+            second.enum_to_index() == 7
+                || second.enum_to_index() == 11
+                || second.enum_to_index() == 13
+                || second.enum_to_index() == 14
+        }
+        14 => {
+            second.enum_to_index() == 7
+                || second.enum_to_index() == 11
+                || second.enum_to_index() == 13
+                || second.enum_to_index() == 14
+        }
 
         15 => second.enum_to_index() == 15,
 
-        _ => false
+        _ => false,
     }
 }
-
 
 /// Retries an impure computation until it succeeds
 fn retry_until_ok<A, B, E, F: Fn(&A) -> Result<B, E>>(initial: A, computation: F) -> B {

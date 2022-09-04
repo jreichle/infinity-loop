@@ -17,7 +17,7 @@ pub struct CellComponentProps {
 }
 
 /// A tile representation in a level board.
-/// Allows custom onclick and onwheel actions, 
+/// Allows custom onclick and onwheel actions,
 /// which is mainly used for turning and changing tiles
 #[function_component(CellComponent)]
 pub fn cell_component(props: &CellComponentProps) -> Html {

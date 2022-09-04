@@ -2,10 +2,7 @@ use yew::prelude::*;
 use yew::{html, Callback};
 
 use game::generator::fastgen::generate;
-use game::model::{
-    gameboard::GameBoard,
-    coordinate::Coordinate
-};
+use game::model::{coordinate::Coordinate, gameboard::GameBoard};
 
 use crate::components::board::level::LevelComponent;
 use crate::components::reducers::board_reducer::{BoardAction, Level};
