@@ -467,7 +467,7 @@ where
 macro_rules! enumset {
     ( $( $e:expr ),* ) => {{
         #[allow(unused_mut)]
-        let mut set = $crate::model::enumset::EnumSet::EMPTY;
+        let mut set = $crate::core::enumset::EnumSet::EMPTY;
         $(
             set.insert($e);
         )*
@@ -515,7 +515,8 @@ mod test {
 
     use quickcheck::Gen;
 
-    use crate::model::{enumset::*, finite::all_enums_ascending, interval::Max, tile::Square};
+    use crate::core::{enumset::*, finite::all_enums_ascending, interval::Max};
+    use crate::model::tile::Square;
 
     #[quickcheck]
     fn set_to_index_and_back_is_id(set: EnumSet<EnumSet<Option<bool>>>) -> bool {

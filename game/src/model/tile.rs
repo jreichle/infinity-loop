@@ -6,7 +6,9 @@ use std::{
 use quickcheck::{Arbitrary, Gen};
 use Square::{Down, Left, Right, Up};
 
-use super::{cardinality::Cardinality, enumset::EnumSet, finite::Finite};
+use crate::core::lattice::*;
+
+use crate::core::{cardinality::Cardinality, enumset::EnumSet, finite::Finite};
 
 /// Represents a direction for a tile connection
 #[derive(Debug, Hash, Copy, Clone, PartialEq, Eq, PartialOrd, Ord)]
@@ -177,6 +179,18 @@ impl Display for Tile<Square> {
     }
 }
 
+impl<A: Finite> JoinSemilattice for Tile<A> {}
+
+impl<A: Finite> MeetSemilattice for Tile<A> {}
+
+impl<A: Finite> BoundedLattice for Tile<A> {
+    const BOTTOM: Self = Self::NO_CONNECTIONS;
+
+    const TOP: Self = Self::ALL_CONNECTIONS;
+}
+
+impl<A: Finite> DistributiveLattice for Tile<A> {}
+
 impl Tile<Square> {
     /// visualization for each tile state as UNICODE character
     const UNICODE_TILES: [char; 16] = [
@@ -194,7 +208,7 @@ macro_rules! tile {
 #[cfg(test)]
 mod tests {
 
-    use crate::model::{cardinality::Cardinality, finite::Finite, interval::Max};
+    use crate::core::{cardinality::Cardinality, finite::Finite, interval::Max};
 
     use super::{Square, Tile};
 

@@ -1,16 +1,32 @@
-# Architecture of Infinity Loop
-(That's how the project is structured)
+# Project Architecture
 
 ## Overview
 
+## Game
+
+standalone implementation of Infinity Loop in pure Rust
+
+
+### Core
+
+general data structures and traits independent of this project
+
+### Generator
+
+contains algorithms for level generators
+
+### Model
+
+contains data structures specific to Infinity Loop
+
+### Solver
+
+solving algorithms for levels
 
 ## Backend
 
 -  src/main.rs - facilitates api for getting the frontend and corresponding data served to client
 -  build.rs - compiles frontend in order to serve to a client
-
-## Game
-
 
 ## Frontend
 

@@ -4,12 +4,13 @@ use quickcheck::Arbitrary;
 
 use crate::model::{
     coordinate::Coordinate,
-    fastgen::generate,
     grid::Grid,
-    interval::Max,
-    testlevel::{ascii_to_tile, parse_level, TEST_LEVELS},
+    parser::{ascii_to_tile, parse_level, TEST_LEVELS},
     tile::{Square, Tile},
 };
+
+use super::fastgen::generate;
+use crate::core::interval::Max;
 
 ///! level generator is an infinite stream of functions from integer seed value to level
 ///! and is defined by an anamorphism

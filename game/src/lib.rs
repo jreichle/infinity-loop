@@ -7,8 +7,10 @@ extern crate quickcheck;
 #[macro_use(quickcheck)]
 extern crate quickcheck_macros;
 
+pub mod core;
 pub mod generator;
 pub mod model;
+pub mod solver;
 
 use model::{
     grid::Grid,

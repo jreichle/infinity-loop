@@ -3,15 +3,21 @@ use std::{fmt::Display, hash::Hash};
 
 use crate::model::{
     coordinate::Coordinate,
-    enummap::EnumMap,
-    enumset::EnumSet,
-    finite::{all_enums_ascending, Finite},
     grid::Grid,
-    solver::{propagate_restrictions_to_all_neighbors, Sentinel, Superposition},
     tile::{
         Square::{self},
         Tile,
     },
+};
+
+use crate::core::{
+    enummap::EnumMap,
+    enumset::EnumSet,
+    finite::{all_enums_ascending, Finite},
+};
+
+use crate::solver::propagationsolver::{
+    propagate_restrictions_to_all_neighbors, Sentinel, Superposition,
 };
 
 ///! This file contains a implementation of the wave function collapse (WFC) algorithm for our game.
@@ -324,14 +330,13 @@ impl WfcGenerator {
 mod tests {
 
     use crate::generator::wfc::WfcGenerator;
-    use crate::model::{
-        enumset::EnumSet,
-        tile::{
-            Square::{self, Down, Left, Right, Up},
-            Tile,
-        },
+    use crate::model::tile::{
+        Square::{self, Down, Left, Right, Up},
+        Tile,
     };
     use crate::{enumset, tile};
+
+    use crate::core::enumset::EnumSet;
 
     #[quickcheck]
     fn wfc_test_full_set() -> bool {
