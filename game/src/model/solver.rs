@@ -406,7 +406,7 @@ impl Grid<Tile<Square>> {
         }
         else {
             let mut unsolvable = vec![];
-            for i in 0..self.columns()*self.rows() {
+            for _i in 0..self.columns()*self.rows() {
                 unsolvable.push(Tile::ALL_CONNECTIONS);
             }
 
