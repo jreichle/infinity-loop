@@ -54,9 +54,9 @@ pub struct VisualizerPageProps {
 pub fn wfc_board_component(props: &VisualizerPageProps) -> Html {
     let overlay_message = use_state_eq(|| String::from(""));
 
-    /// Keeps track of the current config of the wfc generator.
-    /// Size, speed and if it is currently playing
-    /// interval_id is used for stoping the play operation
+    // Keeps track of the current config of the wfc generator.
+    // Size, speed and if it is currently playing
+    // interval_id is used for stoping the play operation
     let (width_value, height_value, speed_value) = (
         use_state(|| DEFAULT_WIDTH),
         use_state(|| DEFAULT_HEIGHT),
@@ -76,9 +76,9 @@ pub fn wfc_board_component(props: &VisualizerPageProps) -> Html {
     let weights = use_state_eq(|| weights);
     let level_grid = use_state_eq(|| WfcGenerator::extract_grid(&sentinel_grid));
 
-    /// Get all config, including size, tile selection and updates the generator.
-    /// And directly initiate a new level generation.
-    /// Show overlay error on the level board if the config is not valid.
+    // Get all config, including size, tile selection and updates the generator.
+    // And directly initiate a new level generation.
+    // Show overlay error on the level board if the config is not valid.
     let update_onclick: Callback<MouseEvent> = {
         let overlay_message = overlay_message.clone();
         let available_tiles = available_tiles.clone();
@@ -111,7 +111,7 @@ pub fn wfc_board_component(props: &VisualizerPageProps) -> Html {
         })
     };
 
-    /// Get the next step of the generation. If complete, start new generation.
+    // Get the next step of the generation. If complete, start new generation.
     let next_onclick: Callback<MouseEvent> = {
         let wfc_generator = wfc_generator.clone();
         let level_grid = level_grid.clone();
@@ -130,7 +130,7 @@ pub fn wfc_board_component(props: &VisualizerPageProps) -> Html {
         })
     };
 
-    /// Start playing generation steps with the given speed.
+    // Start playing generation steps with the given speed.
     let play_onclick: Callback<MouseEvent> = {
         let interval_id = interval_id;
         let wfc_generator = wfc_generator;
@@ -193,7 +193,7 @@ pub fn wfc_board_component(props: &VisualizerPageProps) -> Html {
         })
     };
 
-    /// Go back to home page.
+    // Go back to home page.
     let to_title: Callback<MouseEvent> = {
         let screen = props.screen.clone();
         Callback::from(move |_| {
