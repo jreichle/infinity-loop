@@ -6,6 +6,7 @@ pub struct RowComponentProps {
     pub children: Children,
 }
 
+/// A row in the level board, which is filled with cells.
 #[function_component(RowComponent)]
 pub fn row_component(props: &RowComponentProps) -> Html {
     html! {

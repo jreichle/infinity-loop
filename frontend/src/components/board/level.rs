@@ -26,6 +26,8 @@ pub struct LevelProps {
     pub can_change: bool,
 }
 
+/// A playable level supporting mouse actions.
+/// The state is managed by the board reducer.
 #[function_component(LevelComponent)]
 pub fn level_component(props: &LevelProps) -> html {
     fn dispatch_turn_cell(
@@ -128,6 +130,9 @@ pub fn level_component(props: &LevelProps) -> html {
     }
 }
 
+
+/// A stateless level board that doesn't support any mouse action. 
+/// Mainly used for preview.
 #[derive(Properties, PartialEq, Clone)]
 pub struct StatelessLevelProps {
     pub level_grid: Grid<Tile<Square>>,
