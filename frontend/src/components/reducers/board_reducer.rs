@@ -8,11 +8,13 @@ use crate::helper::level_randomizer::randomize_level;
 use crate::helper::local_storage::save_level;
 use wasm_bindgen::{prelude::*, JsCast};
 
-use game::generator::wfc::WfcGenerator;
-use game::model::hint::{generate_solving_trace, get_hint};
+use game::generator::{
+    wfc::WfcGenerator,
+    fastgen::generate,
+};
+use game::solver::hint::{generate_solving_trace, get_hint};
 use game::model::{
     coordinate::Coordinate,
-    fastgen::generate,
     gameboard::GameBoard,
     grid::Grid,
     tile::{Square, Tile},

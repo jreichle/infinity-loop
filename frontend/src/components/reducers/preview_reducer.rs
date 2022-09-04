@@ -2,7 +2,7 @@ use std::rc::Rc;
 use yew::prelude::*;
 
 use game::model::coordinate::Coordinate;
-use game::model::fastgen::generate;
+use game::generator::fastgen::generate;
 use game::model::grid::Grid;
 use game::model::tile::{Square, Tile};
 

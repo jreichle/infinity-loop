@@ -1,13 +1,12 @@
 use yew::html;
 use yew::prelude::*;
 
-use game::model::{
-    enumset::EnumSet,
-    tile::{
+use game::model::tile::{
         Square::{self, Down, Left, Right, Up},
         Tile,
-    },
 };
+
+use game::core::enumset::EnumSet;
 use game::{enumset, tile};
 
 use crate::components::utils::tile_checkbox::TileCheckbox;

@@ -4,12 +4,12 @@ use wasm_bindgen::{prelude::*, JsCast};
 use yew::prelude::*;
 use yew::{html, Callback};
 
+use game::model::tile::{Square, Tile};
 use game::generator::wfc::WfcGenerator;
-use game::model::{
+use game::solver::propagationsolver::SentinelGrid;
+use game::core::{
     enummap::EnumMap,
     enumset::EnumSet,
-    solver::SentinelGrid,
-    tile::{Square, Tile},
 };
 
 use crate::components::board::level::StatelessLevelComponent;

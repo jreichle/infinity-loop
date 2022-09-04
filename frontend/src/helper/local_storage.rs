@@ -1,7 +1,7 @@
 use super::screen::Screen;
 
 use game::model::grid::Grid;
-use game::model::testlevel::{parse_level, unicode_to_tile};
+use game::model::parser::{parse_level, unicode_to_tile};
 use game::model::tile::{Square, Tile};
 use yew::prelude::*;
 
