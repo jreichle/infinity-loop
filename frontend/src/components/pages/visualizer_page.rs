@@ -1,16 +1,12 @@
-use std::panic;
-
 use wasm_bindgen::{prelude::*, JsCast};
 use yew::prelude::*;
 use yew::{html, Callback};
 
-use game::model::tile::{Square, Tile};
+use game::core::{enummap::EnumMap, enumset::EnumSet};
 use game::generator::wfc::WfcGenerator;
+use game::model::grid::Grid;
+use game::model::tile::{Square, Tile};
 use game::solver::propagationsolver::SentinelGrid;
-use game::core::{
-    enummap::EnumMap,
-    enumset::EnumSet,
-};
 
 use crate::components::board::level::StatelessLevelComponent;
 use crate::components::utils::{slider::SliderComponent, tile_selector::TileSelector};
@@ -28,33 +24,21 @@ const DEFAULT_SPEED: isize = 80;
 const PASS_LIMIT: usize = 40000;
 const PROP_LIMIT: usize = 1000;
 
-fn get_new_board(wfc_generator: &WfcGenerator) -> Result<(GameGrid, Weights), String> {
-    panic::set_hook(Box::new(|_info| {}));
-    match panic::catch_unwind(|| {
-        let (sentinel_grid, weights) = wfc_generator.init_board();
-        wfc_generator.iteration_step(sentinel_grid, weights)
-    }) {
-        Ok((grid, weights)) => Ok((grid, weights)),
-        Err(_) => Err(String::from("Not able to generate new board.")),
-    }
+fn get_new_board(wfc_generator: &WfcGenerator) -> (GameGrid, Weights) {
+    let (sentinel_grid, weights) = wfc_generator.init_board();
+    wfc_generator.iteration_step(sentinel_grid, weights)
 }
 
 fn get_next_step(
     wfc_generator: WfcGenerator,
     sentinel_grid: GameGrid,
     weights: Weights,
-) -> Result<(GameGrid, Weights), String> {
-    panic::set_hook(Box::new(|_info| {}));
-    match panic::catch_unwind(|| {
-        let (mut new_grid, mut new_weights) = (sentinel_grid, weights);
-        if WfcGenerator::is_all_collapsed(&new_grid) {
-            (new_grid, new_weights) = wfc_generator.init_board();
-        }
-        wfc_generator.iteration_step(new_grid, new_weights)
-    }) {
-        Ok((grid, weights)) => Ok((grid, weights)),
-        Err(_) => Err(String::from("Not able to get next step.")),
+) -> (GameGrid, Weights) {
+    let (mut new_grid, mut new_weights) = (sentinel_grid, weights);
+    if WfcGenerator::is_all_collapsed(&new_grid) {
+        (new_grid, new_weights) = wfc_generator.init_board();
     }
+    wfc_generator.iteration_step(new_grid, new_weights)
 }
 
 #[derive(Properties, PartialEq, Clone)]
@@ -65,19 +49,20 @@ pub struct VisualizerPageProps {
 #[function_component(VisualizerPage)]
 pub fn wfc_board_component(props: &VisualizerPageProps) -> Html {
     let overlay_message = use_state_eq(|| String::from(""));
+
     let (width_value, height_value, speed_value) = (
-        use_state_eq(|| DEFAULT_WIDTH),
-        use_state_eq(|| DEFAULT_HEIGHT),
-        use_state_eq(|| DEFAULT_SPEED),
+        use_state(|| DEFAULT_WIDTH),
+        use_state(|| DEFAULT_HEIGHT),
+        use_state(|| DEFAULT_SPEED),
     );
-    let playing = use_state_eq(|| false);
-    let interval_id = use_state_eq(|| 0);
+    let playing = use_state(|| false);
+    let interval_id = use_state(|| 0);
 
     let wfc_generator =
         WfcGenerator::with_all_tiles(DEFAULT_WIDTH as usize, DEFAULT_HEIGHT as usize);
-    let available_tiles: UseStateHandle<EnumSet<Tile<Square>>> = use_state_eq(|| EnumSet::FULL);
-    let (sentinel_grid, weights) = get_new_board(&wfc_generator).unwrap();
+    let (sentinel_grid, weights) = get_new_board(&wfc_generator);
 
+    let available_tiles: UseStateHandle<EnumSet<Tile<Square>>> = use_state_eq(|| EnumSet::FULL);
     let wfc_generator = use_state_eq(|| wfc_generator);
     let sentinel_grid = use_state_eq(|| sentinel_grid);
     let weights = use_state_eq(|| weights);
@@ -100,48 +85,40 @@ pub fn wfc_board_component(props: &VisualizerPageProps) -> Html {
             );
             let new_generator =
                 WfcGenerator::new(width, height, *available_tiles, PASS_LIMIT, PROP_LIMIT);
+            let (new_grid, new_weights) = get_new_board(&new_generator);
 
-            match get_new_board(&new_generator) {
-                Ok((new_grid, new_weights)) => {
-                    level_grid.set(WfcGenerator::extract_grid(&new_grid));
-                    wfc_generator.set(new_generator);
-                    sentinel_grid.set(new_grid);
-                    weights.set(new_weights);
-                }
-                Err(_) => {
-                    overlay_message.set(String::from("Update Error!"));
-                }
+            if new_grid.to_string().trim() == String::from("") {
+                overlay_message.set(String::from("-fail-"));
+            } else {
+                overlay_message.set(String::from(""));
             }
+
+            level_grid.set(WfcGenerator::extract_grid(&new_grid));
+            wfc_generator.set(new_generator);
+            sentinel_grid.set(new_grid);
+            weights.set(new_weights);
         })
     };
 
     let next_onclick: Callback<MouseEvent> = {
-        let overlay_message = overlay_message.clone();
         let wfc_generator = wfc_generator.clone();
         let level_grid = level_grid.clone();
         let sentinel_grid = sentinel_grid.clone();
         let weights = weights.clone();
         Callback::from(move |_| {
             log::debug!("{LOG_PREFIX} [Button click] next");
-            match get_next_step(
+            let (new_grid, new_weights) = get_next_step(
                 (*wfc_generator).clone(),
                 (*sentinel_grid).clone(),
                 (*weights).clone(),
-            ) {
-                Ok((new_grid, new_weights)) => {
-                    level_grid.set(WfcGenerator::extract_grid(&new_grid));
-                    sentinel_grid.set(new_grid);
-                    weights.set(new_weights);
-                }
-                Err(_) => {
-                    overlay_message.set(String::from("next Error!"));
-                }
-            };
+            );
+            level_grid.set(WfcGenerator::extract_grid(&new_grid));
+            sentinel_grid.set(new_grid);
+            weights.set(new_weights);
         })
     };
 
     let play_onclick: Callback<MouseEvent> = {
-        let overlay_message = overlay_message.clone();
         let interval_id = interval_id;
         let wfc_generator = wfc_generator;
         let level_grid = level_grid.clone();
@@ -161,56 +138,44 @@ pub fn wfc_board_component(props: &VisualizerPageProps) -> Html {
                 log::debug!("{LOG_PREFIX} [Button click] play: interval started");
                 playing.set(true);
 
-                match get_next_step(
+                let (new_grid, new_weights) = get_next_step(
                     (*wfc_generator).clone(),
                     (*sentinel_grid).clone(),
                     (*weights).clone(),
-                ) {
-                    Ok((current_grid, current_weights)) => {
-                        let overlay_message = overlay_message.clone();
-                        let wfc_generator = wfc_generator.clone();
-                        let level_grid = level_grid.clone();
-                        let sentinel_grid = sentinel_grid.clone();
-                        let weights = weights.clone();
-                        let mut current_grid = current_grid;
-                        let mut current_weights = current_weights;
+                );
 
-                        let iteration_closure = Closure::<dyn FnMut()>::new(move || {
-                            match get_next_step(
-                                (*wfc_generator).clone(),
-                                current_grid.clone(),
-                                current_weights.clone(),
-                            ) {
-                                Ok((new_grid, new_weights)) => {
-                                    current_grid = new_grid;
-                                    current_weights = new_weights;
-                                    level_grid.set(WfcGenerator::extract_grid(&current_grid));
-                                    sentinel_grid.set(current_grid.clone());
-                                    weights.set(current_weights.clone());
-                                }
-                                Err(_) => {
-                                    overlay_message.set(String::from("iterate Error!"));
-                                }
-                            };
-                        });
+                {
+                    let wfc_generator = wfc_generator.clone();
+                    let level_grid = level_grid.clone();
+                    let sentinel_grid = sentinel_grid.clone();
+                    let weights = weights.clone();
+                    let mut new_grid = new_grid;
+                    let mut new_weights = new_weights;
 
-                        let speed = 3 * (100 - *speed_value as i32);
-                        let window = web_sys::window().unwrap();
-                        let id = window
-                            .set_interval_with_callback_and_timeout_and_arguments_0(
-                                iteration_closure.as_ref().unchecked_ref(),
-                                speed,
-                            )
-                            .ok()
-                            .unwrap();
+                    let iteration_closure = Closure::<dyn FnMut()>::new(move || {
+                        (new_grid, new_weights) = get_next_step(
+                            (*wfc_generator).clone(),
+                            new_grid.clone(),
+                            new_weights.clone(),
+                        );
+                        level_grid.set(WfcGenerator::extract_grid(&new_grid));
+                        sentinel_grid.set(new_grid.clone());
+                        weights.set(new_weights.clone());
+                    });
 
-                        interval_id.set(id);
-                        iteration_closure.forget();
-                    }
-                    Err(_) => {
-                        overlay_message.set(String::from("play Error!"));
-                    }
-                };
+                    let speed = 3 * (100 - *speed_value as i32);
+                    let window = web_sys::window().unwrap();
+                    let id = window
+                        .set_interval_with_callback_and_timeout_and_arguments_0(
+                            iteration_closure.as_ref().unchecked_ref(),
+                            speed,
+                        )
+                        .ok()
+                        .unwrap();
+
+                    interval_id.set(id);
+                    iteration_closure.forget();
+                }
             }
         })
     };

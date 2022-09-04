@@ -40,7 +40,7 @@ impl<A: Finite + Eq + Hash + Clone + Copy + Display> EnumSet<A> {
         let mut rng = rand::thread_rng();
 
         for cell_option in self.iter() {
-            weight = weights[cell_option].unwrap() as f64;
+            weight = weights[cell_option].unwrap_or(0) as f64;
             total_weight += weight;
             option_weights.insert(cell_option, weight);
         }
@@ -99,10 +99,8 @@ impl WfcGenerator {
     }
 
     fn update_weights(board: &Sentinel<Square>, weights: &mut EnumMap<Tile<Square>, usize>) {
-        weights.clear();
-
         // initialize all weights to 0
-        // weights.extend(all_enums_ascending().into_iter().map(|t| (t, 0)));
+        weights.clear();
 
         // update weights: only calculate weight for uncollapsed cells
         for cell in board.0.as_slice() {
@@ -191,7 +189,7 @@ impl WfcGenerator {
         while let Some(index) = stack.pop() {
             for dir in all_enums_ascending() {
                 let neighbor_index = index.get_neighbor_index(dir);
-                let neighbor_cell = &board.0.get(neighbor_index).unwrap();
+                let neighbor_cell = &board.0.get(neighbor_index).unwrap_or(&EnumSet::EMPTY);
 
                 if neighbor_cell.is_collapsed() {
                     continue;

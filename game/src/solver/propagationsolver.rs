@@ -87,6 +87,8 @@ pub type Sentinel<A> = SentinelGrid<Superposition<A>>;
 pub struct SentinelGrid<A>(pub Grid<A>);
 
 impl<A: Clone> SentinelGrid<A> {
+    pub const EMPTY: Self = SentinelGrid(Grid::EMPTY);
+    
     /// Deletes the layer of sentinel values and returns the original grid
     pub fn extract_grid(&self) -> Grid<A> {
         Grid::init(self.0.dimensions() - 2, |c| self.0[c + 1].clone())
