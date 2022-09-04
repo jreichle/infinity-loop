@@ -401,7 +401,18 @@ impl Grid<Tile<Square>> {
         //     .superimpose()])
         //println!("{}", knf::level_to_knf(self).unwrap());
         let tiles = knf::solved_to_tiles(input).unwrap();
-        Grid::new(Coordinate::new(self.columns(),self.rows()),tiles)
+        if tiles.len() == self.columns() * self.rows() {
+            Grid::new(Coordinate::new(self.columns(),self.rows()),tiles)
+        }
+        else {
+            let mut unsolvable = vec![];
+            for i in 0..self.columns()*self.rows() {
+                unsolvable.push(Tile::ALL_CONNECTIONS);
+            }
+
+            Grid::new(Coordinate::new(self.columns(),self.rows()), unsolvable)
+        }
+        
     }
 
     pub fn generate_cnf(&self) -> String {

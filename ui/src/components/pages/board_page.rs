@@ -1,6 +1,12 @@
 use crate::helper::screen::Screen;
 use yew::prelude::*;
-use yew::{html, Callback};
+use yew::{html, Callback, events::Event};
+
+use wasm_bindgen::JsCast;
+use web_sys::{HtmlInputElement};
+
+
+pub struct Comp;
 
 use game::model::gameboard::GameBoard;
 use game::model::{
@@ -60,9 +66,17 @@ pub fn board_page_component(props: &BoardPageProps) -> Html {
 
     let solve_onclick_input: Callback<MouseEvent> = {
         let board = board.clone();
+        let literals = props.literals.clone();
+        //let message = props.message.clone();
+        //let level_grid = board.level_grid.clone();
         Callback::from(move |_| {
             log::info!("[Button click] Solve.");
-            board.dispatch(BoardAction::SolveLevelInput);
+            board.dispatch(BoardAction::SolveLevelInput(literals.to_string().clone()));
+            // let msg = match level_grid.is_solved() {
+            //     true => String::from("The level is solved"),
+            //     false => String::from("This did not solve the level"),
+            // };
+            //message.set(msg);
         })
     };
 
@@ -72,7 +86,6 @@ pub fn board_page_component(props: &BoardPageProps) -> Html {
         let level_grid = board.level_grid.clone();
         Callback::from(move |_| {
             log::info!("[Button click] Generate cnf.");
-            //props.cnf.set(board.dispatch(BoardAction::GenerateCnf));
             cnf.set(knf::level_to_cnf(&level_grid.clone()).unwrap());
         })
     };
@@ -90,6 +103,17 @@ pub fn board_page_component(props: &BoardPageProps) -> Html {
         Callback::from(move |_| {
             log::info!("[Button click] Editor");
             change_screen(screen.clone(), Screen::Overview);
+        })
+    };
+
+    let on_input: Callback<Event> = {
+        log::info!("[Button click] onInput");
+        let literals = props.literals.clone();
+        Callback::from(move |e: Event| {
+            let target = e.target();
+            let input = target.and_then(|t| t.dyn_into::<HtmlInputElement>().ok());
+            log::info!("[Button click] onInput {}", input.clone().unwrap().value());
+            literals.set(input.unwrap().value());
         })
     };
 
@@ -115,10 +139,12 @@ pub fn board_page_component(props: &BoardPageProps) -> Html {
                     {"-generate cnf-"}
                 </button>
 
-                <textarea title="literals_input">
-                    {{literals}}
-                </textarea>
-                
+                <input
+                    onchange={on_input}
+                    id="my-input"
+                    type="text"
+                />
+
                 <button
                     onclick={solve_onclick_input}>
                     {"-solve with input-"}

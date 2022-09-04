@@ -32,7 +32,7 @@ fn tile_to_literals(tile: Tile<Square>, num: i32) -> String{
         14 => format!("{} {} 0\n{} {} 0\n{} {} 0\n{} {} 0\n{} {} 0\n-{} -{} -{} -{} 0\n{} {} 0\n",num*4+2,num*4+1,num*4+3,num*4+1,num*4+4,num*4+1,num*4+3,num*4+2,num*4+4,num*4+2,num*4+3,num*4+4,num*4+1,num*4+2,num*4+4,num*4+3),
         15 => format!("{} 0\n{} 0\n{} 0\n{} 0\n",num*4+1,num*4+2,num*4+3,num*4+4),
 
-        _ => "".to_owned()
+        _ => "".to_string()
     }
 
     // match tile {
@@ -136,7 +136,12 @@ pub fn solved_to_tiles(solved: &str) -> Result<Vec<Tile<Square>>, String>{
         //     break;
         // }
         if c == ' ' {
-            literals.push(literal.parse::<i32>().unwrap());
+
+            let lit = literal.parse::<i32>();
+            match lit {
+                Ok(ok) => {literals.push(lit.unwrap())},
+                Err(e) => return Ok(vec![]),
+            }
             literal = String::from("");
             continue;
         }
@@ -145,7 +150,11 @@ pub fn solved_to_tiles(solved: &str) -> Result<Vec<Tile<Square>>, String>{
         }
     }
     if literal != "" {
-        literals.push(literal.parse::<i32>().unwrap());
+        let last = literal.parse::<i32>();
+        match last {
+            Ok(ok) => {literals.push(last.unwrap())},
+            Err(e) => return Ok(vec![]),
+        }
         literal = String::from("");
     }
 

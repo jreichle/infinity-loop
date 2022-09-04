@@ -16,7 +16,9 @@ use game::model::{
     gameboard::GameBoard,
     grid::Grid,
     tile::{Square, Tile},
+    finite::Finite,
 };
+
 
 
 // reducer's action
@@ -26,7 +28,7 @@ pub enum BoardAction {
     NextLevel,
     GetHint,
     SolveLevel,
-    SolveLevelInput,
+    SolveLevelInput(String),
     GenerateCnf,
 
     // Editor actions
@@ -75,6 +77,33 @@ pub fn highlight_cells(row: usize, column: usize) {
     hl.forget();
 }
 
+pub fn check_match(first: Tile<Square>, second: Tile<Square>) -> bool{
+    match first.enum_to_index(){
+        0 => second.enum_to_index() == 0,
+        1 => second.enum_to_index() == 1 || second.enum_to_index() == 2 || second.enum_to_index() == 4 || second.enum_to_index() == 8,
+        2 => second.enum_to_index() == 1 || second.enum_to_index() == 2 || second.enum_to_index() == 4 || second.enum_to_index() == 8,
+        4 => second.enum_to_index() == 1 || second.enum_to_index() == 2 || second.enum_to_index() == 4 || second.enum_to_index() == 8,
+        8 => second.enum_to_index() == 1 || second.enum_to_index() == 2 || second.enum_to_index() == 4 || second.enum_to_index() == 8,
+
+        3 => second.enum_to_index() == 3 || second.enum_to_index() == 6 || second.enum_to_index() == 9 || second.enum_to_index() == 12,
+        6 => second.enum_to_index() == 3 || second.enum_to_index() == 6 || second.enum_to_index() == 9 || second.enum_to_index() == 12,
+        9 => second.enum_to_index() == 3 || second.enum_to_index() == 6 || second.enum_to_index() == 9 || second.enum_to_index() == 12,
+        12 => second.enum_to_index() == 3 || second.enum_to_index() == 6 || second.enum_to_index() == 9 || second.enum_to_index() == 12,
+
+        5 => second.enum_to_index() == 5 || second.enum_to_index() == 10 ,
+        10 => second.enum_to_index() == 5 || second.enum_to_index() == 10 ,
+
+        7 => second.enum_to_index() == 7 || second.enum_to_index() == 11 || second.enum_to_index() == 13 || second.enum_to_index() == 14,
+        11 => second.enum_to_index() == 7 || second.enum_to_index() == 11 || second.enum_to_index() == 13 || second.enum_to_index() == 14,
+        13 => second.enum_to_index() == 7 || second.enum_to_index() == 11 || second.enum_to_index() == 13 || second.enum_to_index() == 14,
+        14 => second.enum_to_index() == 7 || second.enum_to_index() == 11 || second.enum_to_index() == 13 || second.enum_to_index() == 14,
+
+        15 => second.enum_to_index() == 15,
+
+        _ => false
+    }
+}
+
 impl Reducible for BoardState {
     type Action = BoardAction;
 
@@ -108,13 +137,24 @@ impl Reducible for BoardState {
                     new_level_grid = solved_level;
                 }
             }
-            BoardAction::SolveLevelInput => {
-                let input ="3 6 7 12 19 22 21 23 25 27 28 34 35 40 37 42 41 43 45 47 48 55 53 59 63 61 67 65 73 79 77 82 81 86 85 88 92 97 -13 -14 -15 -16 -29 -30 -31 -32 -49 -50 -51 -52 -69 -70 -71 -72 -93 -94 -95 -96 -1 -4 -24 -2 -8 -44 -62 -64 -68 -66 -83 -84 -5 -9 -11 -10 -26 -46 -87 -89 -91 -90 -36 -56 -54 -76 -20 -33 -38 -60 -74 -75 -80 -78 -100 -17 -18 -39 -57 -58 -98 -99";
-                let mut solved_versions = new_level_grid.solve_with_input(input);
-                if let Some(solved_level) = Some(solved_versions) {
-                    log::info!("solved level:\n {}", solved_level);
-                    new_level_grid = solved_level;
-                }
+            BoardAction::SolveLevelInput(input) => {               
+                let mut solved_version = new_level_grid.solve_with_input(&input);
+                    log::info!("solved level:\n {}", solved_version);
+
+                    let mut same = true;
+
+                    let first_grid = solved_version.as_slice().clone();
+                    let second_grid = new_level_grid.as_slice().clone();
+
+                    for i in 0..first_grid.len() {
+                        if !check_match(first_grid[i], second_grid[i]) {
+                            same = false;
+                        }
+                    }
+                    if solved_version.is_solved() && same {
+                        new_level_grid = solved_version;
+                    }
+                
             }
 
             BoardAction::GenerateCnf => {
