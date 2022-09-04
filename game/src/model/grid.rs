@@ -29,7 +29,7 @@ use super::{
 ///
 /// ## Invariants
 ///
-/// 1. [`Grid<A>`] forms a rectangle entirely filled with elements of type [`A`]
+/// 1. [`Grid<A>`] forms a rectangle entirely filled with elements of type `A`
 /// 2. `∀g : Grid. g.rows * g.columns ≡ g.elements.len()`
 /// 3. [`Grid`] is positioned at Coordinate (0, 0) and extends in positive directions
 #[derive(Debug, PartialEq, Eq, PartialOrd, Ord, Clone, Hash)]

@@ -5,9 +5,9 @@ use super::{enumset::EnumSet, finite::Finite, tile::Tile};
 ///! operator relation of boolean algebra
 ///! | lattice    | operator                         | logic | set                | neutral element  | name    |
 ///! |------------|----------------------------------|-------|--------------------|------------------|---------|
-///! | meet       | [`bitAnd`][std::ops::BitAnd] `&` | `∧`   | `∩` (intersection) | `1`              | `full`  |
-///! | join       | [`bitOr`][std::ops::BitOr] `\|`  | `∨`   | `∪` (union)        | `0`              | `empty` |
-///! | complement | [`not`][std::ops::Not] `!`       | `¬`   | `S^C` (complement) |                  |         |
+///! | meet       | [`bitAnd`](std::ops::BitAnd) `&` | `∧`   | `∩` (intersection) | `1`              | `full`  |
+///! | join       | [`bitOr`](std::ops::BitOr) `\|`  | `∨`   | `∪` (union)        | `0`              | `empty` |
+///! | complement | [`not`](std::ops::Not) `!`       | `¬`   | `S^C` (complement) |                  |         |
 
 /// Commutative, idempotent Semigroup "meet" = [`BitAnd`] over poset
 pub trait MeetSemilattice: Sized + BitAnd<Output = Self> {}
@@ -39,7 +39,7 @@ where
 {
     /// greatest lower bound of all values
     ///
-    /// lazy meet fold: early return if [`Self::BOTTOM`]
+    /// lazy meet fold: early return if [`BoundedLattice::BOTTOM`]
     fn and(self) -> A {
         let mut acc = A::TOP;
         for v in self.into_iter() {
@@ -53,7 +53,7 @@ where
 
     /// least upper bound of all values
     ///
-    /// lazy join fold: early return if [`Self::TOP`]
+    /// lazy join fold: early return if [`BoundedLattice::TOP`]
     fn or(self) -> A {
         let mut acc = A::BOTTOM;
         for v in self.into_iter() {
