@@ -11,6 +11,7 @@ use game::{enumset, tile};
 
 use crate::components::utils::tile_checkbox::TileCheckbox;
 
+/// get all possiblities for given tile
 fn get_all_roations(tile: Tile<Square>) -> EnumSet<Tile<Square>> {
     enumset!(
         tile,
@@ -41,6 +42,7 @@ pub struct TileSelectorProps {
     pub tile_set: UseStateHandle<EnumSet<Tile<Square>>>,
 }
 
+/// A selector with checkbox of all tile shapes. Keeps track of the tile set.
 #[function_component(TileSelector)]
 pub fn tile_selector_component(props: &TileSelectorProps) -> Html {
     let tile_set = props.tile_set.clone();

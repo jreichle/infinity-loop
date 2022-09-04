@@ -17,6 +17,7 @@ pub struct TileImageProps {
     pub tile: Tile<Square>,
 }
 
+/// image representation of tile in the game model
 #[function_component(TileImage)]
 pub fn tile_image_component(props: &TileImageProps) -> Html {
     let tile = props.tile;
@@ -35,17 +36,8 @@ pub fn tile_image_component(props: &TileImageProps) -> Html {
     }
 }
 
-pub fn get_angle(cell_symbol: char) -> usize {
-    match cell_symbol {
-        ' ' | '╋' | '╹' | '┗' | '┣' => 0,
-        '╺' | '━' | '┏' | '┳' => 90,
-        '╻' | '┓' | '┫' => 180,
-        '╸' | '┛' | '┻' => 270,
-        _ => 0,
-    }
-}
-
-pub fn get_index(cell_symbol: char) -> usize {
+/// get the correct image for given tile
+fn get_index(cell_symbol: char) -> usize {
     match cell_symbol {
         ' ' => 0,
         '╹' | '╺' | '╻' | '╸' => 1,
@@ -56,3 +48,16 @@ pub fn get_index(cell_symbol: char) -> usize {
         _ => 0,
     }
 }
+
+
+/// get the correct angle for image roation 
+fn get_angle(cell_symbol: char) -> usize {
+    match cell_symbol {
+        ' ' | '╋' | '╹' | '┗' | '┣' => 0,
+        '╺' | '━' | '┏' | '┳' => 90,
+        '╻' | '┓' | '┫' => 180,
+        '╸' | '┛' | '┻' => 270,
+        _ => 0,
+    }
+}
+
