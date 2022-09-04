@@ -26,6 +26,24 @@ const DEFAULT_SPEED: isize = 80;
 const PASS_LIMIT: usize = 40000;
 const PROP_LIMIT: usize = 1000;
 
+fn init_board(wfc_generator: &WfcGenerator) -> (GameGrid, Weights) {
+    let (sentinel_grid, weights) = wfc_generator.init_board();
+    wfc_generator.iteration_step(sentinel_grid, weights)
+}
+
+fn get_next_step(
+    wfc_generator: WfcGenerator,
+    sentinel_grid: GameGrid,
+    weights: Weights,
+) -> (GameGrid, Weights) {
+    let (mut new_grid, mut new_weights) = (sentinel_grid, weights);
+    if WfcGenerator::is_all_collapsed(&new_grid) {
+        (new_grid, new_weights) = wfc_generator.init_board();
+    }
+    wfc_generator.iteration_step(new_grid, new_weights)
+}
+
+
 #[derive(Properties, PartialEq, Clone)]
 pub struct VisualizerPageProps {
     pub screen: UseStateHandle<Screen>,
@@ -43,26 +61,13 @@ pub fn wfc_board_component(props: &VisualizerPageProps) -> Html {
 
     let wfc_generator =
         WfcGenerator::with_all_tiles(DEFAULT_WIDTH as usize, DEFAULT_HEIGHT as usize);
-    let (sentinel_grid, weights) = wfc_generator.init_board();
-    let (sentinel_grid, weights) = wfc_generator.iteration_step(sentinel_grid, weights);
+    let (sentinel_grid, weights) = init_board(&wfc_generator);
 
     let available_tiles: UseStateHandle<EnumSet<Tile<Square>>> = use_state_eq(|| EnumSet::FULL);
     let wfc_generator = use_state_eq(|| wfc_generator);
     let sentinel_grid = use_state_eq(|| sentinel_grid);
     let weights = use_state_eq(|| weights);
     let level_grid = use_state_eq(|| WfcGenerator::extract_grid(&sentinel_grid));
-
-    fn go_to_next_step(
-        wfc_generator: WfcGenerator,
-        sentinel_grid: GameGrid,
-        weights: Weights,
-    ) -> (GameGrid, Weights) {
-        let (mut new_grid, mut new_weights) = (sentinel_grid, weights);
-        if WfcGenerator::is_all_collapsed(&new_grid) {
-            (new_grid, new_weights) = wfc_generator.init_board();
-        }
-        wfc_generator.iteration_step(new_grid, new_weights)
-    }
 
     let update_onclick: Callback<MouseEvent> = {
         let available_tiles = available_tiles.clone();
@@ -80,17 +85,13 @@ pub fn wfc_board_component(props: &VisualizerPageProps) -> Html {
             );
             let new_generator =
                 WfcGenerator::new(width, height, *available_tiles, PASS_LIMIT, PROP_LIMIT);
-            let (mut new_grid, mut new_weights) = new_generator.init_board();
-            (new_grid, new_weights) = new_generator.iteration_step(new_grid, new_weights);
+            let (new_grid, new_weights) = init_board(&new_generator);
             level_grid.set(WfcGenerator::extract_grid(&new_grid));
             wfc_generator.set(new_generator);
             sentinel_grid.set(new_grid);
             weights.set(new_weights);
         })
     };
-
-    // TODO:
-    // MOVE the setInterval outside of the Callback
 
     let next_onclick: Callback<MouseEvent> = {
         let wfc_generator = wfc_generator.clone();
@@ -99,7 +100,7 @@ pub fn wfc_board_component(props: &VisualizerPageProps) -> Html {
         let weights = weights.clone();
         Callback::from(move |_| {
             log::debug!("{LOG_PREFIX} [Button click] next");
-            let (new_grid, new_weights) = go_to_next_step(
+            let (new_grid, new_weights) = get_next_step(
                 (*wfc_generator).clone(),
                 (*sentinel_grid).clone(),
                 (*weights).clone(),
@@ -130,7 +131,7 @@ pub fn wfc_board_component(props: &VisualizerPageProps) -> Html {
                 log::debug!("{LOG_PREFIX} [Button click] play: interval started");
                 playing.set(true);
 
-                let (new_grid, new_weights) = go_to_next_step(
+                let (new_grid, new_weights) = get_next_step(
                     (*wfc_generator).clone(),
                     (*sentinel_grid).clone(),
                     (*weights).clone(),
@@ -145,7 +146,7 @@ pub fn wfc_board_component(props: &VisualizerPageProps) -> Html {
                     let mut new_weights = new_weights;
 
                     let iteration_closure = Closure::<dyn FnMut()>::new(move || {
-                        (new_grid, new_weights) = go_to_next_step(
+                        (new_grid, new_weights) = get_next_step(
                             (*wfc_generator).clone(),
                             new_grid.clone(),
                             new_weights.clone(),
