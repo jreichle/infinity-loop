@@ -70,13 +70,6 @@ pub fn editor_page_component(props: &EditorPageProps) -> Html {
         })
     };
 
-    // let check_sat_onclick: Callback<MouseEvent> = {
-    //     Callback::from(move |_| {
-    //         log::info!("[Button click] Check with SAT.");
-    //         log::info!("Not implemented yet");
-    //     })
-    // };
-
     let check_solved_onclick: Callback<MouseEvent> = {
         let board = board.clone();
         let head_message = props.head_message.clone();
@@ -110,7 +103,6 @@ pub fn editor_page_component(props: &EditorPageProps) -> Html {
         Callback::from(move |_| {
             log::info!("[Button click] Play custom grid.");
             log::info!("Current grid\n{}", grid.to_string());
-            // TODO: only allowed if valid
             if grid.solve().count() != 0 {
                 change_screen(screen.clone(), Screen::Level(grid.clone()));
             } else {
@@ -236,12 +228,6 @@ pub fn editor_page_component(props: &EditorPageProps) -> Html {
                         onclick={resize_height_plus_one_onclick}
                         style="width:50px;height:50px;margin-left:55px;margin-right:20px"
                         >{"+"}</button></li>
-                    <li>
-                        <button
-                            onclick={save_onclick}
-                            style="margin-left:40px;margin-right:20px, margin-top:20px"
-                            >{"-Save-"}</button>
-                    </li>
                 </ul>
             </section>
 
@@ -254,26 +240,29 @@ pub fn editor_page_component(props: &EditorPageProps) -> Html {
 
             <div class="controller">
                 <button
-                    onclick={clear_onclick}
-                    >{"-Clear grid-"}</button>
-                <button
                     onclick={generate_fast_gen_onclick}
                     >{"-Generate with FastGen-"}</button>
                 <button
                     onclick={generate_wfc_onclick}
                     >{"-Generate with WFC-"}</button>
+                <p style="text-align:center">{"____"}</p>
                 <button
                     onclick={check_cps_onclick}
                     >{"-Check validity-"}</button>
-                // <button
-                //     onclick={check_sat_onclick}
-                //     >{"-Check validity with SAT Solver-"}</button>
                 <button
                     onclick={check_solved_onclick}
                     >{"-Check if solved-"}</button>
+                    <p style="text-align:center">{"____"}</p>
+                <button
+                    onclick={clear_onclick}
+                    >{"-Clear grid-"}</button>
                 <button
                     onclick={shuffle_tile_rotations_onclick}
                     >{"-Shuffle tile rotations-"}</button>
+                <p style="text-align:center">{"____"}</p>
+                <button
+                    onclick={save_onclick}
+                    >{"-Save-"}</button>
                 <button
                     onclick={play_onclick}
                     >{"-Play-"}</button>
