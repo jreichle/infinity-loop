@@ -6,18 +6,20 @@ use std::{
 use quickcheck::{Arbitrary, Gen};
 use Square::{Down, Left, Right, Up};
 
-use super::{cardinality::Cardinality, enumset::EnumSet, finite::Finite};
+use crate::core::lattice::*;
+
+use crate::core::{cardinality::Cardinality, enumset::EnumSet, finite::Finite};
 
 /// Represents a direction for a tile connection
 #[derive(Debug, Hash, Copy, Clone, PartialEq, Eq, PartialOrd, Ord)]
 pub enum Square {
-    /// upwards direction or [`Coordinate::new(-1, 0)`][model::Coordinate::new]
+    /// upwards direction or [`Coordinate::new(-1, 0)`](super::coordinate::Coordinate)
     Up,
-    /// rightwards direction or [`Coordinate::new(0, 1)`](model::Coordinate::new)
+    /// rightwards direction or [`Coordinate::new(0, 1)`](super::coordinate::Coordinate)
     Right,
-    /// downwards direction or [`Coordinate::new(1, 0)`](model::Coordinate::new)
+    /// downwards direction or [`Coordinate::new(1, 0)`](super::coordinate::Coordinate)
     Down,
-    /// leftwards direction or [`Coordinate::new(0, -1)`](model::Coordinate::new)
+    /// leftwards direction or [`Coordinate::new(0, -1)`](super::coordinate::Coordinate)
     Left,
 }
 
@@ -132,9 +134,9 @@ impl<A: Cardinality> Tile<A> {
 }
 
 impl<A: Finite> Tile<A> {
-    /// Rotates the tile clockwise by 360° / [`A::CARDINALITY`]
+    /// Rotates the tile clockwise by 360° / [`A::CARDINALITY`](Cardinality::CARDINALITY)
     ///
-    /// Performing [`A::CARDINALITY`] rotations returns the original tile
+    /// Performing [`A::CARDINALITY`](Cardinality::CARDINALITY) rotations returns the original tile
     pub fn rotated_clockwise(&self, repetitions: u64) -> Self {
         let bit_rep = self.enum_to_index();
         let repetitions = repetitions % A::CARDINALITY;
@@ -143,9 +145,9 @@ impl<A: Finite> Tile<A> {
         Self(EnumSet::unchecked_index_to_enum(rotated_bit_rep))
     }
 
-    /// Rotates the tile counterclockwise by 360° / [`A::CARDINALITY`]
+    /// Rotates the tile counterclockwise by 360° / [`A::CARDINALITY`](Cardinality::CARDINALITY)
     ///
-    /// Performing [`A::CARDINALITY`] rotations returns the original tile
+    /// Performing [`A::CARDINALITY`](Cardinality::CARDINALITY) rotations returns the original tile
     pub fn rotated_counterclockwise(&self, repetitions: u64) -> Self {
         self.rotated_clockwise(A::CARDINALITY - repetitions % A::CARDINALITY)
     }
@@ -177,6 +179,18 @@ impl Display for Tile<Square> {
     }
 }
 
+impl<A: Finite> JoinSemilattice for Tile<A> {}
+
+impl<A: Finite> MeetSemilattice for Tile<A> {}
+
+impl<A: Finite> BoundedLattice for Tile<A> {
+    const BOTTOM: Self = Self::NO_CONNECTIONS;
+
+    const TOP: Self = Self::ALL_CONNECTIONS;
+}
+
+impl<A: Finite> DistributiveLattice for Tile<A> {}
+
 impl Tile<Square> {
     /// visualization for each tile state as UNICODE character
     const UNICODE_TILES: [char; 16] = [
@@ -194,7 +208,7 @@ macro_rules! tile {
 #[cfg(test)]
 mod tests {
 
-    use crate::model::{cardinality::Cardinality, finite::Finite, interval::Max};
+    use crate::core::{cardinality::Cardinality, finite::Finite, interval::Max};
 
     use super::{Square, Tile};
 

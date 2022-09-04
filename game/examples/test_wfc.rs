@@ -1,12 +1,13 @@
 #![allow(dead_code, unused_imports)]
-
-use game::generator::wfc::{WfcGenerator, self};
-use game::model::solver::SentinelGrid;
-use game::model::testlevel::unicode_to_tile;
-use game::model::{
-    enumset::EnumSet,
-    tile::{Square, Tile},
+use game::core::enumset::EnumSet;
+use game::generator::wfc::{self, WfcGenerator};
+use game::model::tile::{
+    Square,
+    Square::{Down, Left, Right, Up},
+    Tile,
 };
+use game::solver::propagationsolver::SentinelGrid;
+use game::{enumset, tile};
 
 use std::process::Command;
 
@@ -16,17 +17,18 @@ static PASS_LIMIT: usize = 40000;
 static PROP_LIMIT: usize = 1000;
 
 fn wfc_test_full_set() -> bool {
-    let available_tiles: EnumSet<Tile<Square>> = EnumSet::FULL;
+    let available_tiles = EnumSet::FULL;
     wfc_test(WIDTH, HEIGHT, available_tiles, PASS_LIMIT, PROP_LIMIT)
 }
 
 fn wfc_test_part_set() -> bool {
-    let mut available_tiles: EnumSet<Tile<Square>> = EnumSet::EMPTY;
-    available_tiles.insert(unicode_to_tile(' ').unwrap());
-    available_tiles.insert(unicode_to_tile('┏').unwrap());
-    available_tiles.insert(unicode_to_tile('┗').unwrap());
-    available_tiles.insert(unicode_to_tile('┓').unwrap());
-    available_tiles.insert(unicode_to_tile('┛').unwrap());
+    let available_tiles = enumset!(
+        Tile::NO_CONNECTIONS,
+        tile!(Right, Down),
+        tile!(Up, Right),
+        tile!(Down, Left),
+        tile!(Up, Left)
+    );
     wfc_test(WIDTH, HEIGHT, available_tiles, PASS_LIMIT, PROP_LIMIT)
 }
 
@@ -71,7 +73,7 @@ fn wfc_test(
 // }
 
 fn wfc_test_step() {
-    let available_tiles: EnumSet<Tile<Square>> = EnumSet::FULL;
+    let available_tiles = EnumSet::FULL;
     wfc_step_by_step(WIDTH, HEIGHT, available_tiles, PASS_LIMIT, PROP_LIMIT)
 }
 
@@ -99,11 +101,9 @@ fn wfc_step_by_step(
         if WfcGenerator::is_all_collapsed(&board) || passes >= pass_limit {
             break;
         }
-
     }
 
     let _final_grid = board.extract_if_collapsed();
-
 }
 
 fn main() {

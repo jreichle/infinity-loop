@@ -3,15 +3,21 @@ use std::{fmt::Display, hash::Hash};
 
 use crate::model::{
     coordinate::Coordinate,
-    enummap::EnumMap,
-    enumset::EnumSet,
-    finite::Finite,
     grid::Grid,
-    solver::{propagate_restrictions_to_all_neighbors, Sentinel, Superposition},
     tile::{
         Square::{self},
         Tile,
     },
+};
+
+use crate::core::{
+    enummap::EnumMap,
+    enumset::EnumSet,
+    finite::{all_enums_ascending, Finite},
+};
+
+use crate::solver::propagationsolver::{
+    propagate_restrictions_to_all_neighbors, Sentinel, Superposition,
 };
 
 ///! This file contains a implementation of the wave function collapse (WFC) algorithm for our game.
@@ -34,7 +40,7 @@ impl<A: Finite + Eq + Hash + Clone + Copy + Display> EnumSet<A> {
         let mut rng = rand::thread_rng();
 
         for cell_option in self.iter() {
-            weight = weights[cell_option].unwrap() as f64;
+            weight = weights[cell_option].unwrap_or(0) as f64;
             total_weight += weight;
             option_weights.insert(cell_option, weight);
         }
@@ -44,7 +50,7 @@ impl<A: Finite + Eq + Hash + Clone + Copy + Display> EnumSet<A> {
         for (option, weight) in option_weights.iter() {
             rng_weights -= weight;
             if rng_weights < 0.0 {
-                for tile in A::all_enums_ascending() {
+                for tile in all_enums_ascending() {
                     if tile != option {
                         self.remove(tile);
                     }
@@ -82,31 +88,25 @@ impl WfcGenerator {
         }
     }
 
-    pub fn default(width: usize, height: usize) -> WfcGenerator {
-        let available_tiles = EnumSet::<Tile<Square>>::FULL;
+    pub fn with_all_tiles(width: usize, height: usize) -> WfcGenerator {
         WfcGenerator {
             width,
             height,
-            available_tiles,
+            available_tiles: EnumSet::FULL,
             prop_limit: 40000,
             pass_limit: 1000,
         }
     }
 
     fn update_weights(board: &Sentinel<Square>, weights: &mut EnumMap<Tile<Square>, usize>) {
+        // initialize all weights to 0
         weights.clear();
 
-        // initialize weights
-        let full_set: Superposition<Square> = EnumSet::FULL;
-        full_set.iter().for_each(|tile| {
-            weights.insert(tile, 0);
-        });
-
         // update weights: only calculate weight for uncollapsed cells
-        for cell in board.0.elements().into_iter() {
+        for cell in board.0.as_slice() {
             if !cell.is_collapsed() {
                 cell.into_iter().for_each(|tile| {
-                    weights[tile] = weights[tile].map(|x| x + 1);
+                    weights[tile] = Some(weights[tile].unwrap_or(0) + 1);
                 });
             }
         }
@@ -187,9 +187,9 @@ impl WfcGenerator {
 
         let mut passes = 0_usize;
         while let Some(index) = stack.pop() {
-            for dir in Square::all_enums_ascending() {
+            for dir in all_enums_ascending() {
                 let neighbor_index = index.get_neighbor_index(dir);
-                let neighbor_cell = &board.0.get(neighbor_index).unwrap();
+                let neighbor_cell = &board.0.get(neighbor_index).unwrap_or(&EnumSet::EMPTY);
 
                 if neighbor_cell.is_collapsed() {
                     continue;
@@ -272,7 +272,6 @@ impl WfcGenerator {
         let board = board
             .0
             .coordinates()
-            .into_iter()
             .fold(board, propagate_restrictions_to_all_neighbors);
 
         let mut weights: EnumMap<Tile<Square>, usize> = EnumMap::empty();
@@ -329,14 +328,13 @@ impl WfcGenerator {
 mod tests {
 
     use crate::generator::wfc::WfcGenerator;
-    use crate::model::{
-        enumset::EnumSet,
-        tile::{
-            Square::{self, Down, Left, Right, Up},
-            Tile,
-        },
+    use crate::model::tile::{
+        Square::{self, Down, Left, Right, Up},
+        Tile,
     };
     use crate::{enumset, tile};
+
+    use crate::core::enumset::EnumSet;
 
     #[quickcheck]
     fn wfc_test_full_set() -> bool {

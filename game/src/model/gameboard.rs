@@ -7,7 +7,7 @@ use super::accesserror::AccessError;
 //  1. return changed grid parts as list of actions
 //  2. send whole grid as `HasMap Coordinate Tile`
 pub trait GameBoard: Sized {
-    /// defines indexing system for the given [Model]
+    /// defines indexing system for the given model
     type Index;
     type Tile;
 

@@ -19,20 +19,24 @@ Infinity loop is a puzzle game built out of a grid of tiles, each with a particu
 **Component Overview:**
 
 * Basic game as [WASM][wasm] Web-UI
+* Backend supplying static files
 * Generating levels with either a
   * unweighted generator, which generates all possible levels with even distribution
-  * generator based on [Wave Fuction Collapse][wfc]
+  * generator based on [Wave Function Collapse][wfc]
 * Solving arbitrary puzzle levels with either a
   * solver based on [Constraint Propagation][constraintpropagation]
   * SAT solver
 * Manual level editor
+* Visualization for Wave Function Collapse
+* Preview with levels to choose from
 * Help during solving by requesting hints
+* Using local storage to save current state of single page application
 
 The following section further elaborates on each component. For an overview of the employed architecture and file structure, refer to the [architecture][architecture] file.
 
 ## Basic game representation / implementation
 
-[`EnumSet`][enumset] is both a space and performance efficient implementation of a set data structure by relating / associating values with a specific bit in a bit array, usually an unsigned integer. The to possible values of a bit `0` and `1` indicate inclusion in the set. For a type to be eligible to being used in a `EnumSet` requires a bijection between values of the type and the natural numbers. (see the Finite trait)
+[`EnumSet`][enumset] is both a space and performance efficient implementation of a set data structure by relating / associating values with a specific bit in a bit array, usually an unsigned integer. The two possible values of a bit `0` and `1` indicate inclusion in the set. For a type to be eligible to being used in a `EnumSet` requires a bijection between values of the type and the natural numbers. (see the Finite trait)
 
 ```rust
 struct EnumSet<A>(u64, PhantomData<A>);
@@ -40,7 +44,7 @@ struct EnumSet<A>(u64, PhantomData<A>);
 
 The fundamental component of interaction in **Infinity Loop** is the `Tile`, which is rotated by the user to solve the puzzle. Conceptually a single tile holds the connection information to its neighbors as a set of directions.
 
-[`Tile`][tile] is a newtype wrapper over an `EnumSet` of directions. Directions correlate to the shape of the tile.
+[`Tile`][tile] is a newtype wrapper over an `EnumSet` of directions. [Directions][square] correlate to the shape of the tile.
 
 ```rust
 struct Tile<A>(EnumSet<A>);
@@ -68,19 +72,11 @@ TestLevel contains some predefined levels for tutorial or test cases. It provide
 
 The progressive change in generated levels is provided by a lazy iterator defined through a [stream unfold][anamorphism] in **levelstream**.
 
-## The UI
-
-Developer: Johannes Reichle
-
 ## Level Generator
 
 ### Unweighted Generator
 
-Developer: Simon Redl
-
 ### The Wave Function Collapse (WFC) Generator
-
-Developer: Alexander Jensen
 
 Wave function collapse is the process by which a system changes from a superposition of states to a discrete state with a clearly defined value of a given measurable quantity by interacting with its environment.
 
@@ -90,7 +86,6 @@ Wave function collapse occurs when a wave function—initially in a superpositio
 
 ### Constraint Propagation Solver
 
-Developer: Simon Redl
 
 for general idea behind the solver see [Propagators][propagator]
 
@@ -99,21 +94,62 @@ strategy: superimpose all possible tiles at each position and successively elimi
 
 ### SAT-Solver
 
-Developer: Jakob Ritter
-
 1. encode tile configurations and game logic in CNF
 2. solve by external SAT-solver
-3. decode returned variables
+3. decode returned variables and check result
 
-## The Level Editor
+## Backend
 
-Developer: Johannes Moosburger
+The backend uses the [rocket][rocket] framework for servers.
+The purpose of the backend is solely in serving static files and getting the application running in compiling and sending the frontend.
+The compilation in [frontend build][build] is facilitated with a rust [build script][build-script].
 
-This part shall provide a editor page, where the user can create his/her own level gameboards. For that, the user can specify a grid (width/height), add tiles of different shapes and rotate them, to shape a initial level pattern. Furthermore, the board can be tested with both the custom and the SAT-solver, to check, whether the level is a valid one or not. At last, it can be continued with the solving of the puzzle.
+## The UI
 
-Optional: The gameboard can be serialized, to replay it in another session.
+The frontend uses the [yew][yew] framework for building [single-page applications][spa].
+While the frontend can be served via the [rocket][rocket] backed server, the frontend can also be run independently.
+Yew is heavily inspired by the more popular frontend framework [React][react].
+But instead of running with JavaScript, the rust code can be compiled to [WebAssembly][wasm].
 
-TODO: können wir auch den schwierigkeitsgrad bestimmen?
+The app state is stored into the [local storage][local-storage] which enables the app to retrieve the correct page and selected content therof.
+For example, the level is stored when being played.
+
+### Level preview
+
+The level preview provides levels that can be (randomly) chosen to play.
+It is possible to load more levels to increase the range of choice.
+Additionally a previously saved level can be retrieved.
+
+### Level board
+
+The level board is the part of the application that encompasses the actual playing experience of infinity loop.
+This includes the functionality of turning tiles with a mouse click.
+A hinting functionality is built in to help a player in case of need.
+The solve button, on the other hand, will immediatly complete the level.
+Upon completion a new level can be played.
+
+### Wave function collapse visualizer
+
+
+### The Level Editor
+
+This part shall provide a editor page, where the user can create his/her own level gameboards. For that, the user can specify a grid (width/height), add tiles of different shapes (use mouse wheel on tile) and rotate (click on a tile) them, to shape a initial level pattern.
+
+The editor has following functions:
+
+* Shape level (rotate and change tiles)
+* Resize grid
+* Check validity of current level with Constraint-Propagation-Solver
+* Check if level is already solved
+* Generate level with FastGen
+* Generate level with WFC
+* Shuffle current grid tile rotations
+* Clear grid
+* Conintinue with to play the custom grid
+* Save grid in local storage
+* Load grid in local storage
+
+The editor is based on the _Basic game representatio_. It contains a initial grid, which is replaced or changed by every manipulation during the editing process. To display the grid in HTML notation the board component is used and extended to serve the purpose of the editor. Flags are passed to the component representing cells to enable/disable tile roatation and shape change. Furthermore, various members were add to the `BoardAction`, such as ChangeTileShape, ChangeSize, GenerateFastGen, GenerateWFC, ShuffleTileRotations, ClearGrid. These different actions are handled in the `board_reducer`-file.
 
 [unsolvedexample]: <images/example-level.png>
 [solvedexample]: <images/example-level-solution.png>
@@ -127,7 +163,16 @@ TODO: können wir auch den schwierigkeitsgrad bestimmen?
 
 [architecture]: <./architecture.md>
 
-[enumset]: <../game/src/model/enumset.rs>
+[enumset]: <../game/src/core/enumset.rs>
 [coordinate]: <../game/src/model/coordinate.rs>
 [tile]: <../game/src/model/tile.rs>
 [square]: <../game/src/model/tile.rs>
+[grid]: <../game/src/model/grid.rs>
+
+[rocket]: <https://rocket.rs/>
+[yew]: <https://yew.rs/>
+[spa]: <https://en.wikipedia.org/wiki/Single-page_application>
+[build]: <../backend/build.rs>
+[build-script]: <https://doc.rust-lang.org/cargo/reference/build-scripts.html>
+[react]: <https://reactjs.org/>
+[local-storage]: <https://en.wikipedia.org/wiki/Web_storage#Local_and_session_storage>

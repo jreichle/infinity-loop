@@ -1,5 +1,4 @@
 use std::{
-    collections::HashSet,
     fmt::Display,
     ops::{Index, IndexMut},
     vec::IntoIter,
@@ -30,7 +29,7 @@ use super::{
 ///
 /// ## Invariants
 ///
-/// 1. [`Grid<A>`] forms a rectangle entirely filled with elements of type [`A`]
+/// 1. [`Grid<A>`] forms a rectangle entirely filled with elements of type `A`
 /// 2. `∀g : Grid. g.rows * g.columns ≡ g.elements.len()`
 /// 3. [`Grid`] is positioned at Coordinate (0, 0) and extends in positive directions
 #[derive(Debug, PartialEq, Eq, PartialOrd, Ord, Clone, Hash)]
@@ -118,10 +117,15 @@ impl<A> Grid<A> {
         self.elements.clone()
     }
 
-    pub fn coordinates(&self) -> HashSet<Coordinate<isize>> {
+    /// Returns a collection of all valid coordinates
+    ///
+    /// # postcondition
+    ///
+    /// Coordinates are guaranteed to be unique, but no promise of stable iteration order
+    pub fn coordinates(&self) -> impl Iterator<Item = Coordinate<isize>> {
+        let columns = self.columns as isize; // erase reference to grid for independent lifetime
         (0..self.rows as isize)
-            .flat_map(|r| (0..self.columns as isize).map(move |c| Coordinate { row: r, column: c }))
-            .collect()
+            .flat_map(move |row| (0..columns).map(move |column| Coordinate::new(row, column)))
     }
 
     pub fn zip<B, I: IntoIterator<Item = B>>(&self, iter: I) -> Grid<(A, B)>
@@ -168,7 +172,11 @@ impl<A> Grid<A> {
     }
 
     /// applies transformation to element at supplied index, if possible
-    pub fn try_adjust_at<F: FnMut(A) -> A>(&self, index: Coordinate<isize>, transformation: F) -> Self
+    pub fn try_adjust_at<F: FnMut(A) -> A>(
+        &self,
+        index: Coordinate<isize>,
+        transformation: F,
+    ) -> Self
     where
         A: Clone,
     {
@@ -354,6 +362,10 @@ impl GameBoard for Grid<Tile<Square>> {
 
 impl Grid<Tile<Square>> {
     pub fn resize(&mut self, size: Coordinate<usize>) {
+        // Sets the grid to a new size and maps the tiles from the old-sized-element-vector to the new-sized one.
+        // If one of the new dimensions is larger than the old ones, the new gird-cells will be filld with empty tiles.
+        // If one of the new dimensions is smaller than the old ones, the unnecessary grid-cells will be removed completely.
+
         let mut new_elements = vec![Tile::NO_CONNECTIONS; size.row * size.column];
 
         for r in 0..size.row {
@@ -374,6 +386,9 @@ impl Grid<Tile<Square>> {
     }
 
     pub fn change_tile_shape(&self, index: Coordinate<isize>) -> Result<Self, AccessError> {
+        // Depending on the number and (if the number is two) on the arrangement of the tile's arms, it will reshaped in the following order:
+        // ╹ -> -> ┗ -> ┃ -> ┣ -> ╋ -> ' '
+
         self.adjust_at(index, |tile| -> Tile<Square> {
             match tile.0.len() {
                 0 => tile!(Square::Up),
@@ -476,7 +491,8 @@ impl<A: Arbitrary> Arbitrary for Grid<A> {
 #[cfg(test)]
 mod grid_tests {
 
-    use crate::model::{coordinate::Coordinate, interval::Max};
+    use crate::core::interval::Max;
+    use crate::model::coordinate::Coordinate;
 
     use super::Grid;
 
