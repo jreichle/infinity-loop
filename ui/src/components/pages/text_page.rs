@@ -7,7 +7,7 @@ use crate::helper::screen::Screen;
 pub struct TextPageProps {
     pub screen: UseStateHandle<Screen>,
     pub title: String,
-    pub content: String,
+    pub content: Html,
 }
 
 #[function_component(TextPage)]

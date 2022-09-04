@@ -127,19 +127,46 @@ pub fn page_router() -> Html {
                             }
                         },
                         Screen::Help => {
+                            let content = html!{
+                                <>
+                                <p>
+                                {"In the programming world, an infinite loop is a sequence of instructions that will repeat endlessly. 
+                                Usually we would want to prevent this, but in this game we want to create a loop with no way out."}
+                                </p>
+                                <p>
+                                {"A level is build with multiple cells, each cell contains a fixed shape that can be rotated on click. 
+                                And there are six kind of shape in total. (from none to four outgoing connections) The goal is to get all the piece connected, creating a enclosed loop."}
+                                </p>
+                                </>
+                            };
                             html!{
                                 <TextPage
                                     screen={screen.clone()}
                                     title={"help"}
-                                    content={"This is the help page."}/>
+                                    content={content} />
                             }
                         },
                         Screen::Credit => {
+                            let content = html!{
+                                <>
+                                <p>{"inspired by the android game: ["}
+                                <a href={"https://play.google.com/store/apps/details?id=com.balysv.loop"} target={"_blank"}>
+                                {"Infinity Loop"}</a>{"]"}
+                                </p>
+                                <p>{"developed by: *"}</p>
+                                <p>{"Jakob Ritter"}</p>
+                                <p>{"Jan Alexander Jensen"}</p>
+                                <p>{"Johannes Moosburger"}</p>
+                                <p>{"Johannes Reichle"}</p>
+                                <p>{"Simon Redl"}</p>
+                                <p>{"* in alphabetical order"}</p>
+                                </>
+                            };
                             html!{
                                 <TextPage
                                     screen={screen.clone()}
-                                    title={"credit"}
-                                    content={"This is the credit page."}/>
+                                    title={"credits"}
+                                    content={content} />
                             }
                         }
                     }

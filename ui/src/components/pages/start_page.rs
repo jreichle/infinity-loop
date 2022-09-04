@@ -72,7 +72,7 @@ pub fn start_page(props: &StartPageProps) -> html {
                     {"-help-"}
                 </button>
                 <button onclick={to_credit}>
-                    {"-credit-"}
+                    {"-credits-"}
                 </button>
                 <button onclick={on_exit}>
                     {"-exit-"}
