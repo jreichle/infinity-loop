@@ -81,7 +81,7 @@ pub fn board_page_component(props: &BoardPageProps) -> Html {
     let generate_cnf: Callback<MouseEvent> = {
         let board = board.clone();
         let cnf = props.cnf.clone();
-        let level_grid = board.level_grid.clone();
+        let level_grid = board.data.clone();
         Callback::from(move |_| {
             log::info!("[Button click] Generate cnf.");
             cnf.set(cnf::level_to_cnf(&level_grid.clone()).unwrap());
