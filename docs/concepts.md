@@ -76,11 +76,7 @@ The progressive change in generated levels is provided by a lazy iterator define
 
 ### Unweighted Generator
 
-Developer: Simon Redl
-
 ### The Wave Function Collapse (WFC) Generator
-
-Developer: Alexander Jensen
 
 Wave function collapse is the process by which a system changes from a superposition of states to a discrete state with a clearly defined value of a given measurable quantity by interacting with its environment.
 
@@ -90,7 +86,6 @@ Wave function collapse occurs when a wave function—initially in a superpositio
 
 ### Constraint Propagation Solver
 
-Developer: Simon Redl
 
 for general idea behind the solver see [Propagators][propagator]
 
@@ -99,15 +94,11 @@ strategy: superimpose all possible tiles at each position and successively elimi
 
 ### SAT-Solver
 
-Developer: Jakob Ritter
-
 1. encode tile configurations and game logic in CNF
 2. solve by external SAT-solver
 3. decode returned variables
 
 ## Backend
-
-Developer: Johannes Reichle
 
 The backend uses the [rocket][rocket] framework for servers. 
 The purpose of the backend is solely in serving static files and getting the application running in compiling and sending the frontend.
@@ -115,28 +106,32 @@ The compilation in [frontend build][build] is facilitated with a rust [build scr
 
 ## The UI
 
-Developer: Johannes Reichle
-
 The frontend uses the [yew][yew] framework for building [single-page applications][spa].
 While the frontend can be served via the [rocket][rocket] backed server, the frontend can also be run independently.
 Yew is heavily inspired by the more popular frontend framework [React][react].
 But instead of running with JavaScript, the rust code can be compiled to [WebAssembly][wasm].
 
+The app state is stored into the [local storage][local-storage] which enables the app to retrieve the correct page and selected content therof.
+For example, the level is stored when being played.
+
 ### Level preview
 
-Developer: Johannes Reichle
+The level preview provides levels that can be (randomly) chosen to play.
+It is possible to load more levels to increase the range of choice.
+Additionally a previously saved level can be retrieved.
 
 ### Level board
 
-Developer: Johannes Reichle, Alexander Jensen
+The level board is the part of the application that encompasses the actual playing experience of infinity loop.
+This includes the functionality of turning tiles with a mouse click.
+A hinting functionality is built in to help a player in case of need.
+The solve button, on the other hand, will immediatly complete the level.
+Upon completion a new level can be played.
 
 ### Wave function collapse visualizer
 
-Developer: Alexander Jensen
 
 ### The Level Editor
-
-Developer: Johannes Moosburger
 
 This part shall provide a editor page, where the user can create his/her own level gameboards. For that, the user can specify a grid (width/height), add tiles of different shapes (use mouse wheel on tile) and rotate (click on a tile) them, to shape a initial level pattern.
 
@@ -180,3 +175,4 @@ The editor is based on the **Basic game representation**. It contains a initial 
 [build]: <../backend/build.rs>
 [build-script]: <https://doc.rust-lang.org/cargo/reference/build-scripts.html>
 [react]: <https://reactjs.org/>
+[local-storage]: <https://en.wikipedia.org/wiki/Web_storage#Local_and_session_storage>
