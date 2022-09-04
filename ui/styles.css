@@ -250,9 +250,7 @@ body::-webkit-scrollbar-thumb {
 }
 
 .level-overlay {
-  font-size: 50px;
-  font-family: Arial, Helvetica, sans-serif;
-  /* filter: blur(2px); */
+  font-size: 5vmin;
   position: absolute;
   top: 0;
   width: 100%;
@@ -425,6 +423,10 @@ input[type=range]:focus::-moz-range-track {
   font-size: 2vmin;
   color: var(--white);
   transform: translate(5px, 1px);
+}
+
+.page-container {
+  width: 60vmin;
 }
 
 .page-title {

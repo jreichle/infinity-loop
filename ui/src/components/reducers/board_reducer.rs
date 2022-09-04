@@ -61,6 +61,12 @@ pub fn highlight_cells(row: usize, column: usize) {
         .unwrap();
 
     let class_names = cell.get_attribute("class").unwrap();
+
+    // prevent re-highlighting if already highlighted
+    if class_names.contains("cell-hint-highlight") {
+        return
+    }
+
     let highlight_class_names = format!("{} {}", class_names, "cell-hint-highlight");
     cell.set_class_name(&highlight_class_names);
     let hl = Closure::<dyn Fn()>::new(move || {
