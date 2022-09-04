@@ -76,6 +76,7 @@ pub fn highlight_cells(row: usize, column: usize) {
     hl.forget();
 }
 
+//checks if 2 tiles have the same playing piece on them, no matter the rotation
 pub fn check_match(first: Tile<Square>, second: Tile<Square>) -> bool{
     match first.enum_to_index(){
         0 => second.enum_to_index() == 0,

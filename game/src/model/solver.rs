@@ -17,7 +17,7 @@ use super::{
     grid::Grid,
     lattice::BoundedLattice,
     tile::{Square, Tile},
-    knf
+    cnf
 };
 
 ///! This file contains a solver algorithm
@@ -395,12 +395,10 @@ impl Grid<Tile<Square>> {
             .superimpose()])
     }
 
+    //takes a user supplied input and runs solved_to_tiles
+    //if that did not generate a sufficient solution an unsolvable puzzle is generated to handle this error
     pub fn solve_with_input(&self, input: &str) -> Grid<Tile<Square>> {
-        // SolutionIterator(vec![self
-        //     .with_sentinels(Tile::NO_CONNECTIONS)
-        //     .superimpose()])
-        //println!("{}", knf::level_to_knf(self).unwrap());
-        let tiles = knf::solved_to_tiles(input).unwrap();
+        let tiles = cnf::solved_to_tiles(input).unwrap();
         if tiles.len() == self.columns() * self.rows() {
             Grid::new(Coordinate::new(self.columns(),self.rows()),tiles)
         }
@@ -409,18 +407,9 @@ impl Grid<Tile<Square>> {
             for _i in 0..self.columns()*self.rows() {
                 unsolvable.push(Tile::ALL_CONNECTIONS);
             }
-
             Grid::new(Coordinate::new(self.columns(),self.rows()), unsolvable)
         }
         
-    }
-
-    pub fn generate_cnf(&self) -> String {
-        // SolutionIterator(vec![self
-        //     .with_sentinels(Tile::NO_CONNECTIONS)
-        //     .superimpose()])
-        //println!("{}", knf::level_to_knf(self).unwrap());
-        return knf::level_to_cnf(self).unwrap();
     }
 }
 

@@ -28,7 +28,7 @@ pub fn page_router() -> Html {
 
     let screen = use_state(|| retrieve_screen());
 
-    // use effect to let message disappear after 1.5 seconds
+    // use effect to let head_message disappear after 1.5 seconds and let bottom_message disappear after 10 seconds
     // depends on message change
     {
         let head_message = head_message.clone();

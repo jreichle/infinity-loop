@@ -14,7 +14,7 @@ use game::model::{
     tile::{Square, Tile},
 };
 
-use game::model::knf;
+use game::model::cnf;
 
 use crate::components::board::level::LevelComponent;
 use crate::components::reducers::board_reducer::{BoardAction, BoardState};
@@ -86,7 +86,7 @@ pub fn board_page_component(props: &BoardPageProps) -> Html {
         let level_grid = board.level_grid.clone();
         Callback::from(move |_| {
             log::info!("[Button click] Generate cnf.");
-            cnf.set(knf::level_to_cnf(&level_grid.clone()).unwrap());
+            cnf.set(cnf::level_to_cnf(&level_grid.clone()).unwrap());
         })
     };
 
