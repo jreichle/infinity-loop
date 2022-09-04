@@ -1,7 +1,7 @@
 use std::path::Path;
 use std::process::Command;
 
-const FRONTEND_DIR: &str = "../ui";
+const FRONTEND_DIR: &str = "../frontend";
 
 fn main() {
     println!("cargo:rerun-if-changed={}/src", FRONTEND_DIR);

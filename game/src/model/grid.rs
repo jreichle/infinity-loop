@@ -29,7 +29,7 @@ use super::{
 ///
 /// ## Invariants
 ///
-/// 1. [`Grid<A>`] forms a rectangle entirely filled with elements of type [`A`]
+/// 1. [`Grid<A>`] forms a rectangle entirely filled with elements of type `A`
 /// 2. `∀g : Grid. g.rows * g.columns ≡ g.elements.len()`
 /// 3. [`Grid`] is positioned at Coordinate (0, 0) and extends in positive directions
 #[derive(Debug, PartialEq, Eq, PartialOrd, Ord, Clone, Hash)]
@@ -387,7 +387,7 @@ impl Grid<Tile<Square>> {
 
     pub fn change_tile_shape(&self, index: Coordinate<isize>) -> Result<Self, AccessError> {
         // Depending on the number and (if the number is two) on the arrangement of the tile's arms, it will reshaped in the following order:
-        // ╹ -> -> ┗ -> ┃ -> ┣ -> ╋ -> ' ' 
+        // ╹ -> -> ┗ -> ┃ -> ┣ -> ╋ -> ' '
 
         self.adjust_at(index, |tile| -> Tile<Square> {
             match tile.0.len() {

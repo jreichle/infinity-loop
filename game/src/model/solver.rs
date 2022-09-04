@@ -12,9 +12,9 @@ use super::{
     coordinate::Coordinate,
     enummap::EnumMap,
     enumset::EnumSet,
-    finite::Finite,
+    finite::{all_enums_ascending, Finite},
     grid::Grid,
-    lattice::BoundedLattice,
+    lattice::{BoundedLattice, BoundedLatticeExt},
     tile::{Square, Tile},
 };
 
@@ -109,7 +109,7 @@ where
     <A as IntoIterator>::Item: Display + BoundedLattice + PartialEq,
 {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        self.0.map(BoundedLattice::or).fmt(f)
+        self.0.map(BoundedLatticeExt::or).fmt(f)
     }
 }
 
@@ -176,11 +176,8 @@ impl Coordinate<isize> {
     }
 
     /// Returns the position of all neighboring tiles in arbitrary order
-    pub fn all_neighbor_indices(self) -> Vec<Coordinate<isize>> {
-        EnumSet::FULL
-            .iter()
-            .map(|dir| self.get_neighbor_index(dir))
-            .collect()
+    pub fn all_neighbor_indices(self) -> impl Iterator<Item = Coordinate<isize>> {
+        all_enums_ascending().map(move |dir| self.get_neighbor_index(dir))
     }
 }
 
@@ -203,7 +200,7 @@ impl<A: Finite> Tile<A> {
 }
 
 impl<A: Finite + Copy> SentinelGrid<EnumSet<A>> {
-    /// unwraps if all superpositions are collapsed (= only contain single state)
+    /// unwraps if all superpositions are collapsed (= only contain a single state)
     pub fn extract_if_collapsed(&self) -> Option<Grid<A>> {
         self.extract_grid()
             .map(EnumSet::unwrap_if_singleton)
@@ -218,7 +215,7 @@ impl<A> SentinelGrid<EnumSet<A>> {
     ///
     /// The signature of function is chosen according to the rule "parse, don't validate"
     /// While no parsing takes place, the caller cannot ignore the wrapped return value
-    fn check_no_empty_superposition(self) -> Option<SentinelGrid<EnumSet<A>>> {
+    pub fn check_no_empty_superposition(self) -> Option<SentinelGrid<EnumSet<A>>> {
         self.0
             .as_slice()
             .iter()
@@ -246,15 +243,8 @@ fn memoize<A: Finite, B: Copy, F: Fn(A) -> B>(f: F) -> impl FnMut(A) -> B {
 impl<A: Copy + Finite + Neg<Output = A> + PartialEq> Superposition<A> {
     /// Generates all propagation information from on a single superposition
     pub fn extract_common_connections(self) -> EnumMap<A, Superposition<A>> {
-        let present_evidence = BoundedLattice::and(self)
-            .0
-            .into_iter()
-            .map(|x| (x, subset_containing(-x)));
-        let absent_evidence = BoundedLattice::or(self)
-            .0
-            .not()
-            .into_iter()
-            .map(|x| (x, !subset_containing(-x)));
+        let present_evidence = self.and().0.map(|x| (x, subset_containing(-x)));
+        let absent_evidence = self.or().0.not().map(|x| (x, !subset_containing(-x)));
         present_evidence.chain(absent_evidence).collect()
     }
 }
@@ -310,7 +300,7 @@ impl Sentinel<Square> {
 impl<A: Finite> Sentinel<A> {
     /// Chooses a tile through the supplied heuristic and for each state
     /// in the superposition of that tile create a new grid with that tile in one of the states
-    fn branch<F>(&self, heuristic: F) -> Vec<Sentinel<A>>
+    pub fn branch<F>(&self, heuristic: F) -> Vec<Sentinel<A>>
     where
         F: Fn(&Sentinel<A>) -> Coordinate<isize>,
     {
@@ -325,7 +315,7 @@ impl<A: Finite> Sentinel<A> {
     }
 }
 /// Splits the superposition with the most states
-fn most_superimposed_states<A: Finite>(grid: &Sentinel<A>) -> Coordinate<isize> {
+pub fn most_superimposed_states<A: Finite>(grid: &Sentinel<A>) -> Coordinate<isize> {
     grid.0
         .coordinates()
         .into_iter()
@@ -388,7 +378,7 @@ pub fn propagate_restrictions_to_all_neighbors2<
 }
 
 impl Grid<Tile<Square>> {
-    /// Returns all puzzle solutions
+    /// Yields all puzzle solutions lazily
     // hide concrete iterator implementation
     // solves puzzles up to 20x20 reasonably fast
     pub fn solve(&self) -> impl Iterator<Item = Grid<Tile<Square>>> {
@@ -426,6 +416,7 @@ impl Iterator for SolutionIterator<Sentinel<Square>> {
 
             // distinguish between no and several solutions
             if let Some(grid) = minimized_grid.check_no_empty_superposition() {
+                // INFO: certain candidates after branching are unsolvable in rare cases
                 self.0.extend(grid.branch(most_superimposed_states))
             }
         }
@@ -439,7 +430,7 @@ const _: Superposition<Square> = EnumSet::FULL;
 mod tests {
 
     use super::*;
-    use crate::model::interval::Max;
+    use crate::model::{finite::all_enums_ascending, interval::Max};
 
     #[quickcheck]
     fn tile_configurations_have_same_number_of_connections(tile: Tile<Square>) -> bool {
@@ -462,10 +453,7 @@ mod tests {
     fn neighborhood_is_euclidian(index: Coordinate<Max<100>>) -> bool {
         // restrict coordinates to a range resembling actual values used in grid and avoid integer over- / underflows
         let index = index.map(Max::to_isize);
-        EnumSet::FULL
-            .into_iter()
-            .fold(index, Coordinate::get_neighbor_index)
-            == index
+        all_enums_ascending().fold(index, Coordinate::get_neighbor_index) == index
     }
 
     #[quickcheck]

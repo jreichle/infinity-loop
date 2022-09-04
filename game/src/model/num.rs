@@ -6,6 +6,8 @@ use std::ops::{
 pub trait Num
 where
     Self: Sized
+        + Copy
+        + Clone
         + Add<Output = Self>
         + AddAssign
         + Mul<Output = Self>
@@ -24,78 +26,156 @@ where
     const ZERO: Self;
 
     const ONE: Self;
+
+    const BITS: Self;
+
+    const MIN: Self;
+
+    const MAX: Self;
 }
 
 impl Num for u8 {
     const ZERO: Self = 0;
 
     const ONE: Self = 1;
+
+    const BITS: Self = Self::BITS as u8;
+
+    const MIN: Self = Self::MIN as u8;
+
+    const MAX: Self = Self::MAX as u8;
 }
 
 impl Num for u16 {
     const ZERO: Self = 0;
 
     const ONE: Self = 1;
+
+    const BITS: Self = Self::BITS as u16;
+
+    const MIN: Self = Self::MIN as u16;
+
+    const MAX: Self = Self::MAX as u16;
 }
 
 impl Num for u32 {
     const ZERO: Self = 0;
 
     const ONE: Self = 1;
+
+    const BITS: Self = Self::BITS as u32;
+
+    const MIN: Self = Self::MIN as u32;
+
+    const MAX: Self = Self::MAX as u32;
 }
 
 impl Num for u64 {
     const ZERO: Self = 0;
 
     const ONE: Self = 1;
+
+    const BITS: Self = Self::BITS as u64;
+
+    const MIN: Self = Self::MIN as u64;
+
+    const MAX: Self = Self::MAX as u64;
 }
 
 impl Num for u128 {
     const ZERO: Self = 0;
 
     const ONE: Self = 1;
+
+    const BITS: Self = Self::BITS as u128;
+
+    const MIN: Self = Self::MIN as u128;
+
+    const MAX: Self = Self::MAX as u128;
 }
 
 impl Num for usize {
     const ZERO: Self = 0;
 
     const ONE: Self = 1;
+
+    const BITS: Self = Self::BITS as usize;
+
+    const MIN: Self = Self::MIN as usize;
+
+    const MAX: Self = Self::MAX as usize;
 }
 
 impl Num for i8 {
     const ZERO: Self = 0;
 
     const ONE: Self = 1;
+
+    const BITS: Self = Self::BITS as i8;
+
+    const MIN: Self = Self::MIN as i8;
+
+    const MAX: Self = Self::MAX as i8;
 }
 
 impl Num for i16 {
     const ZERO: Self = 0;
 
     const ONE: Self = 1;
+
+    const BITS: Self = Self::BITS as i16;
+
+    const MIN: Self = Self::MIN as i16;
+
+    const MAX: Self = Self::MAX as i16;
 }
 
 impl Num for i32 {
     const ZERO: Self = 0;
 
     const ONE: Self = 1;
+
+    const BITS: Self = Self::BITS as i32;
+
+    const MIN: Self = Self::MIN as i32;
+
+    const MAX: Self = Self::MAX as i32;
 }
 
 impl Num for i64 {
     const ZERO: Self = 0;
 
     const ONE: Self = 1;
+
+    const BITS: Self = Self::BITS as i64;
+
+    const MIN: Self = Self::MIN as i64;
+
+    const MAX: Self = Self::MAX as i64;
 }
 
 impl Num for i128 {
     const ZERO: Self = 0;
 
     const ONE: Self = 1;
+
+    const BITS: Self = Self::BITS as i128;
+
+    const MIN: Self = Self::MIN as i128;
+
+    const MAX: Self = Self::MAX as i128;
 }
 
 impl Num for isize {
     const ZERO: Self = 0;
 
     const ONE: Self = 1;
+
+    const BITS: Self = Self::BITS as isize;
+
+    const MIN: Self = Self::MIN as isize;
+
+    const MAX: Self = Self::MAX as isize;
 }
 
 trait Signed: Num + Sub<Output = Self> + SubAssign {}

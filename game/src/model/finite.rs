@@ -4,7 +4,7 @@ use super::cardinality::{Cardinality, Void};
 
 /// Witnesses the bijection between [`Self`] and the finite subset of
 /// [natural numbers `ℕ`](https://en.wikipedia.org/wiki/Natural_number)
-/// up to [`Self::CARDINALITY`] exclusive
+/// up to [`Self::CARDINALITY`](Cardinality::CARDINALITY) exclusive
 ///
 /// With [`Cardinality`] as supertrait, implementations of [`Finite`] are
 /// restricted to types with finite number of inhabitants ≤ [`u64::MAX`]
@@ -19,19 +19,19 @@ use super::cardinality::{Cardinality, Void};
 /// * the isomorphism should additionally preserve the total order imposed by [`Ord`],
 ///     i.e. should be [order isomorphic](https://en.wikipedia.org/wiki/Order_isomorphism)
 ///     `∀x, y : Finite + Ord. x ≤ y ⟺ x.enum_to_index() ≤ y.enum_to_index()`
-/// * all indices are between `0` inclusive and [`Self::CARDINALITY`] exclusive
+/// * all indices are between `0` inclusive and [`Self::CARDINALITY`](Cardinality::CARDINALITY) exclusive
 /// * [`Finite::index_to_enum`] ∘ [`Finite::enum_to_index`]
 ///     ≡ [`identity`](std::convert::identity) ≡ [`Finite::enum_to_index`] ∘ [`Finite::index_to_enum`]
 pub trait Finite: Cardinality {
     /// Converts an integer index into the corresponding [Self]
     ///
     /// The caller must ensure that this method is only called with values
-    /// between 0 and [`Self::CARDINALITY`] exclusive
+    /// between 0 and [`Self::CARDINALITY`](Cardinality::CARDINALITY) exclusive
     ///
     /// Implementors may either
     ///
-    /// 1. use the value modulo [`Self::CARDINALITY`]
-    /// 2. panic, if value ≥ [`Self::CARDINALITY`]
+    /// 1. use the value modulo [`Self::CARDINALITY`](Cardinality::CARDINALITY)
+    /// 2. panic, if value ≥ [`Self::CARDINALITY`](Cardinality::CARDINALITY)
     fn unchecked_index_to_enum(value: u64) -> Self;
 
     /// Converts a [Self] into the corresponding natural number index
@@ -79,18 +79,11 @@ pub trait Finite: Cardinality {
             .map(Self::unchecked_index_to_enum)
             .collect()
     }
+}
 
-    /// Returns all inhabitants in ascending order
-    ///
-    /// # Note
-    ///
-    /// Implementation should return lazy iterator, but returning `impl <trait>`
-    /// is disallowed in traits as of Rust 1.6.3
-    fn all_enums_ascending() -> Vec<Self> {
-        (0..Self::CARDINALITY)
-            .map(Self::unchecked_index_to_enum)
-            .collect()
-    }
+/// Returns all inhabitants in ascending order
+pub fn all_enums_ascending<A: Finite>() -> impl Iterator<Item = A> {
+    (0..A::CARDINALITY).map(A::unchecked_index_to_enum)
 }
 
 impl Finite for Void {

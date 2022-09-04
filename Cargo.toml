@@ -3,5 +3,5 @@
 members = [
     "game",
     "backend",
-    "ui",
+    "frontend",
 ]

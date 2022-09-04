@@ -11,13 +11,13 @@ use super::{cardinality::Cardinality, enumset::EnumSet, finite::Finite};
 /// Represents a direction for a tile connection
 #[derive(Debug, Hash, Copy, Clone, PartialEq, Eq, PartialOrd, Ord)]
 pub enum Square {
-    /// upwards direction or [`Coordinate::new(-1, 0)`][model::Coordinate::new]
+    /// upwards direction or [`Coordinate::new(-1, 0)`](super::coordinate::Coordinate)
     Up,
-    /// rightwards direction or [`Coordinate::new(0, 1)`](model::Coordinate::new)
+    /// rightwards direction or [`Coordinate::new(0, 1)`](super::coordinate::Coordinate)
     Right,
-    /// downwards direction or [`Coordinate::new(1, 0)`](model::Coordinate::new)
+    /// downwards direction or [`Coordinate::new(1, 0)`](super::coordinate::Coordinate)
     Down,
-    /// leftwards direction or [`Coordinate::new(0, -1)`](model::Coordinate::new)
+    /// leftwards direction or [`Coordinate::new(0, -1)`](super::coordinate::Coordinate)
     Left,
 }
 
@@ -132,9 +132,9 @@ impl<A: Cardinality> Tile<A> {
 }
 
 impl<A: Finite> Tile<A> {
-    /// Rotates the tile clockwise by 360° / [`A::CARDINALITY`]
+    /// Rotates the tile clockwise by 360° / [`A::CARDINALITY`](Cardinality::CARDINALITY)
     ///
-    /// Performing [`A::CARDINALITY`] rotations returns the original tile
+    /// Performing [`A::CARDINALITY`](Cardinality::CARDINALITY) rotations returns the original tile
     pub fn rotated_clockwise(&self, repetitions: u64) -> Self {
         let bit_rep = self.enum_to_index();
         let repetitions = repetitions % A::CARDINALITY;
@@ -143,9 +143,9 @@ impl<A: Finite> Tile<A> {
         Self(EnumSet::unchecked_index_to_enum(rotated_bit_rep))
     }
 
-    /// Rotates the tile counterclockwise by 360° / [`A::CARDINALITY`]
+    /// Rotates the tile counterclockwise by 360° / [`A::CARDINALITY`](Cardinality::CARDINALITY)
     ///
-    /// Performing [`A::CARDINALITY`] rotations returns the original tile
+    /// Performing [`A::CARDINALITY`](Cardinality::CARDINALITY) rotations returns the original tile
     pub fn rotated_counterclockwise(&self, repetitions: u64) -> Self {
         self.rotated_clockwise(A::CARDINALITY - repetitions % A::CARDINALITY)
     }

@@ -5,7 +5,7 @@ use crate::model::{
     coordinate::Coordinate,
     enummap::EnumMap,
     enumset::EnumSet,
-    finite::Finite,
+    finite::{all_enums_ascending, Finite},
     grid::Grid,
     solver::{propagate_restrictions_to_all_neighbors, Sentinel, Superposition},
     tile::{
@@ -44,7 +44,7 @@ impl<A: Finite + Eq + Hash + Clone + Copy + Display> EnumSet<A> {
         for (option, weight) in option_weights.iter() {
             rng_weights -= weight;
             if rng_weights < 0.0 {
-                for tile in A::all_enums_ascending() {
+                for tile in all_enums_ascending() {
                     if tile != option {
                         self.remove(tile);
                     }
@@ -82,12 +82,11 @@ impl WfcGenerator {
         }
     }
 
-    pub fn default(width: usize, height: usize) -> WfcGenerator {
-        let available_tiles = EnumSet::<Tile<Square>>::FULL;
+    pub fn with_all_tiles(width: usize, height: usize) -> WfcGenerator {
         WfcGenerator {
             width,
             height,
-            available_tiles,
+            available_tiles: EnumSet::FULL,
             prop_limit: 40000,
             pass_limit: 1000,
         }
@@ -96,17 +95,14 @@ impl WfcGenerator {
     fn update_weights(board: &Sentinel<Square>, weights: &mut EnumMap<Tile<Square>, usize>) {
         weights.clear();
 
-        // initialize weights
-        let full_set: Superposition<Square> = EnumSet::FULL;
-        full_set.iter().for_each(|tile| {
-            weights.insert(tile, 0);
-        });
+        // initialize all weights to 0
+        // weights.extend(all_enums_ascending().into_iter().map(|t| (t, 0)));
 
         // update weights: only calculate weight for uncollapsed cells
-        for cell in board.0.elements().into_iter() {
+        for cell in board.0.as_slice() {
             if !cell.is_collapsed() {
                 cell.into_iter().for_each(|tile| {
-                    weights[tile] = weights[tile].map(|x| x + 1);
+                    weights[tile] = Some(weights[tile].unwrap_or(0) + 1);
                 });
             }
         }
@@ -187,7 +183,7 @@ impl WfcGenerator {
 
         let mut passes = 0_usize;
         while let Some(index) = stack.pop() {
-            for dir in Square::all_enums_ascending() {
+            for dir in all_enums_ascending() {
                 let neighbor_index = index.get_neighbor_index(dir);
                 let neighbor_cell = &board.0.get(neighbor_index).unwrap();
 
