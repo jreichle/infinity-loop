@@ -19,6 +19,7 @@ Infinity loop is a puzzle game built out of a grid of tiles, each with a particu
 **Component Overview:**
 
 * Basic game as [WASM][wasm] Web-UI
+* Backend supplying static files
 * Generating levels with either a
   * unweighted generator, which generates all possible levels with even distribution
   * generator based on [Wave Fuction Collapse][wfc]
@@ -27,8 +28,9 @@ Infinity loop is a puzzle game built out of a grid of tiles, each with a particu
   * SAT solver
 * Manual level editor
 * Visualization for Wave Function Collapse
-* Preview with possible levels to choose from
+* Preview with levels to choose from
 * Help during solving by requesting hints
+* Using local storage to save current state of single page application
 
 The following section further elaborates on each component. For an overview of the employed architecture and file structure, refer to the [architecture][architecture] file.
 
@@ -70,7 +72,17 @@ TestLevel contains some predefined levels for tutorial or test cases. It provide
 
 The progressive change in generated levels is provided by a lazy iterator defined through a [stream unfold][anamorphism] in **levelstream**.
 
+## Backend
+
+Developer: Johannes Reichle
+
+The backend uses the [rocket][rocket] framework for servers. 
+The purpose of the backend is solely in serving static files and getting the application running in compiling and sending the frontend.
+The compilation in [build][frontend build] is facilitated with a rust [build-script][build script].
+
 ## The UI
+
+The frontend uses the [yew][yew] framework for building [spa][single-page applications].
 
 Developer: Johannes Reichle
 
@@ -145,3 +157,9 @@ The editor is based on the *Basic game representation*. It contains a initial gr
 [coordinate]: <../game/src/model/coordinate.rs>
 [tile]: <../game/src/model/tile.rs>
 [square]: <../game/src/model/tile.rs>
+
+[rocket]: <https://rocket.rs/>
+[yew]: <https://yew.rs/>
+[spa]: <https://en.wikipedia.org/wiki/Single-page_application>
+[build]: <../backend/build.rs>
+[build-script]: <https://doc.rust-lang.org/cargo/reference/build-scripts.html>
