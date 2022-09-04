@@ -134,7 +134,7 @@ pub fn solved_to_tiles(solved: &str) -> Result<Vec<Tile<Square>>, String> {
             literal.push(c)
         }
     }
-    if literal != "" {
+    if !literal.is_empty() {
         let last = literal.parse::<i32>();
         match last {
             Ok(i) => literals.push(i),
@@ -142,7 +142,7 @@ pub fn solved_to_tiles(solved: &str) -> Result<Vec<Tile<Square>>, String> {
         }
     }
 
-    literals.sort_by(|a, b| a.abs().cmp(&b.abs()));
+    literals.sort_by_key(|a| a.abs());
 
     log::info!("literals: {}", literals.len());
 

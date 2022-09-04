@@ -80,12 +80,12 @@ pub fn page_router() -> Html {
         );
 
         let bottom_message = bottom_message.clone();
-        let timeout_id = bottom_message_timeout_id.clone();
+        let timeout_id = bottom_message_timeout_id;
         use_effect_with_deps(
             move |message| {
                 let window = web_sys::window().unwrap();
                 let message_string = (*message.clone()).clone();
-                if message_string != "".to_string() {
+                if !message_string.is_empty() {
                     if *timeout_id != -1 {
                         window.clear_timeout_with_handle(*timeout_id);
                     }
@@ -95,7 +95,7 @@ pub fn page_router() -> Html {
 
                     let hide_action = {
                         let message = message.clone();
-                        let msg_element = msg_element.clone();
+                        let msg_element = msg_element;
                         let timeout_id = timeout_id.clone();
                         Closure::<dyn Fn()>::new(move || {
                             msg_element.set_attribute("hidden", "true").ok();

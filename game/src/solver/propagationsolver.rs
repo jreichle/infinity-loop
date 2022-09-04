@@ -84,7 +84,6 @@ pub type Sentinel<A> = SentinelGrid<Superposition<A>>;
 /// # Invariants
 ///
 /// * informal: tiles of the grid without neighbor in a direction gain a new sentinel value in that direction
-// TODO: * formal: `forall g : Grid<A>, sg : SentinelGrid<A>, s : A. g. g.with_sentinels(s) `
 #[derive(Clone, Debug, Default, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct SentinelGrid<A>(pub Grid<A>);
 
@@ -330,7 +329,6 @@ pub fn most_superimposed_states<A: Finite>(grid: &Sentinel<A>) -> Coordinate<isi
         .expect("Logical error: attempted to branch, but was unable")
 }
 
-// TODO: split to isolate parts only working on Square,
 /// Propagates all constraints from the chosen tile to all neighboring ones
 pub fn propagate_restrictions_to_all_neighbors(
     grid: Sentinel<Square>,

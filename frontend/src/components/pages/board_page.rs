@@ -68,7 +68,7 @@ pub fn board_page_component(props: &BoardPageProps) -> Html {
         //let level_grid = board.level_grid.clone();
         Callback::from(move |_| {
             log::info!("[Button click] Solve.");
-            board.dispatch(BoardAction::SolveLevelInput(literals.to_string().clone()));
+            board.dispatch(BoardAction::SolveLevelInput(literals.to_string()));
             // let msg = match level_grid.is_solved() {
             //     true => String::from("The level is solved"),
             //     false => String::from("This did not solve the level"),

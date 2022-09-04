@@ -98,7 +98,7 @@ pub fn wfc_board_component(props: &VisualizerPageProps) -> Html {
                 WfcGenerator::new(width, height, *available_tiles, PASS_LIMIT, PROP_LIMIT);
             let (new_grid, new_weights) = get_new_board(&new_generator);
 
-            if new_grid.to_string().trim() == String::from("") {
+            if new_grid.to_string().trim() == "" {
                 overlay_message.set(String::from("combination invaild"));
             } else {
                 overlay_message.set(String::from(""));
