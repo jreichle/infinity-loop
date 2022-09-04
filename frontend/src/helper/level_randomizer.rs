@@ -5,6 +5,7 @@ use game::model::tile::{Square, Tile};
 
 use rand::Rng;
 
+/// randomizes the given level until it is not in a solved state anymore
 pub fn randomize_level(mut level: Grid<Tile<Square>>) -> Grid<Tile<Square>> {
     let dimension = level.dimensions();
     let mut is_solved = true;

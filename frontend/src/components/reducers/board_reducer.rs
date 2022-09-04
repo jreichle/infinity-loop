@@ -8,20 +8,19 @@ use crate::helper::level_randomizer::randomize_level;
 use crate::helper::local_storage::save_level;
 use wasm_bindgen::{prelude::*, JsCast};
 
-use game::generator::{
-    wfc::WfcGenerator,
-    fastgen::generate,
-};
-use game::solver::hint::{generate_solving_trace, get_hint};
+use game::generator::{fastgen::generate, wfc::WfcGenerator};
 use game::model::{
     coordinate::Coordinate,
     gameboard::GameBoard,
     grid::Grid,
     tile::{Square, Tile},
 };
+use game::solver::hint::{generate_solving_trace, get_hint};
 
-// reducer's action
+/// reducer facilitates actions for both the board and the editor pages
+
 pub enum BoardAction {
+    // Board actions
     TurnCell(Coordinate<isize>),
     ReplaceGrid(Grid<Tile<Square>>),
     NextLevel,

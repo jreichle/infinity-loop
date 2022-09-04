@@ -20,8 +20,6 @@ pub fn page_router() -> Html {
     let head_message_timeout_id = use_state(|| -1_i32);
 
     let dimension = use_state(|| Coordinate::new(5_usize, 5_usize));
-    let level_number = use_state(|| 0);
-
     let screen = use_state(retrieve_screen);
 
     let to_title: Callback<MouseEvent> = {
@@ -100,8 +98,7 @@ pub fn page_router() -> Html {
                             html! {
                                 <LevelPreviewPage
                                     screen={screen.clone()}
-                                    dimension={dimension}
-                                    level_number={level_number}/>
+                                    dimension={dimension}/>
                             }
                         },
                         Screen::Editor => {

@@ -11,18 +11,28 @@ use crate::helper::local_storage::{
 };
 use crate::helper::screen::Screen;
 
-use game::model::coordinate::Coordinate;
 use game::generator::fastgen::generate;
+use game::model::coordinate::Coordinate;
 use game::model::grid::Grid;
 use game::model::tile::{Square, Tile};
 
+/// the props are used to initialize the preview component
+///
+/// screen: used to change screens away from preview
+/// dimension: indicates the dimensin of the levels that are loaded
 #[derive(Properties, PartialEq, Clone)]
 pub struct LevelPreviewPageProps {
     pub screen: UseStateHandle<Screen>,
     pub dimension: UseStateHandle<Coordinate<usize>>,
-    pub level_number: UseStateHandle<usize>,
 }
 
+/// this component can be used to preview levels
+///
+/// functinality
+/// - choose a specific level to play
+/// - choose a random level to play
+/// - load additional levels
+/// - show a previously saved level (from editor)
 #[function_component(LevelPreviewPage)]
 pub fn level_preview_page_component(props: &LevelPreviewPageProps) -> Html {
     let generate_nr = retrieve_preview_level_count();

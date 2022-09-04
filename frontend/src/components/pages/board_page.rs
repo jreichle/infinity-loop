@@ -13,6 +13,11 @@ use crate::components::reducers::board_reducer::{BoardAction, Level};
 
 use crate::helper::local_storage::change_screen;
 
+/// the props are used to initialize the board page
+///
+/// level_grid: level that is being played
+/// screen: used to change screens away from board or to another level
+/// head_message: can be used to show information to user
 #[derive(Properties, PartialEq, Clone)]
 pub struct BoardPageProps {
     pub level_grid: Grid<Tile<Square>>,
@@ -20,6 +25,13 @@ pub struct BoardPageProps {
     pub head_message: UseStateHandle<String>,
 }
 
+/// this page can be used to play levels
+///
+/// functinality
+/// - click and turn tiles
+/// - hinting: shortly highlight a tile to help solve level
+/// - solving the level
+/// - load the next level
 #[function_component(BoardPage)]
 pub fn board_page_component(props: &BoardPageProps) -> Html {
     let board = use_reducer_eq(Level::set_grid(props.level_grid.clone()));
