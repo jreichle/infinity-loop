@@ -26,7 +26,7 @@ const DEFAULT_SPEED: isize = 80;
 const PASS_LIMIT: usize = 40000;
 const PROP_LIMIT: usize = 1000;
 
-fn init_board(wfc_generator: &WfcGenerator) -> (GameGrid, Weights) {
+fn get_new_board(wfc_generator: &WfcGenerator) -> (GameGrid, Weights) {
     let (sentinel_grid, weights) = wfc_generator.init_board();
     wfc_generator.iteration_step(sentinel_grid, weights)
 }
@@ -61,7 +61,7 @@ pub fn wfc_board_component(props: &VisualizerPageProps) -> Html {
 
     let wfc_generator =
         WfcGenerator::with_all_tiles(DEFAULT_WIDTH as usize, DEFAULT_HEIGHT as usize);
-    let (sentinel_grid, weights) = init_board(&wfc_generator);
+    let (sentinel_grid, weights) = get_new_board(&wfc_generator);
 
     let available_tiles: UseStateHandle<EnumSet<Tile<Square>>> = use_state_eq(|| EnumSet::FULL);
     let wfc_generator = use_state_eq(|| wfc_generator);
@@ -85,7 +85,7 @@ pub fn wfc_board_component(props: &VisualizerPageProps) -> Html {
             );
             let new_generator =
                 WfcGenerator::new(width, height, *available_tiles, PASS_LIMIT, PROP_LIMIT);
-            let (new_grid, new_weights) = init_board(&new_generator);
+            let (new_grid, new_weights) = get_new_board(&new_generator);
             level_grid.set(WfcGenerator::extract_grid(&new_grid));
             wfc_generator.set(new_generator);
             sentinel_grid.set(new_grid);
