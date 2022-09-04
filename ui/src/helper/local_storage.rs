@@ -8,6 +8,23 @@ use yew::prelude::*;
 pub const CURRENT_SCREEN: &str = "screen";
 pub const CURRENT_LEVEL: &str = "level";
 pub const SAVED_LEVEL: &str = "saved level";
+pub const PREVIEW_LEVELS: &str = "preview levels";
+
+pub fn save_preview_level_count(nr_levels: usize) {
+    let local_storage = web_sys::window().unwrap().local_storage().unwrap().unwrap();
+    local_storage
+        .set_item(PREVIEW_LEVELS, nr_levels.to_string().as_str())
+        .unwrap();
+}
+
+pub fn retrieve_preview_level_count() -> usize {
+    let local_storage = web_sys::window().unwrap().local_storage().unwrap().unwrap();
+    if let Ok(Some(nr_levels)) = local_storage.get_item(PREVIEW_LEVELS) {
+        nr_levels.parse().unwrap()
+    } else {
+        20
+    }
+}
 
 pub fn save_editor_level(grid: &Grid<Tile<Square>>) {
     let local_storage = web_sys::window().unwrap().local_storage().unwrap().unwrap();
@@ -19,7 +36,7 @@ pub fn save_editor_level(grid: &Grid<Tile<Square>>) {
 pub fn retrieve_editor_level() -> Grid<Tile<Square>> {
     let local_storage = web_sys::window().unwrap().local_storage().unwrap().unwrap();
     if let Ok(Some(level)) = local_storage.get_item(SAVED_LEVEL) {
-        parse_level(&level.as_str(), unicode_to_tile).unwrap()
+        parse_level(level.as_str(), unicode_to_tile).unwrap()
     } else {
         Grid::EMPTY
     }
@@ -35,7 +52,7 @@ pub fn save_level(grid: &Grid<Tile<Square>>) {
 fn retrieve_level() -> Grid<Tile<Square>> {
     let local_storage = web_sys::window().unwrap().local_storage().unwrap().unwrap();
     if let Ok(Some(level)) = local_storage.get_item(CURRENT_LEVEL) {
-        parse_level(&level.as_str(), unicode_to_tile).unwrap()
+        parse_level(level.as_str(), unicode_to_tile).unwrap()
     } else {
         Grid::EMPTY
     }
@@ -61,11 +78,15 @@ pub fn retrieve_screen() -> Screen {
     let local_storage = web_sys::window().unwrap().local_storage().unwrap().unwrap();
     if let Ok(Some(saved_screen)) = local_storage.get_item(CURRENT_SCREEN) {
         log::info!("retrieved old screen: {}", saved_screen);
-        let screen = Screen::new(saved_screen.as_str());
-        if let Screen::Level(_) = screen {
-            Screen::Level(retrieve_level())
-        } else {
-            screen
+        match saved_screen.as_str() {
+            "level" => Screen::Level(retrieve_level()),
+            "overview" => Screen::Overview,
+            "title" => Screen::Title,
+            "help" => Screen::Help,
+            "credit" => Screen::Credit,
+            "editor" => Screen::Editor,
+            "visualizer" => Screen::Visualizer,
+            _ => Screen::Title,
         }
     } else {
         log::info!("default screen: title");

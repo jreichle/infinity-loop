@@ -3,7 +3,7 @@ use yew::{html, Callback, Properties};
 
 use game::model::tile::{Square, Tile};
 
-use crate::components::utils::tile_image::TileImageComponent;
+use crate::components::utils::tile_image::TileImage;
 
 #[derive(Properties, PartialEq, Clone)]
 pub struct CellComponentProps {
@@ -18,8 +18,8 @@ pub struct CellComponentProps {
 
 #[function_component(CellComponent)]
 pub fn cell_component(props: &CellComponentProps) -> Html {
-    let (row, column) = (props.row_number.clone(), props.column_number.clone());
-    let cell_tile = props.tile.clone();
+    let (row, column) = (props.row_number, props.column_number);
+    let cell_tile = props.tile;
 
     html! {
         <div
@@ -28,7 +28,7 @@ pub fn cell_component(props: &CellComponentProps) -> Html {
             onclick={props.on_click.clone()}
             onwheel={props.on_wheel.clone()}
             >
-            <TileImageComponent tile={cell_tile} />
+            <TileImage tile={cell_tile} />
         </div>
     }
 }

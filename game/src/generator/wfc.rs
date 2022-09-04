@@ -57,7 +57,7 @@ impl<A: Finite + Eq + Hash + Clone + Copy + Display> EnumSet<A> {
 
 /// A generator with fixed settings, which can be reused for multiple level generations.
 #[derive(Clone, PartialEq, Eq)]
-pub struct WfcSettings {
+pub struct WfcGenerator {
     width: usize,
     height: usize,
     available_tiles: EnumSet<Tile<Square>>,
@@ -65,15 +65,15 @@ pub struct WfcSettings {
     pass_limit: usize,
 }
 
-impl WfcSettings {
+impl WfcGenerator {
     pub fn new(
         width: usize,
         height: usize,
         available_tiles: EnumSet<Tile<Square>>,
         pass_limit: usize,
         prop_limit: usize,
-    ) -> WfcSettings {
-        WfcSettings {
+    ) -> WfcGenerator {
+        WfcGenerator {
             width,
             height,
             available_tiles,
@@ -82,8 +82,8 @@ impl WfcSettings {
         }
     }
 
-    pub fn with_all_tiles(width: usize, height: usize) -> WfcSettings {
-        WfcSettings {
+    pub fn with_all_tiles(width: usize, height: usize) -> WfcGenerator {
+        WfcGenerator {
             width,
             height,
             available_tiles: EnumSet::FULL,
@@ -144,7 +144,7 @@ impl WfcSettings {
             .iter()
             .filter(|(_, c)| !c.is_collapsed())
         {
-            entropy = WfcSettings::shannon_entropy(cell, weights);
+            entropy = WfcGenerator::shannon_entropy(cell, weights);
             // add random effect -> so same value has slight different probs
             entropy_rng = entropy + rng.gen_range(1..10) as f64 * 0.000001;
 
@@ -272,7 +272,7 @@ impl WfcSettings {
 
         let mut weights: EnumMap<Tile<Square>, usize> = EnumMap::empty();
         // update weights
-        WfcSettings::update_weights(&board, &mut weights);
+        WfcGenerator::update_weights(&board, &mut weights);
 
         (board, weights)
     }
@@ -283,13 +283,13 @@ impl WfcSettings {
         mut board: Sentinel<Square>,
         mut weights: EnumMap<Tile<Square>, usize>,
     ) -> (Sentinel<Square>, EnumMap<Tile<Square>, usize>) {
-        let current_coordinate = WfcSettings::find_entropy_cell(&board, &weights);
-        WfcSettings::collapse_cell(&mut board, &weights, current_coordinate);
-        WfcSettings::propagate(&mut board, current_coordinate, self.prop_limit);
-        WfcSettings::update_weights(&board, &mut weights);
+        let current_coordinate = WfcGenerator::find_entropy_cell(&board, &weights);
+        WfcGenerator::collapse_cell(&mut board, &weights, current_coordinate);
+        WfcGenerator::propagate(&mut board, current_coordinate, self.prop_limit);
+        WfcGenerator::update_weights(&board, &mut weights);
 
         if PRINT_INTERMEDIATE_RESULTS {
-            WfcSettings::print_map(&board);
+            WfcGenerator::print_map(&board);
             print!("{esc}[2J{esc}[1;1H", esc = 27 as char);
         }
 
@@ -308,11 +308,11 @@ impl WfcSettings {
 
             if PRINT_INTERMEDIATE_RESULTS {
                 println!("PASS #{}\n", passes);
-                WfcSettings::print_map(&board);
+                WfcGenerator::print_map(&board);
                 print!("{esc}[2J{esc}[1;1H", esc = 27 as char);
             }
 
-            if WfcSettings::is_all_collapsed(&board) || passes >= self.pass_limit {
+            if WfcGenerator::is_all_collapsed(&board) || passes >= self.pass_limit {
                 break;
             }
         }
@@ -323,7 +323,7 @@ impl WfcSettings {
 #[cfg(test)]
 mod tests {
 
-    use crate::generator::wfc::WfcSettings;
+    use crate::generator::wfc::WfcGenerator;
     use crate::model::{
         enumset::EnumSet,
         tile::{
@@ -359,7 +359,7 @@ mod tests {
         prop_limit: usize,
     ) -> bool {
         let wfc_generator =
-            WfcSettings::new(width, height, available_tiles, pass_limit, prop_limit);
+            WfcGenerator::new(width, height, available_tiles, pass_limit, prop_limit);
         let mut generation_result = wfc_generator.generate();
 
         while let Err(_) = generation_result {

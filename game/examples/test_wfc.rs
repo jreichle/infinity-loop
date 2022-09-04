@@ -1,7 +1,7 @@
 #![allow(dead_code, unused_imports)]
 use game::model::tile::Square::{Down, Left, Right, Up};
 use game::{enumset, tile};
-use game::generator::wfc::{self, WfcSettings};
+use game::generator::wfc::{self, WfcGenerator};
 use game::model::solver::SentinelGrid;
 use game::model::testlevel::unicode_to_tile;
 use game::model::{
@@ -39,7 +39,7 @@ fn wfc_test(
     pass_limit: usize,
     prop_limit: usize,
 ) -> bool {
-    let wfc_generator = WfcSettings::new(width, height, available_tiles, pass_limit, prop_limit);
+    let wfc_generator = WfcGenerator::new(width, height, available_tiles, pass_limit, prop_limit);
     let mut generation_result = wfc_generator.generate();
 
     while let Err(_) = generation_result {
@@ -84,7 +84,7 @@ fn wfc_step_by_step(
     pass_limit: usize,
     prop_limit: usize,
 ) {
-    let wfc_generator = WfcSettings::new(width, height, available_tiles, pass_limit, prop_limit);
+    let wfc_generator = WfcGenerator::new(width, height, available_tiles, pass_limit, prop_limit);
     let (mut board, mut weights) = wfc_generator.init_board();
 
     let mut passes: usize = 0;
@@ -93,12 +93,12 @@ fn wfc_step_by_step(
         (board, weights) = wfc_generator.iteration_step(board, weights);
 
         // WfcGenerator::print_map(&board);
-        let grid = WfcSettings::extract_grid(&board);
+        let grid = WfcGenerator::extract_grid(&board);
         println!("{}", grid.to_string());
 
         passes += 1;
 
-        if WfcSettings::is_all_collapsed(&board) || passes >= pass_limit {
+        if WfcGenerator::is_all_collapsed(&board) || passes >= pass_limit {
             break;
         }
     }

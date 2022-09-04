@@ -2,15 +2,14 @@ use wasm_bindgen::prelude::Closure;
 use wasm_bindgen::JsCast;
 use yew::prelude::*;
 
-
 use crate::components::pages::board_page::BoardPage;
 use crate::components::pages::editor_page::EditorPage;
+use crate::components::pages::level_preview::LevelPreviewPage;
 use crate::components::pages::start_page::StartPage;
 use crate::components::pages::text_page::TextPage;
 use crate::components::pages::visualizer_page::VisualizerPage;
-use crate::components::pages::level_preview::LevelPreviewPage;
 
-use crate::helper::local_storage::retrieve_screen;
+use crate::helper::local_storage::{change_screen, retrieve_screen};
 use crate::helper::screen::Screen;
 
 use game::model::coordinate::Coordinate;
@@ -20,21 +19,28 @@ pub fn page_router() -> Html {
     let head_message = use_state_eq(|| "".to_string());
     let head_message_timeout_id = use_state(|| -1_i32);
 
-    let dimension = use_state(|| Coordinate::new(5 as usize, 5 as usize));
+    let dimension = use_state(|| Coordinate::new(5_usize, 5_usize));
     let level_number = use_state(|| 0);
 
-    let screen = use_state(|| retrieve_screen());
+    let screen = use_state(retrieve_screen);
+
+    let to_title: Callback<MouseEvent> = {
+        let screen = screen.clone();
+        Callback::from(move |_| {
+            log::info!("[Button click] Editor");
+            change_screen(screen.clone(), Screen::Title);
+        })
+    };
 
     // use effect to let message disappear after 1.5 seconds
     // depends on message change
     {
         let head_message = head_message.clone();
-        let timeout_id = head_message_timeout_id.clone();
+        let timeout_id = head_message_timeout_id;
         use_effect_with_deps(
-            move |message| {
+            move |head_message| {
                 let window = web_sys::window().unwrap();
-                let message_string = (*message.clone()).clone();
-                if message_string != "".to_string() {
+                if !head_message.trim().is_empty() {
                     if *timeout_id != -1 {
                         window.clear_timeout_with_handle(*timeout_id);
                     }
@@ -43,12 +49,12 @@ pub fn page_router() -> Html {
                     msg_element.remove_attribute("hidden").ok();
 
                     let hide_action = {
-                        let message = message.clone();
-                        let msg_element = msg_element.clone();
+                        let head_message = head_message.clone();
+                        let msg_element = msg_element;
                         let timeout_id = timeout_id.clone();
                         Closure::<dyn Fn()>::new(move || {
                             msg_element.set_attribute("hidden", "true").ok();
-                            message.set("".to_string());
+                            head_message.set("".to_string());
                             timeout_id.set(-1);
                         })
                     };
@@ -73,6 +79,11 @@ pub fn page_router() -> Html {
 
     html! {
         <>
+            <div
+                id="title"
+                onclick={to_title}>
+                {"Rusty infinity loop!"}
+            </div>
             <div id="head-message" hidden=true>
                 {(*head_message).clone()}
             </div>
@@ -82,7 +93,7 @@ pub fn page_router() -> Html {
                             html! {
                                 <StartPage
                                     screen={screen.clone()}
-                                    message={head_message.clone()} />
+                                    head_message={head_message} />
                             }
                         },
                         Screen::Overview => {
@@ -97,7 +108,7 @@ pub fn page_router() -> Html {
                             html! {
                                 <EditorPage
                                     screen={screen.clone()}
-                                    message={head_message.clone()}/>
+                                    head_message={head_message}/>
                             }
                         },
                         Screen::Level(user_grid) => {
@@ -105,7 +116,7 @@ pub fn page_router() -> Html {
                                 <BoardPage
                                     level_grid={user_grid.clone()}
                                     screen={screen.clone()}
-                                    message={head_message.clone()}/>
+                                    head_message={head_message}/>
 
                             }
                         },

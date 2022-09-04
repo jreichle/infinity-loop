@@ -15,7 +15,11 @@ use crate::helper::local_storage::save_level;
 #[derive(Properties, PartialEq, Clone)]
 pub struct LevelProps {
     pub board: UseReducerHandle<Level<Grid<Tile<Square>>>>,
-    pub message: UseStateHandle<String>,
+    pub head_message: UseStateHandle<String>,
+    #[prop_or(use_state_eq(|| "".to_string()))]
+    pub overlay_message: UseStateHandle<String>,
+    #[prop_or(true)]
+    pub can_complete: bool,
     #[prop_or(false)]
     pub can_turn: bool,
     #[prop_or(false)]
@@ -25,23 +29,23 @@ pub struct LevelProps {
 #[function_component(LevelComponent)]
 pub fn level_component(props: &LevelProps) -> html {
     fn dispatch_turn_cell(
-        board: UseReducerHandle<Level<Grid<Tile<Square>>>>,
+        level: UseReducerHandle<Level<Grid<Tile<Square>>>>,
         index: Coordinate<isize>,
         can_change: bool,
-        message: UseStateHandle<String>,
+        head_message: UseStateHandle<String>,
     ) -> Callback<MouseEvent> {
         Callback::from(move |_| {
-            log::info!(
+            log::debug!(
                 "Tile with coordinate {:?} has been clicked.",
                 index.to_tuple()
             );
-            log::info!("can change? {}", can_change);
-            if can_change || !board.data.is_solved() {
-                board.dispatch(BoardAction::TurnCell(index));
-                save_level(&board.data);
-                log::info!("saving level now");
+            log::debug!("can change? {}", can_change);
+            if can_change || !level.data.is_solved() {
+                level.dispatch(BoardAction::TurnCell(index));
+                save_level(&level.data);
+                log::debug!("saving level now");
             } else {
-                message.set(String::from("The level is already solved"));
+                head_message.set(String::from("The level is already solved"));
             }
         })
     }
@@ -51,13 +55,13 @@ pub fn level_component(props: &LevelProps) -> html {
         index: Coordinate<isize>,
     ) -> Callback<WheelEvent> {
         Callback::from(move |_| {
-            log::info!(
+            log::debug!(
                 "Tile with coordinate {:?} has been wheeled.",
                 index.to_tuple()
             );
             board.dispatch(BoardAction::ChangeTileShape(index));
             save_level(&board.data);
-            log::info!("saving level now");
+            log::debug!("saving level now");
         })
     }
 
@@ -66,9 +70,18 @@ pub fn level_component(props: &LevelProps) -> html {
     let (height, width) = level_grid.dimensions().to_tuple();
     let (height, width) = (height as isize, width as isize);
 
+    if props.can_complete {
+        let overlay_message = props.overlay_message.clone();
+        if !board.data.is_solved() {
+            overlay_message.set(String::from(""));
+        } else {
+            overlay_message.set(String::from("-LEVEL COMPLETED-"));
+        }
+    }
+
     html! {
         <div class="game-board">
-            <GridComponent>
+            <GridComponent overlay_message={props.overlay_message.clone()}>
                 {
                     (0..height).into_iter().map(| row | {
                         html!{
@@ -76,7 +89,7 @@ pub fn level_component(props: &LevelProps) -> html {
                                 {
                                     (0..width).into_iter().map(| column | {
                                         let index = Coordinate { row, column };
-                                        let tile = level_grid.get(index).unwrap().clone();
+                                        let tile = *level_grid.get(index).unwrap();
                                         html!{
                                             <CellComponent
                                                 key={column}
@@ -89,7 +102,7 @@ pub fn level_component(props: &LevelProps) -> html {
                                                             board.clone(),
                                                             index,
                                                             props.can_change,
-                                                            props.message.clone()
+                                                            props.head_message.clone()
                                                         )
                                                     } else {
                                                         Callback::from(|_|{})
@@ -118,6 +131,8 @@ pub fn level_component(props: &LevelProps) -> html {
 #[derive(Properties, PartialEq, Clone)]
 pub struct StatelessLevelProps {
     pub level_grid: Grid<Tile<Square>>,
+    #[prop_or(use_state_eq(|| "".to_string()))]
+    pub overlay_message: UseStateHandle<String>,
 }
 
 #[function_component(StatelessLevelComponent)]
@@ -128,7 +143,7 @@ pub fn stateless_level_component(props: &StatelessLevelProps) -> html {
 
     html! {
         <div class="flex-col">
-            <GridComponent>
+            <GridComponent overlay_message={props.overlay_message.clone()}>
                 {
                     (0..height).into_iter().map(| row | {
                         html!{
@@ -136,7 +151,7 @@ pub fn stateless_level_component(props: &StatelessLevelProps) -> html {
                                 {
                                     (0..width).into_iter().map(| column | {
                                         let index = Coordinate { row, column };
-                                        let tile = level_grid.get(index).unwrap().clone();
+                                        let tile = *level_grid.get(index).unwrap();
                                         html!{
                                             <CellComponent
                                                 key={column}

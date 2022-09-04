@@ -6,7 +6,9 @@ use rand::Rng;
 use crate::components::board::level::StatelessLevelComponent;
 use crate::components::reducers::preview_reducer::{PreviewAction, PreviewState};
 
-use crate::helper::local_storage::{change_screen, retrieve_editor_level};
+use crate::helper::local_storage::{
+    change_screen, retrieve_editor_level, retrieve_preview_level_count, save_preview_level_count,
+};
 use crate::helper::screen::Screen;
 
 use game::model::coordinate::Coordinate;
@@ -23,7 +25,8 @@ pub struct LevelPreviewPageProps {
 
 #[function_component(LevelPreviewPage)]
 pub fn level_preview_page_component(props: &LevelPreviewPageProps) -> Html {
-    let generate_nr = 20;
+    let generate_nr = retrieve_preview_level_count();
+    let level_count = use_state(|| generate_nr);
     let generated_levels = (0..generate_nr as u64)
         .into_iter()
         .map(|index| generate(*props.dimension, index))
@@ -31,7 +34,6 @@ pub fn level_preview_page_component(props: &LevelPreviewPageProps) -> Html {
 
     let saved_level = retrieve_editor_level();
 
-    let level_count = use_state(|| generate_nr);
     let reducer = use_reducer(PreviewState::set(generated_levels));
 
     let load_more_levels: Callback<MouseEvent> = {
@@ -41,6 +43,7 @@ pub fn level_preview_page_component(props: &LevelPreviewPageProps) -> Html {
         Callback::from(move |_| {
             log::info!("loading more levles");
             reducer.dispatch(PreviewAction::LoadNew(10, *dimension));
+            save_preview_level_count(*level_count + 10);
             level_count.set(*level_count + 10);
         })
     };
@@ -54,7 +57,6 @@ pub fn level_preview_page_component(props: &LevelPreviewPageProps) -> Html {
             let num = rand::thread_rng().gen_range(0..*level_count);
             let level = reducer.extracted_levels[num].clone();
             change_screen(screen.clone(), Screen::Level(level));
-            //screen.set(Screen::Level(reducer.extracted_levels[num].clone()));
         })
     };
 
@@ -66,7 +68,7 @@ pub fn level_preview_page_component(props: &LevelPreviewPageProps) -> Html {
         })
     };
 
-    let back: Callback<MouseEvent> = {
+    let to_title: Callback<MouseEvent> = {
         let screen = props.screen.clone();
         Callback::from(move |_| {
             log::info!("[Button click] Editor");
@@ -90,7 +92,9 @@ pub fn level_preview_page_component(props: &LevelPreviewPageProps) -> Html {
                     <div id="saved-level">
                         <div
                             class="level-container"
-                            onclick={to_level_action(saved_level.clone(), props.screen.clone())}>
+                            onclick={to_level_action(
+                                saved_level.clone(),
+                                props.screen.clone())}>
                             <StatelessLevelComponent level_grid={saved_level.clone()} />
                             <div class="level-title">{"Saved"}</div>
                         </div>
@@ -105,8 +109,8 @@ pub fn level_preview_page_component(props: &LevelPreviewPageProps) -> Html {
                             html!{
                                 <div
                                     class="level-container"
-                                    onclick={
-                                        to_level_action(level_grid.clone(),
+                                    onclick={to_level_action(
+                                        level_grid.clone(),
                                         props.screen.clone())}>
                                     <StatelessLevelComponent level_grid={level_grid.clone()} />
                                     <div class="level-title">
@@ -117,10 +121,10 @@ pub fn level_preview_page_component(props: &LevelPreviewPageProps) -> Html {
                         }).collect::<Html>()
                     }
                 </div>
-                <div class="controller">
+                <div class="controller preview-controller">
                     <button
                         onclick={load_more_levels}>
-                        {"-load more-"}
+                        {"-more levels-"}
                     </button>
                     <button
                         onclick={pick_random_level}>
@@ -128,11 +132,11 @@ pub fn level_preview_page_component(props: &LevelPreviewPageProps) -> Html {
                     </button>
                     <button
                         onclick={create_own_level}>
-                        {"-create your own-"}
+                        {"-create level-"}
                     </button>
                     <button
-                        onclick={back}>
-                        {"-back-"}
+                        onclick={to_title}>
+                        {"-home-"}
                     </button>
                 </div>
             </div>

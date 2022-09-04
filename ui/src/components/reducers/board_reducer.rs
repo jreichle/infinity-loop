@@ -8,7 +8,7 @@ use crate::helper::level_randomizer::randomize_level;
 use crate::helper::local_storage::save_level;
 use wasm_bindgen::{prelude::*, JsCast};
 
-use game::generator::wfc::WfcSettings;
+use game::generator::wfc::WfcGenerator;
 use game::model::hint::{generate_solving_trace, get_hint};
 use game::model::{
     coordinate::Coordinate,
@@ -58,7 +58,14 @@ pub fn highlight_cells(row: usize, column: usize) {
         .unwrap();
 
     let class_names = cell.get_attribute("class").unwrap();
-    cell.set_class_name(&format!("{} {}", class_names.clone(), "cell-hint-highlight"));
+
+    // prevent re-highlighting if already highlighted
+    if class_names.contains("cell-hint-highlight") {
+        return
+    }
+
+    let highlight_class_names = format!("{} {}", class_names, "cell-hint-highlight");
+    cell.set_class_name(&highlight_class_names);
     let hl = Closure::<dyn Fn()>::new(move || {
         cell.set_class_name(&class_names);
     });
@@ -126,11 +133,11 @@ impl Reducible for Level<Grid<Tile<Square>>> {
                 Level::new(self.id, data).into()
             }
             BoardAction::GenerateWFC => {
-                let wfc_settings = WfcSettings::with_all_tiles(
+                let wfc_settings = WfcGenerator::with_all_tiles(
                     self.data.columns(),
                     self.data.rows(),
                 );
-                let data = retry_until_ok(wfc_settings, WfcSettings::generate);
+                let data = retry_until_ok(wfc_settings, WfcGenerator::generate);
 
                 log::info!("Generated grid\n{data}");
                 Level::new(self.id, data).into()

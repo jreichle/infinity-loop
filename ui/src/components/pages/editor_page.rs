@@ -12,7 +12,7 @@ use crate::helper::screen::Screen;
 #[derive(Properties, PartialEq, Clone)]
 pub struct EditorPageProps {
     pub screen: UseStateHandle<Screen>,
-    pub message: UseStateHandle<String>,
+    pub head_message: UseStateHandle<String>,
 }
 
 #[function_component(EditorPage)]
@@ -48,7 +48,7 @@ pub fn editor_page_component(props: &EditorPageProps) -> Html {
 
     let check_cps_onclick: Callback<MouseEvent> = {
         // let board = board.clone();
-        let message = props.message.clone();
+        let head_message = props.head_message.clone();
         Callback::from(move |_| {
             log::info!("[Button click] Check with CPS.");
             log::info!("Current grid\n{}", level_grid.to_string());
@@ -66,7 +66,7 @@ pub fn editor_page_component(props: &EditorPageProps) -> Html {
                 0 => String::from("The level is not valid"),
                 n => format!("The level is valid and has {} possible solutions", n),
             };
-            message.set(msg);
+            head_message.set(msg);
         })
     };
 
@@ -79,7 +79,7 @@ pub fn editor_page_component(props: &EditorPageProps) -> Html {
 
     let check_solved_onclick: Callback<MouseEvent> = {
         let board = board.clone();
-        let message = props.message.clone();
+        let head_message = props.head_message.clone();
         Callback::from(move |_| {
             log::info!("[Button click] Check is solved.");
             log::info!("Current grid\n{}", board.data.to_string());
@@ -91,7 +91,7 @@ pub fn editor_page_component(props: &EditorPageProps) -> Html {
                 true => String::from("The level is solved"),
                 false => String::from("The level is not solved"),
             };
-            message.set(msg);
+            head_message.set(msg);
         })
     };
 
@@ -106,7 +106,7 @@ pub fn editor_page_component(props: &EditorPageProps) -> Html {
     let play_onclick: Callback<MouseEvent> = {
         let screen = props.screen.clone();
         let grid = board.data.clone();
-        let message = props.message.clone();
+        let head_message = props.head_message.clone();
         Callback::from(move |_| {
             log::info!("[Button click] Play custom grid.");
             log::info!("Current grid\n{}", grid.to_string());
@@ -114,7 +114,7 @@ pub fn editor_page_component(props: &EditorPageProps) -> Html {
             if grid.solve().count() != 0 {
                 change_screen(screen.clone(), Screen::Level(grid.clone()));
             } else {
-                message.set(String::from(
+                head_message.set(String::from(
                     "The level is not valid and thus not playable.",
                 ));
             }
@@ -191,11 +191,11 @@ pub fn editor_page_component(props: &EditorPageProps) -> Html {
 
     let save_onclick: Callback<MouseEvent> = {
         let board = board.clone();
-        let message = props.message.clone();
+        let head_message = props.head_message.clone();
         Callback::from(move |_| {
             log::info!("[Button click] Save level.");
             save_editor_level(&board.data);
-            message.set(String::from("Saved level"));
+            head_message.set(String::from("Saved level"));
         })
     };
 
@@ -207,7 +207,7 @@ pub fn editor_page_component(props: &EditorPageProps) -> Html {
         })
     };
 
-    let back_onclick: Callback<MouseEvent> = {
+    let to_title: Callback<MouseEvent> = {
         let screen = props.screen.clone();
         Callback::from(move |_| {
             log::info!("[Button click] Editor");
@@ -216,30 +216,30 @@ pub fn editor_page_component(props: &EditorPageProps) -> Html {
     };
 
     html! {
-        <div class="container">
+        <div class="container editor-page">
             <section class="controller">
                 <ul style="list-style-type: none">
                     <li><button
                         onclick={resize_height_minus_one_onclick}
-                        style="width:80px;height:50px;margin-left:65px;margin-right:20px"
+                        style="width:50px;height:50px;margin-left:55px;margin-right:20px"
                         >{"-"}</button></li>
                     <li><button
                         onclick={resize_width_minus_one_onclick}
-                        style="width:80px;height:50px"
+                        style="width:50px;height:50px"
                         >{"-"}</button>
-                    <b style="width:80px;height:50px">{"Resize"}</b>
+                    <b style="width:50px;height:50px">{"Resize"}</b>
                     <button
                         onclick={resize_width_plus_one_onclick}
-                        style="width:80px;height:50px;margin-right:20px"
+                        style="width:50px;height:50px;margin-right:20px"
                         >{"+"}</button></li>
                     <li><button
                         onclick={resize_height_plus_one_onclick}
-                        style="width:80px;height:50px;margin-left:65px;margin-right:20px"
+                        style="width:50px;height:50px;margin-left:55px;margin-right:20px"
                         >{"+"}</button></li>
                     <li>
                         <button
                             onclick={save_onclick}
-                            style="margin-left:65px;margin-right:20px, margin-top=20px"
+                            style="margin-left:40px;margin-right:20px, margin-top:20px"
                             >{"-Save-"}</button>
                     </li>
                 </ul>
@@ -247,9 +247,10 @@ pub fn editor_page_component(props: &EditorPageProps) -> Html {
 
             <LevelComponent
                 board={board.clone()}
+                can_complete=false
                 can_turn=true
                 can_change=true
-                message={props.message.clone()} />
+                head_message={props.head_message.clone()} />
 
             <div class="controller">
                 <button
@@ -279,8 +280,8 @@ pub fn editor_page_component(props: &EditorPageProps) -> Html {
                 <button  onclick={preview_onclick}>
                     {"-Levels-"}
                 </button>
-                <button  onclick={back_onclick}>
-                    {"-back-"}
+                <button  onclick={to_title}>
+                    {"-home-"}
                 </button>
             </div>
         </div>
