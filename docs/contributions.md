@@ -6,7 +6,7 @@
 | Unweighted Generator                   |                    |                     | :heavy_check_mark: |                    |                    |
 | Wave Fuction Collapse Generator        | :heavy_check_mark: |                     |                    |                    |                    |
 | Solver based on Constraint Propagation |                    |                     | :heavy_check_mark: |                    |                    |
-| Hint functionality                     |                    |                     | :heavy_check_mark: |                    |                    |
+| Hint Assistance                        |                    |                     | :heavy_check_mark: |                    |                    |
 | SAT Solver In-/Output                  |                    |                     |                    |                    | :heavy_check_mark: |
 | Backend                                |                    |                     |                    | :heavy_check_mark: |                    |
 | WASM Web-UI                            | :heavy_check_mark: |                     |                    | :heavy_check_mark: |                    |

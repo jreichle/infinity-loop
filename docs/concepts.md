@@ -1,21 +1,5 @@
 # Concepts of Infinity Loop
 
-(That's how the game works)
-
-## The game
-
-Infinity loop is a puzzle game built out of a grid of tiles, each with a particular set of connections pointing to orthogonal neighboring tiles. To solve the puzzle, the user must rotate individual tiles to match the connection of all neighboring tiles. The following two images help to demonstrate the visually intuitive ruleset.
-
-**Example of a puzzle:**
-
-![unsolved][unsolvedexample]
-
-**And its solution:**
-
-![solved][solvedexample]
-
-> **_NOTE:_**  A given puzzle may have multiple valid solutions.
-
 **Component Overview:**
 
 * Basic game as [WASM][wasm] Web-UI
@@ -32,17 +16,17 @@ Infinity loop is a puzzle game built out of a grid of tiles, each with a particu
 * Help during solving by requesting hints
 * Using local storage to save current state of single page application
 
-The following section further elaborates on each component. For an overview of the employed architecture and file structure, refer to the [architecture][architecture] file.
+The following section further elaborates on each component. For an overview of the employed architecture and file structure, please refer to the [architecture][architecture] file.
 
-## Basic game representation / implementation
+## Basic Game Implementation
 
-[`EnumSet`][enumset] is both a space and performance efficient implementation of a set data structure by relating / associating values with a specific bit in a bit array, usually an unsigned integer. The two possible values of a bit `0` and `1` indicate inclusion in the set. For a type to be eligible to being used in a `EnumSet` requires a bijection between values of the type and the natural numbers. (see the Finite trait)
+[`EnumSet`][enumset] is both a space and performance efficient implementation of a set data structure by associating values with a specific bit in a bit array, usually an unsigned integer. The two possible values of a bit indicate inclusion in the set. For use in `EnumSet<A>`, `A` requires a bijection between values of the type and the natural numbers provided through the [Finite][finite] trait.
 
 ```rust
 struct EnumSet<A>(u64, PhantomData<A>);
 ```
 
-The fundamental component of interaction in **Infinity Loop** is the `Tile`, which is rotated by the user to solve the puzzle. Conceptually a single tile holds the connection information to its neighbors as a set of directions.
+The fundamental component of interaction in _Infinity Loop_ is the `Tile`, which is rotated by the user to solve the puzzle. Conceptually a single tile holds the connection information to its neighbors as a set of directions.
 
 [`Tile`][tile] is a newtype wrapper over an `EnumSet` of directions. [Directions][square] correlate to the shape of the tile.
 
@@ -68,13 +52,22 @@ struct Coordinate<A> {
 }
 ```
 
-TestLevel contains some predefined levels for tutorial or test cases. It provides a bunch of gameboards, represented as hardcoded strings, and a deserialization method to create a corresponding Grid.
+The [parser][parser] file contains some predefined levels in string format for test cases as well as deserialization functionality to convert strings into Grids.
 
-The progressive change in generated levels is provided by a lazy iterator defined through a [stream unfold][anamorphism] in **levelstream**.
+The progressive change in generated levels is provided by a lazy iterator defined through a [stream unfold][anamorphism] in [levelstream][levelstream].
 
 ## Level Generator
 
 ### Unweighted Generator
+
+Assuming the following properties:
+
+1. all possible tiles are available for level generation
+2. fixing all orthogonal neighbors uniquely determines the tile
+
+Properties 1 and 2 imply that there always exists a suitable tile for any configuration of neighbors
+
+Generating a valid level now reduces to filling the grid with random tiles in a checkerboard pattern and then infering the blanks based on their neighbors.
 
 ### The Wave Function Collapse (WFC) Generator
 
@@ -86,17 +79,22 @@ Wave function collapse occurs when a wave function—initially in a superpositio
 
 ### Constraint Propagation Solver
 
+The level is converted to a grid of possible tiles in superposition surrounded with empty sentinel tiles. The superimposed tiles in the grid are successively reduced by extracting and then propagating common connections to neighbors until solved. A more comprehensive explanation can be found in [Propagationsolver][propagationsolver]. Furthermore all solutions are lazily generated.
 
-for general idea behind the solver see [Propagators][propagator]
-
-lazily generates all possible solutions for arbitrary levels
-strategy: superimpose all possible tiles at each position and successively eliminate them by propagating constraints to neighbors until solved
+The propagation is based on the concept of [Propagators][propagator]
 
 ### SAT-Solver
 
 1. encode tile configurations and game logic in CNF
 2. solve by external SAT-solver
 3. decode returned variables and check result
+
+## Hint Assistance
+
+Algorithm:
+
+1. Generate a trace of the successively solved tiles during solving.
+2. Find the first tile in the trace that differs from the equivalent tile in the current level and return the corresponding position.
 
 ## Backend
 
@@ -130,12 +128,11 @@ Upon completion a new level can be played.
 
 ### Wave function collapse visualizer
 
-
 ### The Level Editor
 
 This part shall provide a editor page, where the user can create his/her own level gameboards. For that, the user can specify a grid (width/height), add tiles of different shapes (use mouse wheel on tile) and rotate (click on a tile) them, to shape a initial level pattern.
 
-The editor has following functions:
+The editor has the following functions:
 
 * Shape level (rotate and change tiles)
 * Resize grid
@@ -151,9 +148,6 @@ The editor has following functions:
 
 The editor is based on the _Basic game representatio_. It contains a initial grid, which is replaced or changed by every manipulation during the editing process. To display the grid in HTML notation the board component is used and extended to serve the purpose of the editor. Flags are passed to the component representing cells to enable/disable tile roatation and shape change. Furthermore, various members were add to the `BoardAction`, such as ChangeTileShape, ChangeSize, GenerateFastGen, GenerateWFC, ShuffleTileRotations, ClearGrid. These different actions are handled in the `board_reducer`-file.
 
-[unsolvedexample]: <images/example-level.png>
-[solvedexample]: <images/example-level-solution.png>
-
 [propagator]: <https://qfpl.io/share/talks/propagators/slides.pdf>
 
 [wasm]: <https://webassembly.org/>
@@ -168,6 +162,10 @@ The editor is based on the _Basic game representatio_. It contains a initial gri
 [tile]: <../game/src/model/tile.rs>
 [square]: <../game/src/model/tile.rs>
 [grid]: <../game/src/model/grid.rs>
+[finite]: <../game/src/core/finite.rs>
+[parser]: <../game/src/model/parser.rs>
+[levelstream]: <../game/src/generator/levelstream.rs>
+[propagationsolver]: <../game/src/solver/propagationsolver.rs>
 
 [rocket]: <https://rocket.rs/>
 [yew]: <https://yew.rs/>

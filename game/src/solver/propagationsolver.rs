@@ -412,7 +412,7 @@ impl Grid<Tile<Square>> {
     }
 }
 
-/// lazy generation of solutions to unify API for quarying single and multiple solutions
+/// lazy generation of solutions to unify API for querying single and multiple solutions
 ///
 /// stores a stack of solution candidates, which are successively refined
 struct SolutionIterator<A>(Vec<A>);

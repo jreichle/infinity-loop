@@ -14,13 +14,15 @@ use crate::helper::screen::Screen;
 
 use game::model::coordinate::Coordinate;
 
+/// This page is used as a router which directs to the correct page depending on
+/// which screen is required
+/// Additionally the page can display messages to inform the user.
 #[function_component(PageRouter)]
 pub fn page_router() -> Html {
     let head_message = use_state_eq(|| "".to_string());
     let bottom_message = use_state_eq(|| "".to_string());
     let head_message_timeout_id = use_state(|| -1_i32);
     let bottom_message_timeout_id = use_state(|| -2_i32);
-    
 
     let dimension = use_state(|| Coordinate::new(5_usize, 5_usize));
     let screen = use_state(retrieve_screen);
@@ -173,14 +175,19 @@ pub fn page_router() -> Html {
                         Screen::Help => {
                             let content = html!{
                                 <>
-                                <p>
-                                {"In the programming world, an infinite loop is a sequence of instructions that will repeat endlessly.
-                                Usually we would want to prevent this, but in this game we want to create a loop with no way out."}
-                                </p>
-                                <p>
-                                {"A level is build with multiple cells, each cell contains a fixed shape that can be rotated on click.
-                                And there are six kind of shape in total. (from none to four outgoing connections) The goal is to get all the piece connected, creating a enclosed loop."}
-                                </p>
+                                    <p>
+                                        {"In the programming world, an infinite loop is a
+                                        sequence of instructions that will repeat endlessly.
+                                        Usually we would want to prevent this, but in this
+                                        game we want to create a loop with no way out."}
+                                    </p>
+                                    <p>
+                                        {"A level is build with multiple cells, each cell
+                                        contains a fixed shape that can be rotated on click.
+                                        And there are six kind of shape in total. (from none
+                                        to four outgoing connections) The goal is to get all
+                                        the piece connected, creating a enclosed loop."}
+                                    </p>
                                 </>
                             };
                             html!{

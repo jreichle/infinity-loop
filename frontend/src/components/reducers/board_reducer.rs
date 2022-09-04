@@ -20,9 +20,23 @@ use game::solver::hint::{generate_solving_trace, get_hint};
 use game::core::finite::Finite;
 
 /// reducer facilitates actions for both the board and the editor pages
-
+///
+/// playing board actions:
+/// - TurnCell: turns the cell indicated through the coordinate clockwise
+/// - ReplaceGrid: replaces the current grid with a new one
+/// - NextLevel: generates the next level with dimension + 1 and sets it as the current level
+/// - GetHint: generates a hint and highlights the corresponding tile
+/// - SolveLevel: solves the level
+///
+/// editor board actions:
+/// - ChangeTileShape:
+/// - ChangeSize:
+/// - GenerateFastGen:
+/// - GenerateWFC:
+/// - ShuffleTileRotations:
+/// - ClearGrid:
 pub enum BoardAction {
-    // Board actions
+    // playing level actions
     TurnCell(Coordinate<isize>),
     ReplaceGrid(Grid<Tile<Square>>),
     NextLevel,
