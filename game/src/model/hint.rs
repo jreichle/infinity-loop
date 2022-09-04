@@ -11,7 +11,9 @@ use super::{
 
 /// Generates a trace of the successively solved tiles
 ///
-/// can be memoized
+/// conceptually independent of solving algorithm
+/// 
+/// deterministic, can be memoized
 pub fn generate_solving_trace(grid: &Grid<Tile<Square>>) -> Vec<(Coordinate<isize>, Tile<Square>)> {
     let mut stack = vec![(
         grid.with_sentinels(Tile::NO_CONNECTIONS).superimpose(),

@@ -4,7 +4,7 @@ use std::{
     ops::{Add, AddAssign, Div, DivAssign, Mul, MulAssign, Neg, Sub, SubAssign},
 };
 
-use super::{num::Num, representable::Representable};
+use super::{num::Num};
 
 /// Represents spacial position by defining values for row and column and offers basic arithmetic operators
 #[derive(Debug, PartialEq, Eq, PartialOrd, Ord, Hash, Clone, Copy, Default)]
@@ -289,22 +289,6 @@ impl<A: Default> FromIterator<A> for Coordinate<A> {
 impl<A: Arbitrary> Arbitrary for Coordinate<A> {
     fn arbitrary(g: &mut Gen) -> Self {
         Self::new(A::arbitrary(g), A::arbitrary(g))
-    }
-}
-
-impl<A: Copy> Representable<A> for Coordinate<A> {
-    type Index = bool;
-
-    fn tabulate<F: Fn(Self::Index) -> A>(f: F) -> Self {
-        Self::new(f(false), f(true))
-    }
-
-    fn index(&self, index: Self::Index) -> A {
-        if index {
-            self.column
-        } else {
-            self.row
-        }
     }
 }
 
