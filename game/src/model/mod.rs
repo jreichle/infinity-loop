@@ -9,6 +9,7 @@ pub mod gameboard;
 pub mod grid;
 pub mod hint;
 pub mod interval;
+pub mod knf;
 pub mod lattice;
 pub mod monoid;
 pub mod num;

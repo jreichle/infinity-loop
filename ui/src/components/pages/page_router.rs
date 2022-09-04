@@ -18,6 +18,7 @@ use game::model::coordinate::Coordinate;
 #[function_component(PageRouter)]
 pub fn page_router() -> Html {
     let head_message = use_state_eq(|| "".to_string());
+    let bottom_message = use_state_eq(|| "".to_string());
     let head_message_timeout_id = use_state(|| -1_i32);
 
     let dimension = use_state(|| Coordinate::new(5 as usize, 5 as usize));
@@ -105,7 +106,9 @@ pub fn page_router() -> Html {
                                 <BoardPage
                                     level_grid={user_grid.clone()}
                                     screen={screen.clone()}
-                                    message={head_message.clone()}/>
+                                    message={head_message.clone()}
+                                    cnf={bottom_message.clone()}
+                                    literals={use_state_eq(|| "".to_string())}/>
 
                             }
                         },
@@ -133,6 +136,9 @@ pub fn page_router() -> Html {
                         }
                     }
                 }
+                <div id="bottom-message" hidden=false>
+                {(*bottom_message).clone()}
+            </div>
         </>
     }
 }

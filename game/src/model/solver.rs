@@ -1,5 +1,6 @@
 use crate::model::tile::Square::{Down, Left, Right, Up};
 use core::fmt::Debug;
+
 use std::{
     fmt::Display,
     hash::Hash,
@@ -16,6 +17,7 @@ use super::{
     grid::Grid,
     lattice::BoundedLattice,
     tile::{Square, Tile},
+    knf
 };
 
 ///! This file contains a solver algorithm
@@ -391,6 +393,23 @@ impl Grid<Tile<Square>> {
         SolutionIterator(vec![self
             .with_sentinels(Tile::NO_CONNECTIONS)
             .superimpose()])
+    }
+
+    pub fn solve_with_input(&self, input: &str) -> Grid<Tile<Square>> {
+        // SolutionIterator(vec![self
+        //     .with_sentinels(Tile::NO_CONNECTIONS)
+        //     .superimpose()])
+        //println!("{}", knf::level_to_knf(self).unwrap());
+        let tiles = knf::solved_to_tiles(input).unwrap();
+        Grid::new(Coordinate::new(self.columns(),self.rows()),tiles)
+    }
+
+    pub fn generate_cnf(&self) -> String {
+        // SolutionIterator(vec![self
+        //     .with_sentinels(Tile::NO_CONNECTIONS)
+        //     .superimpose()])
+        //println!("{}", knf::level_to_knf(self).unwrap());
+        return knf::level_to_cnf(self).unwrap();
     }
 }
 

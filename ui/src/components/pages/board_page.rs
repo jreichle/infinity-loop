@@ -8,6 +8,8 @@ use game::model::{
     tile::{Square, Tile},
 };
 
+use game::model::knf;
+
 use crate::components::board::level::LevelComponent;
 use crate::components::reducers::board_reducer::{BoardAction, BoardState};
 
@@ -17,8 +19,11 @@ use crate::helper::local_storage::change_screen;
 pub struct BoardPageProps {
     pub level_grid: Grid<Tile<Square>>,
     pub screen: UseStateHandle<Screen>,
-    pub message: UseStateHandle<String>,
+    pub message: UseStateHandle<String>,   
+    pub cnf: UseStateHandle<String>,
+    pub literals: UseStateHandle<String>,
 }
+
 
 #[function_component(BoardPage)]
 pub fn board_page_component(props: &BoardPageProps) -> Html {
@@ -50,6 +55,25 @@ pub fn board_page_component(props: &BoardPageProps) -> Html {
         Callback::from(move |_| {
             log::info!("[Button click] Solve.");
             board.dispatch(BoardAction::SolveLevel);
+        })
+    };
+
+    let solve_onclick_input: Callback<MouseEvent> = {
+        let board = board.clone();
+        Callback::from(move |_| {
+            log::info!("[Button click] Solve.");
+            board.dispatch(BoardAction::SolveLevelInput);
+        })
+    };
+
+    let generate_cnf: Callback<MouseEvent> = {
+        let board = board.clone();
+        let cnf = props.cnf.clone();
+        let level_grid = board.level_grid.clone();
+        Callback::from(move |_| {
+            log::info!("[Button click] Generate cnf.");
+            //props.cnf.set(board.dispatch(BoardAction::GenerateCnf));
+            cnf.set(knf::level_to_cnf(&level_grid.clone()).unwrap());
         })
     };
 
@@ -87,6 +111,19 @@ pub fn board_page_component(props: &BoardPageProps) -> Html {
                     {"-solve-"}
                 </button>
                 <button
+                    onclick={generate_cnf}>
+                    {"-generate cnf-"}
+                </button>
+
+                <textarea title="literals_input">
+                    {{literals}}
+                </textarea>
+                
+                <button
+                    onclick={solve_onclick_input}>
+                    {"-solve with input-"}
+                </button>
+                <button
                     onclick={next_onclick}>
                     {"-next-"}
                 </button>
@@ -94,6 +131,8 @@ pub fn board_page_component(props: &BoardPageProps) -> Html {
                     onclick={to_preview}>
                     {"-back-"}
                 </button>
+
+                
             </div>
         </div>
     }

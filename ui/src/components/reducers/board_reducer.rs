@@ -26,6 +26,8 @@ pub enum BoardAction {
     NextLevel,
     GetHint,
     SolveLevel,
+    SolveLevelInput,
+    GenerateCnf,
 
     // Editor actions
     ChangeTileShape(Coordinate<isize>),
@@ -105,6 +107,22 @@ impl Reducible for BoardState {
                     log::info!("solved level:\n {}", solved_level);
                     new_level_grid = solved_level;
                 }
+            }
+            BoardAction::SolveLevelInput => {
+                let input ="3 6 7 12 19 22 21 23 25 27 28 34 35 40 37 42 41 43 45 47 48 55 53 59 63 61 67 65 73 79 77 82 81 86 85 88 92 97 -13 -14 -15 -16 -29 -30 -31 -32 -49 -50 -51 -52 -69 -70 -71 -72 -93 -94 -95 -96 -1 -4 -24 -2 -8 -44 -62 -64 -68 -66 -83 -84 -5 -9 -11 -10 -26 -46 -87 -89 -91 -90 -36 -56 -54 -76 -20 -33 -38 -60 -74 -75 -80 -78 -100 -17 -18 -39 -57 -58 -98 -99";
+                let mut solved_versions = new_level_grid.solve_with_input(input);
+                if let Some(solved_level) = Some(solved_versions) {
+                    log::info!("solved level:\n {}", solved_level);
+                    new_level_grid = solved_level;
+                }
+            }
+
+            BoardAction::GenerateCnf => {
+                let mut solved_versions = new_level_grid.generate_cnf();
+                // if let Some(solved_level) = Some(solved_versions) {
+                //     log::info!("solved level:\n {}", solved_level);
+                //     new_level_grid = solved_level;
+                // }
             }
 
             // Editor actions
