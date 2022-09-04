@@ -30,11 +30,11 @@ const CAPACITY: u64 = BitArray::BITS as u64;
 ///
 /// This implementation preallocates a fixed amount of memory and does not grow dynamically
 ///
-/// Using types that exceed the maximum storing capacity leads to a compile-time error: [`BitArray::BITS`] ≥ [`A::CARDINALITY`][Cardinality]
+/// Using types that exceed the maximum storing capacity leads to a compile-time error: [`BitArray::BITS`] ≥ [`A::CARDINALITY`](Cardinality::CARDINALITY)
 ///
 /// This struct deliberately does not implement the [`Default`] trait, instead use [`EnumSet::EMPTY`] or [`EnumSet::FULL`]
 ///
-/// `EnumSet` is a specialized implementation of an [`EnumMap`][super::enummap::EnumMap]: `EnumSet<A> ≅ EnumMap<A, ()>`
+/// `EnumSet` is a specialized implementation of an [`EnumMap`](super::enummap::EnumMap): `EnumSet<A> ≅ EnumMap<A, ()>`
 ///
 /// # Iterator
 ///
@@ -44,7 +44,7 @@ const CAPACITY: u64 = BitArray::BITS as u64;
 ///
 /// # Invariants
 ///
-/// 1. bits exceeding [`A::Cardinality`] are always set to 0
+/// 1. bits exceeding [`Cardinality`] of `A` are always set to 0
 /// 2. [`Finite`] of EnumSet<A> is order isomorphic ⟺ [`Finite`] of A is order isomorphic:
 ///     `∀x, y : A, s1, s2 : EnumSet<A>. (s1 ≤ s2 ⟺ s1.enum_to_index() ≤ s2.enum_to_index()) ⟺ (x ≤ y ⟺ x.enum_to_index() ≤ y.enum_to_index())`
 ///
