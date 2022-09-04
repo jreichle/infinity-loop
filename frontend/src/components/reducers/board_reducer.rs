@@ -29,12 +29,12 @@ use game::core::finite::Finite;
 /// - SolveLevel: solves the level
 ///
 /// editor board actions:
-/// - ChangeTileShape: Changes the shape of given cell (iterates through all shapes)
-/// - ChangeSize: Change the size of the level, and re-generates a new level.
-/// - GenerateFastGen: Generates a new level with the FastGen generator.
-/// - GenerateWFC: Generates a new level with the Wave functioncollapse generator.
-/// - ShuffleTileRotations: Randomly rotates each cell of the level.
-/// - ClearGrid: Replaces the current level with an empty grid.
+/// - ChangeTileShape:
+/// - ChangeSize:
+/// - GenerateFastGen:
+/// - GenerateWFC:
+/// - ShuffleTileRotations:
+/// - ClearGrid:
 pub enum BoardAction {
     // playing level actions
     TurnCell(Coordinate<isize>),
@@ -128,17 +128,6 @@ impl Reducible for Level<Grid<Tile<Square>>> {
             BoardAction::SolveLevelInput(input) => {
                 let solved_version = self.data.solve_with_input(&input);
                 log::info!("solved level:\n {}", solved_version);
-
-                // let mut same = true;
-
-                // let first_grid = solved_version.as_slice().clone();
-                // let second_grid = self.data.as_slice().clone();
-
-                // for i in 0..first_grid.len() {
-                //     if !check_match(first_grid[i], second_grid[i]) {
-                //         same = false;
-                //     }
-                // }
 
                 let same = self
                     .data

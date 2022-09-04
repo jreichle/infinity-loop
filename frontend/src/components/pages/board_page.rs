@@ -145,12 +145,12 @@ pub fn board_page_component(props: &BoardPageProps) -> Html {
                     onchange={on_input}
                     id="my-input"
                     type="text"
-                    placeholder="Please put the solved literals and only those in DIMACS format in here"
+                    placeholder="Put the literals in DIMACS format here"
                 />
 
                 <button
                     onclick={solve_onclick_input}>
-                    {"-solve with input-"}
+                    {"-solve with DIMACS input-"}
                 </button>
                 <button
                     onclick={next_onclick}>
