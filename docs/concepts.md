@@ -87,7 +87,7 @@ The propagation is based on the concept of [Propagators][propagator]
 
 1. encode tile configurations and game logic in CNF
 2. solve by external SAT-solver
-3. decode returned variables
+3. decode returned variables and check result
 
 ## Hint Assistance
 

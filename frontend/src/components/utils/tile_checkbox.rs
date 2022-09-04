@@ -11,6 +11,7 @@ pub struct TileCheckboxProps {
     pub is_used: UseStateHandle<bool>,
 }
 
+/// A single checkbox with a tile image, select/unselect on click
 #[function_component(TileCheckbox)]
 pub fn tile_checkbox_component(props: &TileCheckboxProps) -> Html {
     let is_used = props.is_used.clone();

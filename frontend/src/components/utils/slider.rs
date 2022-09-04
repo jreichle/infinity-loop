@@ -15,8 +15,10 @@ pub struct SliderComponentProps {
     pub value: UseStateHandle<isize>,
 }
 
+/// A HTML input range, with label and value display next to it
 #[function_component(SliderComponent)]
 pub fn slider_component(props: &SliderComponentProps) -> Html {
+    // reference to the slider value
     let slider_input_ref = use_node_ref();
     let slider_value = props.value.clone();
 

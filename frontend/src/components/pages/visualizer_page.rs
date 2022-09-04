@@ -2,13 +2,10 @@ use wasm_bindgen::{prelude::*, JsCast};
 use yew::prelude::*;
 use yew::{html, Callback};
 
+use game::core::{enummap::EnumMap, enumset::EnumSet};
 use game::generator::wfc::WfcGenerator;
-use game::model::{
-    enummap::EnumMap,
-    enumset::EnumSet,
-    solver::SentinelGrid,
-    tile::{Square, Tile},
-};
+use game::model::tile::{Square, Tile};
+use game::solver::propagationsolver::SentinelGrid;
 
 use crate::components::board::level::StatelessLevelComponent;
 use crate::components::utils::{slider::SliderComponent, tile_selector::TileSelector};
@@ -26,11 +23,14 @@ const DEFAULT_SPEED: isize = 80;
 const PASS_LIMIT: usize = 40000;
 const PROP_LIMIT: usize = 1000;
 
+/// get new board with the given generator, 
+/// and return the grid and weight after 1 step
 fn get_new_board(wfc_generator: &WfcGenerator) -> (GameGrid, Weights) {
     let (sentinel_grid, weights) = wfc_generator.init_board();
     wfc_generator.iteration_step(sentinel_grid, weights)
 }
 
+/// gets the next step of the generation
 fn get_next_step(
     wfc_generator: WfcGenerator,
     sentinel_grid: GameGrid,
@@ -48,16 +48,24 @@ pub struct VisualizerPageProps {
     pub screen: UseStateHandle<Screen>,
 }
 
+/// A board that visualizes the steps of the wfc generator.
+/// Provides a selection Allows users to specify the size and tiles for generation 
 #[function_component(VisualizerPage)]
 pub fn wfc_board_component(props: &VisualizerPageProps) -> Html {
+    let overlay_message = use_state_eq(|| String::from(""));
+
+    /// Keeps track of the current config of the wfc generator.
+    /// Size, speed and if it is currently playing
+    /// interval_id is used for stoping the play operation
     let (width_value, height_value, speed_value) = (
         use_state(|| DEFAULT_WIDTH),
         use_state(|| DEFAULT_HEIGHT),
         use_state(|| DEFAULT_SPEED),
     );
-    let playing = use_state(|| false);
+    let is_playing = use_state(|| false);
     let interval_id = use_state(|| 0);
 
+    // Initialize the generator with all tiles.
     let wfc_generator =
         WfcGenerator::with_all_tiles(DEFAULT_WIDTH as usize, DEFAULT_HEIGHT as usize);
     let (sentinel_grid, weights) = get_new_board(&wfc_generator);
@@ -68,7 +76,11 @@ pub fn wfc_board_component(props: &VisualizerPageProps) -> Html {
     let weights = use_state_eq(|| weights);
     let level_grid = use_state_eq(|| WfcGenerator::extract_grid(&sentinel_grid));
 
+    /// Get all config, including size, tile selection and updates the generator.
+    /// And directly initiate a new level generation.
+    /// Show overlay error on the level board if the config is not valid.
     let update_onclick: Callback<MouseEvent> = {
+        let overlay_message = overlay_message.clone();
         let available_tiles = available_tiles.clone();
         let wfc_generator = wfc_generator.clone();
         let level_grid = level_grid.clone();
@@ -85,6 +97,13 @@ pub fn wfc_board_component(props: &VisualizerPageProps) -> Html {
             let new_generator =
                 WfcGenerator::new(width, height, *available_tiles, PASS_LIMIT, PROP_LIMIT);
             let (new_grid, new_weights) = get_new_board(&new_generator);
+
+            if new_grid.to_string().trim() == String::from("") {
+                overlay_message.set(String::from("combination invaild"));
+            } else {
+                overlay_message.set(String::from(""));
+            }
+
             level_grid.set(WfcGenerator::extract_grid(&new_grid));
             wfc_generator.set(new_generator);
             sentinel_grid.set(new_grid);
@@ -92,6 +111,7 @@ pub fn wfc_board_component(props: &VisualizerPageProps) -> Html {
         })
     };
 
+    /// Get the next step of the generation. If complete, start new generation.
     let next_onclick: Callback<MouseEvent> = {
         let wfc_generator = wfc_generator.clone();
         let level_grid = level_grid.clone();
@@ -110,6 +130,7 @@ pub fn wfc_board_component(props: &VisualizerPageProps) -> Html {
         })
     };
 
+    /// Start playing generation steps with the given speed.
     let play_onclick: Callback<MouseEvent> = {
         let interval_id = interval_id;
         let wfc_generator = wfc_generator;
@@ -117,18 +138,18 @@ pub fn wfc_board_component(props: &VisualizerPageProps) -> Html {
         let sentinel_grid = sentinel_grid;
         let weights = weights;
 
-        let playing = playing.clone();
+        let is_playing = is_playing.clone();
         let speed_value = speed_value.clone();
         Callback::from(move |_| {
-            if *playing {
+            if *is_playing {
                 log::debug!("{LOG_PREFIX} [Button click] pause: interval has been cleared");
-                playing.set(false);
+                is_playing.set(false);
                 web_sys::window()
                     .unwrap()
                     .clear_interval_with_handle(*interval_id);
             } else {
                 log::debug!("{LOG_PREFIX} [Button click] play: interval started");
-                playing.set(true);
+                is_playing.set(true);
 
                 let (new_grid, new_weights) = get_next_step(
                     (*wfc_generator).clone(),
@@ -172,6 +193,7 @@ pub fn wfc_board_component(props: &VisualizerPageProps) -> Html {
         })
     };
 
+    /// Go back to home page.
     let to_title: Callback<MouseEvent> = {
         let screen = props.screen.clone();
         Callback::from(move |_| {
@@ -181,7 +203,7 @@ pub fn wfc_board_component(props: &VisualizerPageProps) -> Html {
     };
 
     html! {
-        <div class="container">
+        <div class="container viz-page">
             <div class="controller">
                 <div class="selector-controller">
                     <TileSelector tile_set={available_tiles.clone()} />
@@ -195,7 +217,7 @@ pub fn wfc_board_component(props: &VisualizerPageProps) -> Html {
                 </button>
             </div>
             <div class="game-board">
-                <StatelessLevelComponent overlay_message={use_state_eq(|| String::from(""))} level_grid={(*level_grid).clone()} />
+                <StatelessLevelComponent overlay_message={overlay_message.clone()} level_grid={(*level_grid).clone()} />
             </div>
             <div class="controller space-between">
                 <div class="flex-col">
@@ -204,7 +226,7 @@ pub fn wfc_board_component(props: &VisualizerPageProps) -> Html {
                         onclick={play_onclick.clone()}
                     >
                     {
-                        if *playing {"-pause-"} else {"-play-"}
+                        if *is_playing {"-pause-"} else {"-play-"}
                     }
                     </button>
                     <button

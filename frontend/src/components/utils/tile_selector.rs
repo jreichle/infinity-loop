@@ -1,17 +1,17 @@
 use yew::html;
 use yew::prelude::*;
 
-use game::model::{
-    enumset::EnumSet,
-    tile::{
+use game::model::tile::{
         Square::{self, Down, Left, Right, Up},
         Tile,
-    },
 };
+
+use game::core::enumset::EnumSet;
 use game::{enumset, tile};
 
 use crate::components::utils::tile_checkbox::TileCheckbox;
 
+/// get all possiblities for given tile
 fn get_all_roations(tile: Tile<Square>) -> EnumSet<Tile<Square>> {
     enumset!(
         tile,
@@ -42,10 +42,11 @@ pub struct TileSelectorProps {
     pub tile_set: UseStateHandle<EnumSet<Tile<Square>>>,
 }
 
+/// A selector with checkbox of all tile shapes. Keeps track of the tile set.
 #[function_component(TileSelector)]
 pub fn tile_selector_component(props: &TileSelectorProps) -> Html {
     let tile_set = props.tile_set.clone();
-    log::info!("tile_set: {}", tile_set.to_string());
+    log::debug!("tile_set: {}", tile_set.to_string());
 
     // all tile shapes base on connections (c)
     let tile_0c = TileState::new(tile!(), true);

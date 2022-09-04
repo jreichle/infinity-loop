@@ -1,13 +1,17 @@
 use std::rc::Rc;
 use yew::prelude::*;
 
+use game::generator::fastgen::generate;
 use game::model::coordinate::Coordinate;
-use game::model::fastgen::generate;
 use game::model::grid::Grid;
 use game::model::tile::{Square, Tile};
 
 use crate::helper::level_randomizer::randomize_level;
 
+/// reducer facilitates loading more levels for the preview component
+
+/// the LoadNew action takes a number which indicates the amount of levels to load and
+/// a coordinate which indicates needed dimension of the levels
 pub enum PreviewAction {
     LoadNew(usize, Coordinate<usize>),
 }
