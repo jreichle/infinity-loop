@@ -200,7 +200,7 @@ pub fn wfc_board_component(props: &VisualizerPageProps) -> Html {
                 </button>
             </div>
             <div class="game-board">
-                <StatelessLevelComponent overlay_message={use_state_eq(|| "TEST".to_string())} level_grid={(*level_grid).clone()} />
+                <StatelessLevelComponent overlay_message={use_state_eq(|| String::from(""))} level_grid={(*level_grid).clone()} />
             </div>
             <div class="controller space-between">
                 <div class="flex-col">
