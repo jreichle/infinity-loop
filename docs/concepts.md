@@ -96,7 +96,7 @@ strategy: superimpose all possible tiles at each position and successively elimi
 
 1. encode tile configurations and game logic in CNF
 2. solve by external SAT-solver
-3. decode returned variables
+3. decode returned variables and check result
 
 ## Backend
 
