@@ -423,13 +423,18 @@ input[type=range]:focus::-moz-range-track {
 }
 
 .page-title {
-  font-size: 3vh;
+  font-size: 4vh;
   line-height: 1;
 }
 
 .page-content {
-  line-height: 1;
+  font-size: 2vh;
+  line-height: 1.2;
   margin: 2vh 0 0 0;
+}
+
+.page-content p {
+  margin: 0 0 15px 0;
 }
 
 /* selector */
