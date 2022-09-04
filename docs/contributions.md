@@ -1,5 +1,3 @@
-## Contribution Breakdown
-
 | Task                                   | Alexander Jensen   | Johannes Moosburger | Simon Redl         | Johannes Reichle   | Jakob Ritter       |
 |:---------------------------------------|:------------------:|:-------------------:|:------------------:|:------------------:|:------------------:|
 | Game Model                             |                    |                     | :heavy_check_mark: |                    |                    |

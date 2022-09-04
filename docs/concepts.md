@@ -19,6 +19,7 @@ Infinity loop is a puzzle game built out of a grid of tiles, each with a particu
 **Component Overview:**
 
 * Basic game as [WASM][wasm] Web-UI
+* Backend supplying static files
 * Generating levels with either a
   * unweighted generator, which generates all possible levels with even distribution
   * generator based on [Wave Fuction Collapse][wfc]
@@ -26,7 +27,10 @@ Infinity loop is a puzzle game built out of a grid of tiles, each with a particu
   * solver based on [Constraint Propagation][constraintpropagation]
   * SAT solver
 * Manual level editor
+* Visualization for Wave Function Collapse
+* Preview with levels to choose from
 * Help during solving by requesting hints
+* Using local storage to save current state of single page application
 
 The following section further elaborates on each component. For an overview of the employed architecture and file structure, refer to the [architecture][architecture] file.
 
@@ -68,10 +72,6 @@ TestLevel contains some predefined levels for tutorial or test cases. It provide
 
 The progressive change in generated levels is provided by a lazy iterator defined through a [stream unfold][anamorphism] in **levelstream**.
 
-## The UI
-
-Developer: Johannes Reichle
-
 ## Level Generator
 
 ### Unweighted Generator
@@ -105,7 +105,36 @@ Developer: Jakob Ritter
 2. solve by external SAT-solver
 3. decode returned variables
 
-## The Level Editor
+## Backend
+
+Developer: Johannes Reichle
+
+The backend uses the [rocket][rocket] framework for servers. 
+The purpose of the backend is solely in serving static files and getting the application running in compiling and sending the frontend.
+The compilation in [frontend build][build] is facilitated with a rust [build script][build-script].
+
+## The UI
+
+Developer: Johannes Reichle
+
+The frontend uses the [yew][yew] framework for building [single-page applications][spa].
+While the frontend can be served via the [rocket][rocket] backed server, the frontend can also be run independently.
+Yew is heavily inspired by the more popular frontend framework [React][react].
+But instead of running with JavaScript, the rust code can be compiled to [WebAssembly][wasm].
+
+### Level preview
+
+Developer: Johannes Reichle
+
+### Level board
+
+Developer: Johannes Reichle, Alexander Jensen
+
+### Wave function collapse visualizer
+
+Developer: Alexander Jensen
+
+### The Level Editor
 
 Developer: Johannes Moosburger
 
@@ -144,3 +173,10 @@ The editor is based on the **Basic game representation**. It contains a initial 
 [tile]: <../game/src/model/tile.rs>
 [square]: <../game/src/model/tile.rs>
 [grid]: <../game/src/model/grid.rs>
+
+[rocket]: <https://rocket.rs/>
+[yew]: <https://yew.rs/>
+[spa]: <https://en.wikipedia.org/wiki/Single-page_application>
+[build]: <../backend/build.rs>
+[build-script]: <https://doc.rust-lang.org/cargo/reference/build-scripts.html>
+[react]: <https://reactjs.org/>
