@@ -26,6 +26,8 @@ Infinity loop is a puzzle game built out of a grid of tiles, each with a particu
   * solver based on [Constraint Propagation][constraintpropagation]
   * SAT solver
 * Manual level editor
+* Visualization for Wave Function Collapse
+* Preview with possible levels to choose from
 * Help during solving by requesting hints
 
 The following section further elaborates on each component. For an overview of the employed architecture and file structure, refer to the [architecture][architecture] file.

@@ -91,7 +91,7 @@ body::-webkit-scrollbar-thumb {
 }
 
 #title:hover {
-    cursor: pointer;
+  cursor: pointer;
 }
 
 #head-message {
@@ -136,6 +136,7 @@ body::-webkit-scrollbar-thumb {
 }
 
 #start-menu button:hover {
+  cursor: pointer;
   color: var(--white);
   background-color: rgba(85, 90, 141, 0.4);
 }
@@ -168,6 +169,7 @@ body::-webkit-scrollbar-thumb {
 }
 
 .controller button:hover {
+  cursor: pointer;
   color: #fff;
   background-color: rgba(85, 90, 141, 0.4);
 }
@@ -229,10 +231,12 @@ body::-webkit-scrollbar-thumb {
 }
 
 .level-container:hover {
+  cursor: pointer;
   background-color: var(--light-blue);
 }
 
 .level-container:hover .level-title {
+  cursor: pointer;
   color: var(--dark-blue);
 }
 
@@ -267,6 +271,7 @@ body::-webkit-scrollbar-thumb {
 }
 
 .level-container:hover .level-overlay {
+  cursor: pointer;
   filter: blur(0);
   color: rgba(0, 0, 0, 0.6);
 }
@@ -298,6 +303,7 @@ body::-webkit-scrollbar-thumb {
 }
 
 .tile:hover {
+  cursor: pointer;
   background-color: var(--light-blue);
 }
 
@@ -323,6 +329,7 @@ a {
 }
 
 a:hover {
+  cursor: pointer;
   color: #fff;
 }
 
@@ -451,6 +458,7 @@ input[type=range]:focus::-moz-range-track {
 }
 
 .tile-checkbox:hover {
+  cursor: pointer;
   filter: brightness(0.5);
 }
 
@@ -459,6 +467,7 @@ input[type=range]:focus::-moz-range-track {
 }
 
 .unchecked:hover {
+  cursor: pointer;
   filter: grayscale(1);
   background-color: var(--light-blue);
 }
