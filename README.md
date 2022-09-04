@@ -1,5 +1,7 @@
 # Rusty Infinity Loop
 
+Live demo: https://rusty-infinity-loop.netlify.app/
+
 ## Gameplay
 
 [Infinity Loop][infinityloop] is a puzzle game built out of a grid of tiles, each with a particular set of connections pointing to orthogonal neighboring tiles. To solve the puzzle, the user must rotate individual tiles to match the connection of all neighboring tiles. The following two images help to demonstrate the visually intuitive ruleset.
