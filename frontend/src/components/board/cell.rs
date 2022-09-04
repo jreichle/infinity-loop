@@ -16,6 +16,9 @@ pub struct CellComponentProps {
     pub on_wheel: Callback<WheelEvent>,
 }
 
+/// A tile representation in a level board.
+/// Allows custom onclick and onwheel actions, 
+/// which is mainly used for turning and changing tiles
 #[function_component(CellComponent)]
 pub fn cell_component(props: &CellComponentProps) -> Html {
     let (row, column) = (props.row_number, props.column_number);

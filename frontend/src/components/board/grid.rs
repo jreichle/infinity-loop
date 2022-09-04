@@ -9,6 +9,8 @@ pub struct GridComponentProps {
     pub overlay_message: UseStateHandle<String>,
 }
 
+/// A complete representation of the grid in the game model.
+/// Allows overlay messages to display over the grid if needed.
 #[function_component(GridComponent)]
 pub fn grid_component(props: &GridComponentProps) -> Html {
     let children = props.children.clone();
