@@ -247,6 +247,7 @@ pub fn editor_page_component(props: &EditorPageProps) -> Html {
 
             <LevelComponent
                 board={board.clone()}
+                can_complete=false
                 can_turn=true
                 can_change=true
                 head_message={props.head_message.clone()} />

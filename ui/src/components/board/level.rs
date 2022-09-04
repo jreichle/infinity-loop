@@ -18,6 +18,8 @@ pub struct LevelProps {
     pub head_message: UseStateHandle<String>,
     #[prop_or(use_state_eq(|| "".to_string()))]
     pub overlay_message: UseStateHandle<String>,
+    #[prop_or(true)]
+    pub can_complete: bool,
     #[prop_or(false)]
     pub can_turn: bool,
     #[prop_or(false)]
@@ -67,6 +69,15 @@ pub fn level_component(props: &LevelProps) -> html {
     let level_grid = board.level_grid.clone();
     let (height, width) = level_grid.dimensions().to_tuple();
     let (height, width) = (height as isize, width as isize);
+
+    if props.can_complete {
+        let overlay_message = props.overlay_message.clone();
+        if !board.level_grid.is_solved() {
+            overlay_message.set(String::from(""));
+        } else {
+            overlay_message.set(String::from("-LEVEL COMPLETED-"));
+        }
+    }
 
     html! {
         <div class="game-board">
