@@ -27,12 +27,12 @@ use game::solver::hint::{generate_solving_trace, get_hint};
 /// - SolveLevel: solves the level
 ///
 /// editor board actions:
-/// - ChangeTileShape:
-/// - ChangeSize:
-/// - GenerateFastGen:
-/// - GenerateWFC:
-/// - ShuffleTileRotations:
-/// - ClearGrid:
+/// - ChangeTileShape: Changes the shape of given cell (iterates through all shapes)
+/// - ChangeSize: Change the size of the level, and re-generates a new level.
+/// - GenerateFastGen: Generates a new level with the FastGen generator.
+/// - GenerateWFC: Generates a new level with the Wave functioncollapse generator.
+/// - ShuffleTileRotations: Randomly rotates each cell of the level.
+/// - ClearGrid: Replaces the current level with an empty grid.
 pub enum BoardAction {
     // playing level actions
     TurnCell(Coordinate<isize>),
