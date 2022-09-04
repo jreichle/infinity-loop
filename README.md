@@ -1,6 +1,6 @@
 # Rusty Infinity Loop
 
-Live demo: https://rusty-infinity-loop.netlify.app/
+[Live demo][demo]
 
 ## Gameplay
 
@@ -59,6 +59,7 @@ cd frontend/
 trunk serve --open
 ```
 
+[demo]: <https://rusty-infinity-loop.netlify.app/>
 [infinityloop]: <https://play.google.com/store/apps/details?id=com.balysv.loop&hl=de&gl=US>
 
 [unsolvedexample]: <./docs/images/example-level.png>
