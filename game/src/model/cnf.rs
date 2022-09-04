@@ -1,8 +1,10 @@
 use crate::{enumset, tile};
 
+
+use crate::core::{finite::Finite};
+
 use super::{
     grid::Grid,
-    finite::Finite,
     tile::{
         Square,
         Square::{Down, Left, Right, Up},
