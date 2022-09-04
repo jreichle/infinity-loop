@@ -248,21 +248,21 @@ pub fn editor_page_component(props: &EditorPageProps) -> Html {
                 <button
                     onclick={generate_wfc_onclick}
                     >{"-Generate with WFC-"}</button>
-                <p style="text-align:center">{"____"}</p>
+                <p style="text-align:center;margin:20px">{"____"}</p>
                 <button
                     onclick={check_cps_onclick}
                     >{"-Check validity-"}</button>
                 <button
                     onclick={check_solved_onclick}
                     >{"-Check if solved-"}</button>
-                    <p style="text-align:center">{"____"}</p>
+                <p style="text-align:center;margin:20px">{"____"}</p>
                 <button
                     onclick={clear_onclick}
                     >{"-Clear grid-"}</button>
                 <button
                     onclick={shuffle_tile_rotations_onclick}
                     >{"-Shuffle tile rotations-"}</button>
-                <p style="text-align:center">{"____"}</p>
+                <p style="text-align:center;margin:20px">{"____"}</p>
                 <button
                     onclick={save_onclick}
                     >{"-Save-"}</button>
