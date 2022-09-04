@@ -65,7 +65,7 @@ Assuming the following properties:
 1. all possible tiles are available for level generation
 2. fixing all orthogonal neighbors uniquely determines the tile
 
-Properties #1 and #2 imply that there always exists a suitable tile for any configuration of neighbors
+Properties 1 and 2 imply that there always exists a suitable tile for any configuration of neighbors
 
 Generating a valid level now reduces to filling the grid with random tiles in a checkerboard pattern and then infering the blanks based on their neighbors.
 
