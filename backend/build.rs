@@ -3,6 +3,8 @@ use std::process::Command;
 
 const FRONTEND_DIR: &str = "../frontend";
 
+/// build script which is being run ahead of ./src/main.rs
+/// compiles frontend in order to serve to client
 fn main() {
     println!("cargo:rerun-if-changed={}/src", FRONTEND_DIR);
     println!("cargo:rerun-if-changed={}/index.html", FRONTEND_DIR);

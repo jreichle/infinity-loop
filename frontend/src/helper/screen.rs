@@ -1,6 +1,7 @@
 use game::model::{grid::Grid, tile::Square, tile::Tile};
 use std::fmt::{Display, Formatter, Result};
 
+/// can be used to indicate which screen needs to be shown
 #[derive(PartialEq)]
 pub enum Screen {
     Level(Grid<Tile<Square>>),
