@@ -72,20 +72,6 @@ TestLevel contains some predefined levels for tutorial or test cases. It provide
 
 The progressive change in generated levels is provided by a lazy iterator defined through a [stream unfold][anamorphism] in **levelstream**.
 
-## Backend
-
-Developer: Johannes Reichle
-
-The backend uses the [rocket][rocket] framework for servers. 
-The purpose of the backend is solely in serving static files and getting the application running in compiling and sending the frontend.
-The compilation in [build][frontend build] is facilitated with a rust [build-script][build script].
-
-## The UI
-
-The frontend uses the [yew][yew] framework for building [spa][single-page applications].
-
-Developer: Johannes Reichle
-
 ## Level Generator
 
 ### Unweighted Generator
@@ -119,7 +105,36 @@ Developer: Jakob Ritter
 2. solve by external SAT-solver
 3. decode returned variables
 
-## The Level Editor
+## Backend
+
+Developer: Johannes Reichle
+
+The backend uses the [rocket][rocket] framework for servers. 
+The purpose of the backend is solely in serving static files and getting the application running in compiling and sending the frontend.
+The compilation in [frontend build][build] is facilitated with a rust [build script][build-script].
+
+## The UI
+
+Developer: Johannes Reichle
+
+The frontend uses the [yew][yew] framework for building [single-page applications][spa].
+While the frontend can be served via the [rocket][rocket] backed server, the frontend can also be run independently.
+Yew is heavily inspired by the more popular frontend framework [React][react].
+But instead of running with JavaScript, the rust code can be compiled to [WebAssembly][wasm].
+
+### Level preview
+
+Developer: Johannes Reichle
+
+### Level board
+
+Developer: Johannes Reichle, Alexander Jensen
+
+### Wave function collapse visualizer
+
+Developer: Alexander Jensen
+
+### The Level Editor
 
 Developer: Johannes Moosburger
 
@@ -139,6 +154,11 @@ The editor has following functions:
 * Load grid in local storage
 
 The editor is based on the *Basic game representation*. It contains a initial grid, which is replaced or changed by every manipulation during the editing process. To display the grid in HTML notation the board component is used and extended to serve the purpose of the editor. Flags are passed to the component representing cells to enable/disable tile roatation and shape change. Furthermore, various members were add to the `BoardAction`, such as ChangeTileShape, ChangeSize, GenerateFastGen, GenerateWFC, ShuffleTileRotations, ClearGrid. These different actions are handled in the `board_reducer`-file.
+
+
+
+
+
 
 
 [unsolvedexample]: <images/example-level.png>
@@ -163,3 +183,4 @@ The editor is based on the *Basic game representation*. It contains a initial gr
 [spa]: <https://en.wikipedia.org/wiki/Single-page_application>
 [build]: <../backend/build.rs>
 [build-script]: <https://doc.rust-lang.org/cargo/reference/build-scripts.html>
+[react]: <https://reactjs.org/>
