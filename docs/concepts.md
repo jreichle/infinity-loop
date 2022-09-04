@@ -100,13 +100,7 @@ strategy: superimpose all possible tiles at each position and successively elimi
 
 ## Backend
 
-<<<<<<< HEAD
-The backend uses the [rocket][rocket] framework for servers. 
-=======
-Developer: Johannes Reichle
-
 The backend uses the [rocket][rocket] framework for servers.
->>>>>>> origin/main
 The purpose of the backend is solely in serving static files and getting the application running in compiling and sending the frontend.
 The compilation in [frontend build][build] is facilitated with a rust [build script][build-script].
 
@@ -181,7 +175,4 @@ The editor is based on the **Basic game representation**. It contains a initial 
 [build]: <../backend/build.rs>
 [build-script]: <https://doc.rust-lang.org/cargo/reference/build-scripts.html>
 [react]: <https://reactjs.org/>
-<<<<<<< HEAD
 [local-storage]: <https://en.wikipedia.org/wiki/Web_storage#Local_and_session_storage>
-=======
->>>>>>> origin/main
