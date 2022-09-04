@@ -10,6 +10,12 @@ pub struct StartPageProps {
     pub head_message: UseStateHandle<String>,
 }
 
+/// This page is the starting or home page that links to
+/// - preview
+/// - editor
+/// - WFC visualizer
+/// - help
+/// - credits
 #[function_component(StartPage)]
 pub fn start_page(props: &StartPageProps) -> html {
     let screen = props.screen.clone();
