@@ -262,7 +262,12 @@ body::-webkit-scrollbar-thumb {
   background-color: rgba(103, 92, 105, 0.5);
 }
 
+.viz-page .level-overlay {
+  background-color: #B33A3A;
+}
+
 .level-overlay .overlay-text {
+  text-align: center;
   line-height: 1;
   color: var(--white);
   filter: blur(0);

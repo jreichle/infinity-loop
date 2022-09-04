@@ -4,7 +4,6 @@ use yew::{html, Callback};
 
 use game::core::{enummap::EnumMap, enumset::EnumSet};
 use game::generator::wfc::WfcGenerator;
-use game::model::grid::Grid;
 use game::model::tile::{Square, Tile};
 use game::solver::propagationsolver::SentinelGrid;
 
@@ -88,7 +87,7 @@ pub fn wfc_board_component(props: &VisualizerPageProps) -> Html {
             let (new_grid, new_weights) = get_new_board(&new_generator);
 
             if new_grid.to_string().trim() == String::from("") {
-                overlay_message.set(String::from("-fail-"));
+                overlay_message.set(String::from("combination invaild"));
             } else {
                 overlay_message.set(String::from(""));
             }
@@ -189,7 +188,7 @@ pub fn wfc_board_component(props: &VisualizerPageProps) -> Html {
     };
 
     html! {
-        <div class="container">
+        <div class="container viz-page">
             <div class="controller">
                 <div class="selector-controller">
                     <TileSelector tile_set={available_tiles.clone()} />
