@@ -1,8 +1,10 @@
+# Contribution Breakdown
+
 | Task                                   | Alexander Jensen   | Johannes Moosburger | Simon Redl         | Johannes Reichle   | Jakob Ritter       |
 |:---------------------------------------|:------------------:|:-------------------:|:------------------:|:------------------:|:------------------:|
 | Game Model                             |                    |                     | :heavy_check_mark: |                    |                    |
 | WASM Web-UI                            |                    |                     |                    | :heavy_check_mark: |                    |
-| Unweighted Generator                   |                    |                     |                    |                    |                    |
+| Unweighted Generator                   |                    |                     | :heavy_check_mark: |                    |                    |
 | Wave Fuction Collapse Generator        | :heavy_check_mark: |                     |                    |                    |                    |
 | Solver based on Constraint Propagation |                    |                     | :heavy_check_mark: |                    |                    |
 | SAT Solver                             |                    |                     |                    |                    | :heavy_check_mark: |

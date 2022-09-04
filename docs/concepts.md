@@ -22,7 +22,7 @@ Infinity loop is a puzzle game built out of a grid of tiles, each with a particu
 * Backend supplying static files
 * Generating levels with either a
   * unweighted generator, which generates all possible levels with even distribution
-  * generator based on [Wave Fuction Collapse][wfc]
+  * generator based on [Wave Function Collapse][wfc]
 * Solving arbitrary puzzle levels with either a
   * solver based on [Constraint Propagation][constraintpropagation]
   * SAT solver
@@ -36,7 +36,7 @@ The following section further elaborates on each component. For an overview of t
 
 ## Basic game representation / implementation
 
-[`EnumSet`][enumset] is both a space and performance efficient implementation of a set data structure by relating / associating values with a specific bit in a bit array, usually an unsigned integer. The to possible values of a bit `0` and `1` indicate inclusion in the set. For a type to be eligible to being used in a `EnumSet` requires a bijection between values of the type and the natural numbers. (see the Finite trait)
+[`EnumSet`][enumset] is both a space and performance efficient implementation of a set data structure by relating / associating values with a specific bit in a bit array, usually an unsigned integer. The two possible values of a bit `0` and `1` indicate inclusion in the set. For a type to be eligible to being used in a `EnumSet` requires a bijection between values of the type and the natural numbers. (see the Finite trait)
 
 ```rust
 struct EnumSet<A>(u64, PhantomData<A>);
@@ -44,7 +44,7 @@ struct EnumSet<A>(u64, PhantomData<A>);
 
 The fundamental component of interaction in **Infinity Loop** is the `Tile`, which is rotated by the user to solve the puzzle. Conceptually a single tile holds the connection information to its neighbors as a set of directions.
 
-[`Tile`][tile] is a newtype wrapper over an `EnumSet` of directions. Directions correlate to the shape of the tile.
+[`Tile`][tile] is a newtype wrapper over an `EnumSet` of directions. [Directions][square] correlate to the shape of the tile.
 
 ```rust
 struct Tile<A>(EnumSet<A>);
@@ -109,7 +109,7 @@ Developer: Jakob Ritter
 
 Developer: Johannes Reichle
 
-The backend uses the [rocket][rocket] framework for servers. 
+The backend uses the [rocket][rocket] framework for servers.
 The purpose of the backend is solely in serving static files and getting the application running in compiling and sending the frontend.
 The compilation in [frontend build][build] is facilitated with a rust [build script][build-script].
 
@@ -168,7 +168,7 @@ The editor is based on the **Basic game representation**. It contains a initial 
 
 [architecture]: <./architecture.md>
 
-[enumset]: <../game/src/model/enumset.rs>
+[enumset]: <../game/src/core/enumset.rs>
 [coordinate]: <../game/src/model/coordinate.rs>
 [tile]: <../game/src/model/tile.rs>
 [square]: <../game/src/model/tile.rs>
