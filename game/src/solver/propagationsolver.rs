@@ -1,5 +1,6 @@
 use crate::model::tile::Square::{Down, Left, Right, Up};
 use core::fmt::Debug;
+
 use std::{
     fmt::Display,
     hash::Hash,
@@ -19,6 +20,7 @@ use crate::model::{
     coordinate::Coordinate,
     grid::Grid,
     tile::{Square, Tile},
+    cnf
 };
 
 ///! This file contains a solver algorithm
@@ -390,6 +392,23 @@ impl Grid<Tile<Square>> {
         SolutionIterator(vec![self
             .with_sentinels(Tile::NO_CONNECTIONS)
             .superimpose()])
+    }
+
+    //takes a user supplied input and runs solved_to_tiles
+    //if that did not generate a sufficient solution an unsolvable puzzle is generated to handle this error
+    pub fn solve_with_input(&self, input: &str) -> Grid<Tile<Square>> {
+        let tiles = cnf::solved_to_tiles(input).unwrap();
+        if tiles.len() == self.columns() * self.rows() {
+            Grid::new(Coordinate::new(self.columns(),self.rows()),tiles)
+        }
+        else {
+            let mut unsolvable = vec![];
+            for _i in 0..self.columns()*self.rows() {
+                unsolvable.push(Tile::ALL_CONNECTIONS);
+            }
+            Grid::new(Coordinate::new(self.columns(),self.rows()), unsolvable)
+        }
+        
     }
 }
 
