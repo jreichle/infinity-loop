@@ -8,7 +8,7 @@ use std::path::PathBuf;
 
 async fn get_index() -> Result<NamedFile, NotFound<String>> {
     println!("getting index");
-    NamedFile::open("ui/dist/index.html")
+    NamedFile::open("frontend/dist/index.html")
         .await
         .map_err(|e| NotFound(e.to_string()))
 }
@@ -16,7 +16,7 @@ async fn get_index() -> Result<NamedFile, NotFound<String>> {
 #[get("/<path..>")]
 async fn static_files(path: PathBuf) -> Result<NamedFile, NotFound<String>> {
     println!("getting static");
-    let path = PathBuf::from("ui/dist").join(path);
+    let path = PathBuf::from("frontend/dist").join(path);
     match NamedFile::open(path).await {
         Ok(f) => Ok(f),
         Err(_) => get_index().await,
