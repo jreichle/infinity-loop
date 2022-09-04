@@ -1,8 +1,11 @@
-use super::{
+use crate::model::{
     coordinate::Coordinate,
     grid::Grid,
-    solver::*,
     tile::{Square, Tile},
+};
+
+use super::propagationsolver::{
+    iter_fix, most_superimposed_states, propagate_restrictions_to_all_neighbors2,
 };
 
 // algorithm:
@@ -12,7 +15,7 @@ use super::{
 /// Generates a trace of the successively solved tiles
 ///
 /// conceptually independent of solving algorithm
-/// 
+///
 /// deterministic, can be memoized
 pub fn generate_solving_trace(grid: &Grid<Tile<Square>>) -> Vec<(Coordinate<isize>, Tile<Square>)> {
     let mut stack = vec![(
@@ -73,12 +76,12 @@ pub fn get_hint(
 
 #[cfg(test)]
 mod test {
-    use crate::model::{
-        coordinate::Coordinate,
-        fastgen::generate,
-        interval::{Interval, Max},
-        tile::Tile,
+    use crate::{
+        generator::fastgen::generate,
+        model::{coordinate::Coordinate, tile::Tile},
     };
+
+    use crate::core::interval::{Interval, Max};
 
     use super::generate_solving_trace;
 

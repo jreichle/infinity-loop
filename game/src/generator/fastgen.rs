@@ -4,14 +4,15 @@ use rand::{
     Rng, SeedableRng,
 };
 
-use super::{
+use crate::solver::propagationsolver::SentinelGrid;
+
+use crate::model::{
     coordinate::Coordinate,
-    enumset::EnumSet,
-    finite::Finite,
     grid::Grid,
-    solver::*,
     tile::{Square, Tile},
 };
+
+use crate::core::{enumset::EnumSet, finite::Finite};
 
 ///! since the tileset is not restricted and all possible tiles are available for constructing a level, any permutation of neighbor connections can be accomodated
 ///!
@@ -69,7 +70,7 @@ impl<A: Finite> Grid<Tile<A>> {
 #[cfg(test)]
 mod test {
 
-    use crate::model::interval::Max;
+    use crate::core::interval::Max;
 
     use super::*;
 

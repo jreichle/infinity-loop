@@ -43,7 +43,6 @@ fn get_next_step(
     wfc_generator.iteration_step(new_grid, new_weights)
 }
 
-
 #[derive(Properties, PartialEq, Clone)]
 pub struct VisualizerPageProps {
     pub screen: UseStateHandle<Screen>,

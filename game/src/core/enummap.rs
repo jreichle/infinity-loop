@@ -250,7 +250,7 @@ impl<K: Cardinality + 'static, V: Arbitrary> Arbitrary for EnumMap<K, V> {
 
 #[cfg(test)]
 mod test {
-    use crate::model::{enummap::EnumMap, interval::Max};
+    use crate::core::{enummap::EnumMap, interval::Max};
 
     #[quickcheck]
     fn empty_is_all_none() -> bool {

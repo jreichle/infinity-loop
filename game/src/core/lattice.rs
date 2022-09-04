@@ -1,6 +1,6 @@
 use std::ops::{BitAnd, BitOr, Not};
 
-use super::{enumset::EnumSet, finite::Finite, tile::Tile};
+use super::{enumset::EnumSet, finite::Finite};
 
 ///! operator relation of boolean algebra
 ///! | lattice    | operator                         | logic | set                | neutral element  | name    |
@@ -115,18 +115,6 @@ impl<A: Finite> BoundedLattice for EnumSet<A> {
 
 impl<A: Finite> DistributiveLattice for EnumSet<A> {}
 
-impl<A: Finite> JoinSemilattice for Tile<A> {}
-
-impl<A: Finite> MeetSemilattice for Tile<A> {}
-
-impl<A: Finite> BoundedLattice for Tile<A> {
-    const BOTTOM: Self = Self::NO_CONNECTIONS;
-
-    const TOP: Self = Self::ALL_CONNECTIONS;
-}
-
-impl<A: Finite> DistributiveLattice for Tile<A> {}
-
 #[cfg(test)]
 mod tests {
 
@@ -171,42 +159,42 @@ mod tests {
     }
 
     #[quickcheck]
-    fn tile_associativity(x: Tile<Square>, y: Tile<Square>, z: Tile<Square>) -> bool {
+    fn tile_associativity(x: EnumSet<Square>, y: EnumSet<Square>, z: EnumSet<Square>) -> bool {
         join_associativity(x, y, z) && meet_associativity(x, y, z)
     }
 
     #[quickcheck]
-    fn tile_commutativity(x: Tile<Square>, y: Tile<Square>) -> bool {
+    fn tile_commutativity(x: EnumSet<Square>, y: EnumSet<Square>) -> bool {
         join_commutativity(x, y) && meet_commutativity(x, y)
     }
 
     #[quickcheck]
-    fn tile_idempotency(x: Tile<Square>) -> bool {
+    fn tile_idempotency(x: EnumSet<Square>) -> bool {
         join_idempotency(x) && meet_idempotency(x)
     }
 
     #[quickcheck]
-    fn tile_absorption(x: Tile<Square>, y: Tile<Square>) -> bool {
+    fn tile_absorption(x: EnumSet<Square>, y: EnumSet<Square>) -> bool {
         join_absorption(x, y) && meet_absorption(x, y)
     }
 
     #[quickcheck]
-    fn tile_identity_element(x: Tile<Square>) -> bool {
+    fn tile_identity_element(x: EnumSet<Square>) -> bool {
         join_identity_element(x) && meet_identity_element(x)
     }
 
     #[quickcheck]
-    fn tile_distributivity(x: Tile<Square>, y: Tile<Square>, z: Tile<Square>) -> bool {
+    fn tile_distributivity(x: EnumSet<Square>, y: EnumSet<Square>, z: EnumSet<Square>) -> bool {
         join_distributivity(x, y, z) && meet_distributivity(x, y, z)
     }
 
     #[quickcheck]
-    fn tile_complement(x: Tile<Square>) -> bool {
+    fn tile_complement(x: EnumSet<Square>) -> bool {
         join_complement(x) && meet_complement(x)
     }
 
     #[quickcheck]
-    fn tile_fold_is_lazy(x: Tile<Square>) -> bool {
+    fn tile_fold_is_lazy(x: EnumSet<Square>) -> bool {
         and_fold_is_lazy(x) && or_fold_is_lazy(x)
     }
 

@@ -491,7 +491,8 @@ impl<A: Arbitrary> Arbitrary for Grid<A> {
 #[cfg(test)]
 mod grid_tests {
 
-    use crate::model::{coordinate::Coordinate, interval::Max};
+    use crate::core::interval::Max;
+    use crate::model::coordinate::Coordinate;
 
     use super::Grid;
 

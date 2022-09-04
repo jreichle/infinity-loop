@@ -94,8 +94,6 @@ pub fn serialize_level<A: Clone, F: Fn(A) -> char>(grid: Grid<A>, converter: F) 
         .join("\n")
 }
 
-pub const LEVEL_MALFORMED: &str = " ";
-
 /// first levels of android game infinity loop
 #[rustfmt::skip]
 pub const TEST_LEVELS: [&str; 30] = [
@@ -130,44 +128,7 @@ pub const TEST_LEVELS: [&str; 30] = [
     /* 28 */ "LLLTL\nTTT+T\nLL LT\nLTLIT\nLTILT\n-TTL-",
     /* 29 */ "LLLIL\nII-LT\n-I-LT\nLLI-I\nLTTTT\n-T- -",
     /* 30 */ "  LL\n -TL\nLLLL\nT- I\nLL I\nLL--\n- L-",
-    /* 31 */
-    /* 32 */
-    /* 33 */
-    /* 34 */
-    /* 35 */
-    /* 36 */
-    /* 37 */
-    /* 38 */
-    /* 39 */
-    /* 40 */
-    /* 41 */
-    /* 42 */
-    /* 43 */
-    /* 44 */
-    /* 45 */
-    /* 46 */
-    /* 47 */
-    /* 48 */
-    /* 49 */
-    /* 50 */
-    /* 51 */
-    /* 52 */
-    /* 53 */
-    /* 54 */
-    /* 55 */
-    /* 56 */
-    /* 57 */
-    /* 58 */
-    /* 59 */
 ];
-
-// lvl 111 "-LLL-L-\n-LTTLLL\nLITLLL-\n -LILLL\n-LLTL-I\n-LLTLL-\n-LTLILL\nL---L--"
-
-pub const TRIVIAL_LEVEL: &str = "-I-";
-
-pub const MULTIPLE_SOLUTIONS: &str = "----\n----\n----\n----";
-
-pub const HARD_LEVEL: &str = "----------\n----------\n----------\n----------\n----------\n----------\n----------\n----------\n----------\n----------\n";
 
 #[cfg(test)]
 mod tests {
@@ -176,7 +137,7 @@ mod tests {
 
     use crate::model::{
         grid::Grid,
-        testlevel::{parse_level, unicode_to_tile},
+        parser::{parse_level, unicode_to_tile},
         tile::{Square, Tile},
     };
 

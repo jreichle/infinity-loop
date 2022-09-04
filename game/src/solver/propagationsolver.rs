@@ -8,13 +8,16 @@ use std::{
 
 use quickcheck::Arbitrary;
 
-use super::{
-    coordinate::Coordinate,
+use crate::core::{
     enummap::EnumMap,
     enumset::EnumSet,
     finite::{all_enums_ascending, Finite},
-    grid::Grid,
     lattice::{BoundedLattice, BoundedLatticeExt},
+};
+
+use crate::model::{
+    coordinate::Coordinate,
+    grid::Grid,
     tile::{Square, Tile},
 };
 
@@ -430,7 +433,7 @@ const _: Superposition<Square> = EnumSet::FULL;
 mod tests {
 
     use super::*;
-    use crate::model::{finite::all_enums_ascending, interval::Max};
+    use crate::core::{finite::all_enums_ascending, interval::Max};
 
     #[quickcheck]
     fn tile_configurations_have_same_number_of_connections(tile: Tile<Square>) -> bool {
