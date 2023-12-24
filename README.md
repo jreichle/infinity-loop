@@ -29,12 +29,6 @@
 
 ### Prerequisites
 
-Clone this repository into a local directory.
-
-```shell
-git clone https://gitlab.lrz.de/rust-praktikum/infinity-loop-rust
-```
-
 This project runs on Rust version `1.6.3` or later.
 Additionally the dependencies _trunk_ and _wasm_ are required, in order to use the _yew_ package
 
